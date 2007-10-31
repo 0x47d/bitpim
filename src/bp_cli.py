@@ -27,7 +27,7 @@ NotImplemented_Error=2
 InvalidDir_Error=3
 DirExists_Error=4
 
-_commands=frozenset(('ls', 'll', 'cp', 'mkdir'))
+_commands=frozenset(('ls', 'll', 'cp', 'mkdir', 'cli'))
 
 def valid_command(arg):
     """Check of this arg is a valid command or not
@@ -57,6 +57,7 @@ class CLI(object):
         @param phone_model: string phone model to use (default to config file)
         """
         self.OK=False
+        self._inCLI=False
         try:
             _cmd_line=arg.split(' ')
             self.cmd=_cmd_line[0]
@@ -115,11 +116,12 @@ class CLI(object):
                   (F, error code) otherwise
         """
         if cmdline:
-            _cmdline=cmdline.split(' ')
+            _cmdline=cmdline.split(None)
             self.cmd=_cmdline[0]
             self.args=_cmdline[1:]
         _func=getattr(self, self.cmd, None)
         if _func is None:
+            self._err.write('Error: invalid command: %s\n'%self.cmd)
             return (False, InvalidCommand_Error)
         return _func(self.args)
 
@@ -317,3 +319,23 @@ class CLI(object):
                 self._out.write('Error: Failed to create dir %(name)s.\n'%\
                                 { 'name': _dir['name'] })
         return (True, None)
+
+    def cli(self, _):
+        """Run a primitive interactive CLI sesssion.
+        @params _: don't care
+        @returns: always (True, None)
+        """
+        if self._inCLI:
+            # we're in our shell, bail
+            return (True, None)
+        self._inCLI=True
+        try:
+            while True:
+                self._out.write('BitPim>')
+                _cmdline=self._in.readline()
+                if _cmdline.startswith('exit'):
+                    break
+                self.run(_cmdline)
+        finally:
+            self._inCLI=False
+            return (True, None)

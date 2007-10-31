@@ -35,8 +35,8 @@ def sanitycheck():
 
     print "wxPython version",
     import wx
-    if wx.VERSION[:4]!=(2,8,4,2):
-        raise Exception("Should be wxPython 2.8.4.2.  This is "+`wx.VERSION`)
+    if wx.VERSION[:4]!=(2,8,6,1):
+        raise Exception("Should be wxPython 2.8.6.1.  This is "+`wx.VERSION`)
     print "  OK"
 
     print "wxPython is unicode build",
@@ -79,7 +79,7 @@ def sanitycheck():
     print "  OK"
 
     print "sqlite",
-    ver="3.4.1"
+    ver="3.5.1"
     if apsw.sqlitelibversion()!=ver:
         raise Exception("Should be sqlite version %s - you have %s" % (ver, apsw.sqlitelibversion()))
     print "  OK"
@@ -231,7 +231,7 @@ def getpy2appoptions(defaults):
 def getpy2exeoptions(defaults):
     defaults.update(
         {
-        # make this a console app so we can manipulate stderr & stdout
+        'windows': [{ 'script': 'src/bp.py', 'dest_base': 'bitpimw', }],
         'console': [{ 'script': 'src/bp.py', 'dest_base': 'bitpim', }],
         }
         )

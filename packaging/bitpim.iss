@@ -24,8 +24,8 @@ LicenseFile=..\src\LICENSE
 [Registry]
 Root: HKCR; Subkey: ".bitpim"; ValueType: string; ValueName: ""; ValueData: "BitPimConfigFile"; Flags: uninsdeletevalue
 Root: HKCR; Subkey: "BitPimConfigFile"; ValueType: string; ValueName: ""; ValueData: "BitPim Config File"; Flags: uninsdeletekey
-Root: HKCR; Subkey: "BitPimConfigFile\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\bitpim.exe,0"
-Root: HKCR; Subkey: "BitPimConfigFile\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\bitpim.exe"" -c ""%1"""
+Root: HKCR; Subkey: "BitPimConfigFile\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\bitpimw.exe,0"
+Root: HKCR; Subkey: "BitPimConfigFile\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\bitpimw.exe"" -c ""%1"""
 
 [Files]
 ; the file locations are relative to the location of where the substituted version of this script ends up
@@ -36,13 +36,13 @@ Source: "..\packaging\bitpim.url"; DestDir: "{app}"
 Source: ..\buildrelease\winpkg\unicows.dll; DestDir: "{app}"; Flags: sortfilesbyextension replacesameversion ignoreversion overwritereadonly; MinVersion: 4.0,0
 
 [Icons]
-Name: "{group}\BitPim" ; Filename: "{app}\bitpim.exe"; Comment: "The main BitPim program"
+Name: "{group}\BitPim" ; Filename: "{app}\bitpimw.exe"; Comment: "The main BitPim program"
 Name: "{group}\Help"; Filename: "{app}\resources\bitpim.chm"
-Name: "{group}\BitFling" ; Filename: "{app}\bitpim.exe"; Parameters: "bitfling"; Comment: "A tool to allow BitPim to access phones on other machines"
+Name: "{group}\BitFling" ; Filename: "{app}\bitpimw.exe"; Parameters: "bitfling"; Comment: "A tool to allow BitPim to access phones on other machines"
 Name: "{group}\Visit The BitPim Web Site"; Filename: "{app}\bitpim.url"
 
 [Run]
-Filename: "{app}\bitpim.exe"; Description: "Start BitPim"; Flags: "postinstall nowait"
+Filename: "{app}\bitpimw.exe"; Description: "Start BitPim"; Flags: "postinstall nowait"
 
 [Messages]
 SetupLdrStartupMessage=This will install %%NAME%% %%VERSION%%. Do you wish to continue?
