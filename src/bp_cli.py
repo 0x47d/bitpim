@@ -35,7 +35,7 @@ def valid_command(arg):
     @returns: T if this is a valid command, F otherwise
     """
     global _commands
-    return arg.split(' ')[0] in _commands
+    return arg.split(None)[0] in _commands
 
 
 class PhoneModelError(Exception):
@@ -59,7 +59,7 @@ class CLI(object):
         self.OK=False
         self._inCLI=False
         try:
-            _cmd_line=arg.split(' ')
+            _cmd_line=arg.split(None)
             self.cmd=_cmd_line[0]
             self.args=_cmd_line[1:]
             self.config=bp_config.Config(config_filename)

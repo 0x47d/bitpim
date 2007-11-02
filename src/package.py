@@ -207,35 +207,45 @@ def getallencodingsmodules():
             pass
     return _res
 
+lazyimportmodules=['email.iterators']
+if sys.platform=='darwin':
+    lazyimportmodules.append('Carbon.CF')
+
 def getcxfreezeoptions(defaults):
+    global lazyimportmodules
     defaults.update(
         {
         'app': [{'script': 'src/bp.py', 'dest_base': 'bitpim'}],
         }
         )
     defaults['options']['cxfreeze']['includes']=phones.getallmodulenames()+\
-                                                 getallencodingsmodules()
+                                                 getallencodingsmodules()+\
+                                                 lazyimportmodules
     return defaults
 
 def getpy2appoptions(defaults):
+    global lazyimportmodules
     defaults.update(
         {
         'app': [{'script': 'src/bp.py',}],
         }
         )
-    defaults['options']['py2app']['includes']=phones.getallmodulenames()
+    defaults['options']['py2app']['includes']=phones.getallmodulenames()+\
+                                               lazyimportmodules
     defaults['options']['py2app']['plist']['CFBundleHelpBookFolder']="BitPim Help"
     defaults['options']['py2app']['plist']['CFBundleHelpBookName']="BitPim Help"
     return defaults
 
 def getpy2exeoptions(defaults):
+    global lazyimportmodules
     defaults.update(
         {
         'windows': [{ 'script': 'src/bp.py', 'dest_base': 'bitpimw', }],
         'console': [{ 'script': 'src/bp.py', 'dest_base': 'bitpim', }],
         }
         )
-    defaults['options']['py2exe']['includes']=phones.getallmodulenames()
+    defaults['options']['py2exe']['includes']=phones.getallmodulenames()+\
+                                               lazyimportmodules
     defaults['options']['py2exe']['compressed']=0 # make setup.exe smaller but installed code larger
     return defaults
 

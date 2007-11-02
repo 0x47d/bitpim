@@ -4,6 +4,7 @@
     <ul>
       <LI><P>Improvement: Monthly Calendar Print: print one month per page.
       <LI><P>New Feature: Command Line Interface: <B>ls, ll, cp, and mkdir</B> commands.  See the <B>Help</B> pages for more details.
+      <LI><P>Bug fix: <B>Export SMS</B> menu throws exception.
     </ul>
 
    <h2><a name="1.0.2">Changes in 1.0.2</a></h2>

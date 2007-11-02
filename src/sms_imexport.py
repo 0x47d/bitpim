@@ -10,9 +10,9 @@
 "Deals with SMS import/export stuff"
 # System Module
 from __future__ import with_statement
-from email.Generator import Generator
-from email.MIMEText import MIMEText
-from email.Utils import formatdate
+from email.generator import Generator
+from email.mime.text import MIMEText
+from email.utils import formatdate
 
 # wxPython modules
 import wx
