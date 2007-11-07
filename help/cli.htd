@@ -21,10 +21,11 @@ python bp.py [CLI Command & Arguments] [-p comm port] [-f phone model]
 <P>The syntax for specifying local file and directory names is defined by the OS.
 <P>The syntax for specifying phone FS is as follows:
 <P><CODE><B>phone:/</B>[dir]<B>/</B>[dir]<B>/</B>...<B>/</B>[dir|file]</CODE>
-<P>Currently, the syntax does not support wildcard characters.
+<P>The directory name <B>"."</B> can be used to specify the current directory.<BR>
+Currently, this syntax does not support wildcard characters.
 <H2>Available Commands</H2>
 <H3>ls [dir name] ...</H3>
-List the names of the files and directories of the specified <CODE>dir name</CODE> on the phone file system.  The arguments specify one or more phone FS dir names.  The prefix <B><CODE>phones:</CODE></B> may be omitted from the directory names.  The file/directory names are listed one per line.
+List the names of the files and directories of the specified <CODE>dir name</CODE> on the phone file system.  The arguments specify one or more phone FS dir names.  The prefix <B><CODE>phone:</CODE></B> may be omitted from the directory names.  The file/directory names are listed one per line.
 <P>Examples:
 <P><CODE>bitpim "ls phone:/nvm /pim"</CODE><BR>
 lists the files and directories in phone FS dir "/nvm" and "/pim".
@@ -66,7 +67,34 @@ This command creates one or more directories on the phone FS.  The <B>[dir name]
 bitpim "mkdir tmp phone:/tmp/tmp1"<BR>
 </CODE>creates 2 directories on the phone FS: <B>tmp</B> and <B>tmp/tmp1</B>.
 
+<H3>rm [file name] ...</H3>
+This command deletes one or more files on the phone FS.  The arguments specify one or more phone FS file names.  All file are assumed to reside on the phone FS and the prefix <B><CODE>phone:</CODE></B> may be omitted from the file names.
+<P>Examples:
+<P><CODE>
+bitpim "rm file1.txt phone:file2.txt tmp/file3.txt"<BR>
+</CODE>delete file <B>file1.txt, file2.txt, tmp/file3.txt</B> from the phone FS.
+
+<H3>rmdir [dir name] ...</H3>
+This command deletes one or more directories on the phone FS.  The arguments specify one or more phone FS directory names.  All directories are assumed to reside on the phone FS, and the prefix <B>phone:</B> may be omitted.  The directories being deleted must be empty.
+<P>Examples:
+<P><CODE>
+bitpim "rmdir tmp phone:tmp1"<BR>
+</CODE>deletes directory <B>tmp</B> and <B>tmp1</B> from the phone FS.
+
 <H3>cli</H3>
-This command provides a primitive interactive BitPim shell that allows users to enter BitPim CLI commands and view the results.  Within the shell, enter <B>exit</B> to exit the shell.
+This command provides a primitive interactive BitPim shell that allows users to enter BitPim CLI commands and view the results.  There are several subcommands available only within the shell.  These subcommands are:
+
+<H4>cd [dir name]</H4>
+Change the current phone FS working directory to the specified one.  Non-full-path phone FS file names and directory names (name that do not start with <B>"/"</B>) specified in subsequent commands will be relative to the current working directory.  The prefix <B>phone:</B> may be omitted from the argument.
+
+<H4>cdu</H4>
+Change to current working directory to the parent directory.
+
+<H4>pwd<BR>
+cwd</H4>
+This command prints the name of the current workding directory.
+
+<H4>exit</H4>
+This command exits the shell and terminates the program.
 
 #include "pageend.h"

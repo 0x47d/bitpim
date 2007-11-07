@@ -17,6 +17,7 @@ import os
 
 # BitPim modules
 import bp_config
+import phones.com_brew as com_brew
 import common
 import commport
 import phones
@@ -27,7 +28,7 @@ NotImplemented_Error=2
 InvalidDir_Error=3
 DirExists_Error=4
 
-_commands=frozenset(('ls', 'll', 'cp', 'mkdir', 'cli'))
+_commands=frozenset(('ls', 'll', 'cp', 'mkdir', 'cli', 'rm'))
 
 def valid_command(arg):
     """Check of this arg is a valid command or not
@@ -75,10 +76,12 @@ class CLI(object):
             except KeyError:
                 raise PhoneModelError
             self.phone=self.phonemodule.Phone(self, self.commport)
-            self._pwd=''
+            self._pwd='/'
             self._in=file_in
             self._out=file_out
             self._err=file_err
+            # initialize the Brew file cache
+            com_brew.file_cache=com_brew.FileCache(self.config.Read('path', ''))
         except common.CommsOpenFailure:
             file_err.write('Error: Failed to open comm port %s\n'%_commport)
         except PhoneModelError:
@@ -97,11 +100,14 @@ class CLI(object):
         _res=[]
         for _item in args:
             if _item.startswith(self._phone_prefix):
-                _res.append({ 'name': '/'.join((self._pwd, _item[self._phone_prefix_len:])),
-                              'phonefs': True })
+                _dirname=_item[self._phone_prefix_len:]
+                _phonefs=True
             else:
-                _res.append({ 'name': _item,
-                              'phonefs': False or force_phonefs})
+                _dirname=_item
+                _phonefs=force_phonefs
+            if _phonefs and not _dirname.startswith('/'):
+                _dirname=self.phone.join(self._pwd, _dirname)
+            _res.append({ 'name': _dirname, 'phonefs': _phonefs })
         for _item in _res:
             if not _item['phonefs']:
                 _paths=_item['name'].split('/')
@@ -141,6 +147,8 @@ class CLI(object):
         @returns: (True, None) if successful, (False, error code) otherwise
         """
         _src=self._parse_args(args, force_phonefs=True)
+        if not _src:
+            _src=[{ 'name': self._pwd, 'phonefs': True }]
         for _dir in _src:
             try:
                 _dirlist=self.phone.getfilesystem(_dir['name'])
@@ -159,6 +167,8 @@ class CLI(object):
         @returns: (True, None) if successful, (False, error code) otherwise
         """
         _src=self._parse_args(args, force_phonefs=True)
+        if not _src:
+            _src=[{ 'name': self._pwd, 'phonefs': True }]
         for _dir in _src:
             try:
                 _dirlist=self.phone.getfilesystem(_dir['name'])
@@ -329,13 +339,80 @@ class CLI(object):
             # we're in our shell, bail
             return (True, None)
         self._inCLI=True
-        try:
-            while True:
-                self._out.write('BitPim>')
-                _cmdline=self._in.readline()
-                if _cmdline.startswith('exit'):
-                    break
-                self.run(_cmdline)
-        finally:
-            self._inCLI=False
-            return (True, None)
+##        try:
+        while True:
+            self._out.write('BitPim>')
+            _cmdline=self._in.readline()
+            if _cmdline.startswith('exit'):
+                break
+            self.run(_cmdline)
+##        finally:
+        self._inCLI=False
+        return (True, None)
+
+    def cd(self, args):
+        """Change the current working dir on the phone FS.
+        @param args: dir name(s), only args[0] matters.
+        @returns: (True, None) if successful, (False, error code) otherwise
+        """
+        _dirs=self._parse_args(args, force_phonefs=True)
+        if _dirs:
+            _dirname=_dirs[0]['name']
+            if self.phone.exists(_dirname):
+                self._pwd=_dirname
+            else:
+                self._out.write('Invalid dir: %s\n'%_dirname)
+        return self.pwd(args)
+    def cdu(self, args):
+        """Change to current working dir on the phone up one level (parent).
+        @param _: don't care
+        @returns: (True, None) if successful, (False, error code) otherwise
+        """
+        _updir=self.phone.dirname(self._pwd)
+        if _updir:
+            self._pwd=_updir
+        return self.pwd(args)
+
+    def pwd(self, _):
+        """Print the current working dir(cwd/pwd) on the phone FS.
+        @params _: don't care
+        @returns: (True, None)
+        """
+        self._out.write("%(name)s\n"%{ 'name': self._pwd })
+        return (True, None)
+    cwd=pwd
+
+    def rm(self, args):
+        """delete one or more files on the phone FS.  This command does not
+        delete local files.
+        @param args: file names
+        @returns: (True, None) if successful, (False, error code) otherwise.
+        """
+        _filenames=self._parse_args(args, force_phonefs=True)
+        for _item in _filenames:
+            _name=_item['name']
+            if self.phone.statfile(_name) and not self.phone.exists(_name):
+                self.phone.rmfile(_name)
+                self._out.write('File %(name)s deleted\n'%{ 'name': _name })
+            else:
+                self._out.write('Invalid file: %(name)s\n'%{ 'name': _name })
+
+    def rmdir(self, args):
+        """Delete one or more phone FS directories.  This command does not
+        delete local directories.
+        @param args: dir names.
+        @returns: (True, None) if successful, (False, error code) otherwise.
+        """
+        _dirnames=self._parse_args(args, force_phonefs=True)
+        for _item in _dirnames:
+            _name=_item['name']
+            if self.phone.exists(_name):
+                # this is  a dir, check for empty
+                if self.phone.hassubdirs(_name) or \
+                   self.phone.listfiles(_name):
+                    self._out.write('Dir %(name)s is not empty.\n'%{'name': _name })
+                else:
+                    self.phone.rmdirs(_name)
+                    self._out.write('Dir %(name)s deleted.\n'% { 'name': _name })
+            else:
+                self._out.write('Invalid dir: %(name)s\n'%{ 'name': _name})

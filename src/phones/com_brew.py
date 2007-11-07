@@ -439,11 +439,15 @@ class RealBrewProtocol:
     def dirname(self, filename):
         # return the dir name of the filename, does not check on whether
         # the file exists.
-        return '/'.join([x for x in filename.split('/') if x][:-1])
+        _dirs=[x for x in filename.split('/') if x]
+        if len(_dirs)<2:
+            # either / or /name
+            return '/'
+        return '/'.join(_dirs[:-1])
 
     def join(self, *args):
         # join the dir/file components and return the full path name
-        return '/'.join(args)
+        return '/'.join([x.strip('/') for x in args])
 
     def listsubdirs(self, dir='', recurse=0):
         results={}
