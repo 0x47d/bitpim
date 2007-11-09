@@ -434,7 +434,10 @@ class RealBrewProtocol:
     def basename(self, path):
         # return the basename of the path, does not check on whether the path
         # exists.
-        return [x for x in path.split('/') if x][-1]
+        _dirs=[x for x in path.split('/') if x]
+        if _dirs:
+            return _dirs[-1]
+        return ''
 
     def dirname(self, filename):
         # return the dir name of the filename, does not check on whether

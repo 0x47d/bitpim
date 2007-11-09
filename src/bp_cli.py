@@ -13,7 +13,9 @@
 from __future__ import with_statement
 
 # System modules
+import fnmatch
 import os
+import re
 
 # BitPim modules
 import bp_config
@@ -29,6 +31,7 @@ InvalidDir_Error=3
 DirExists_Error=4
 
 _commands=frozenset(('ls', 'll', 'cp', 'mkdir', 'cli', 'rm'))
+wildcards=re.compile('.*[\*+|\?+]')
 
 def valid_command(arg):
     """Check of this arg is a valid command or not
@@ -107,11 +110,22 @@ class CLI(object):
                 _phonefs=force_phonefs
             if _phonefs and not _dirname.startswith('/'):
                 _dirname=self.phone.join(self._pwd, _dirname)
-            _res.append({ 'name': _dirname, 'phonefs': _phonefs })
-        for _item in _res:
-            if not _item['phonefs']:
-                _paths=_item['name'].split('/')
-                _item['path']=os.path.join(*_paths)
+            # check for wildcards
+            global wildcards
+            _name=self.phone.basename(_dirname)
+            if wildcards.match(_name):
+                _dirname=self.phone.dirname(_dirname)
+                _wildcard=_name
+            else:
+                _wildcard=None
+            # correct path
+            if _phonefs:
+                _path=None
+            else:
+                _path=os.path.join(_dirname.split('/'))
+            _res.append({ 'name': _dirname, 'phonefs': _phonefs,
+                          'wildcard': _wildcard,
+                          'path': _path })
         return _res
         
     def run(self, cmdline=None):
@@ -148,13 +162,16 @@ class CLI(object):
         """
         _src=self._parse_args(args, force_phonefs=True)
         if not _src:
-            _src=[{ 'name': self._pwd, 'phonefs': True }]
+            _src=[{ 'name': self._pwd, 'phonefs': True,
+            'path': None, 'wildcard': None }]
         for _dir in _src:
             try:
                 _dirlist=self.phone.getfilesystem(_dir['name'])
                 self._out.write('%s:\n'%_dir['name'])
                 for _,_file in _dirlist.items():
-                    self._out.write('%s\n'%_file['name'])
+                    if _dir['wildcard'] is None or \
+                       fnmatch.fnmatch(self.phone.basename(_file['name']), _dir['wildcard']):
+                        self._out.write('%s\n'%_file['name'])
             except (phones.com_brew.BrewNoSuchDirectoryException,
                     phones.com_brew.BrewBadPathnameException):
                 self._out.write('Error: cannot access %s: no such file or directory\n'%_dir['name'])
@@ -168,7 +185,8 @@ class CLI(object):
         """
         _src=self._parse_args(args, force_phonefs=True)
         if not _src:
-            _src=[{ 'name': self._pwd, 'phonefs': True }]
+            _src=[{ 'name': self._pwd, 'phonefs': True, 'path': None,
+                    'wildcard': None }]
         for _dir in _src:
             try:
                 _dirlist=self.phone.getfilesystem(_dir['name'])
@@ -183,15 +201,17 @@ class CLI(object):
                             { 'maxdatelen': _maxdatelen,
                               'maxsizelen': len(str(_maxsize)) }
                 for _,_file in _dirlist.items():
-                    _strdict={ 'name': _file['name'] }
-                    if _file['type']=='file':
-                        _strdict['dir']=''
-                        _strdict['size']=str(_file['size'])
-                    else:
-                        _strdict['dir']='d'
-                        _strdict['size']=''
-                    _strdict['date']=_file.get('date', (0, ''))[1]
-                    self._out.write(_formatstr%_strdict)
+                    if _dir['wildcard'] is None or \
+                       fnmatch.fnmatch(self.phone.basename(_file['name']), _dir['wildcard']):
+                        _strdict={ 'name': _file['name'] }
+                        if _file['type']=='file':
+                            _strdict['dir']=''
+                            _strdict['size']=str(_file['size'])
+                        else:
+                            _strdict['dir']='d'
+                            _strdict['size']=''
+                        _strdict['date']=_file.get('date', (0, ''))[1]
+                        self._out.write(_formatstr%_strdict)
             except (phones.com_brew.BrewNoSuchDirectoryException,
                     phones.com_brew.BrewBadPathnameException):
                 self._out.write('Error: cannot access %s: no such file or directory\n'%_dir['name'])
@@ -205,9 +225,11 @@ class CLI(object):
             f.write(self.phone.getfilecontents(filename))
             self._out.write('Copied file %(srcname)s to %(dirname)s\n'% { 'srcname': filename,
                                                                           'dirname': destdir})
-    def _cpdirfromphone(self, dirname, destdir):
+    def _cpdirfromphone(self, dirname, destdir, wildcard):
         # copy all files under a phone dir to the dest dir
         for _, _item in self.phone.listfiles(dirname).items():
+            if wildcard is None or \
+               fnmatch.fnmatch(self.phone.basename(_item['name']), wildcard):
             self._cpfilefromphone(_item['name'], destdir)
 
     def _cpfromphone(self, args):
@@ -220,7 +242,7 @@ class CLI(object):
             _name=_item['name']
             if self.phone.exists(_name):
                 # this is a dir, cp all files under it
-                self._cpdirfromphone(_name, _destdir)
+                self._cpdirfromphone(_name, _destdir, _item['wildcard'])
             elif self.phone.statfile(_name):
                 # this is a file, just copy it
                 self._cpfilefromphone(_name, _destdir)

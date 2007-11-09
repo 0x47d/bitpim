@@ -85,10 +85,10 @@ bitpim "rmdir tmp phone:tmp1"<BR>
 This command provides a primitive interactive BitPim shell that allows users to enter BitPim CLI commands and view the results.  There are several subcommands available only within the shell.  These subcommands are:
 
 <H4>cd [dir name]</H4>
-Change the current phone FS working directory to the specified one.  Non-full-path phone FS file names and directory names (name that do not start with <B>"/"</B>) specified in subsequent commands will be relative to the current working directory.  The prefix <B>phone:</B> may be omitted from the argument.
+This command sets the current phone FS working directory to the specified one.  Non-full-path phone FS file names and directory names (name that do not start with <B>"/"</B>) specified in subsequent commands will be relative to the current working directory.  The prefix <B>phone:</B> may be omitted from the argument.
 
 <H4>cdu</H4>
-Change to current working directory to the parent directory.
+This command sets the current working directory to the parent directory.
 
 <H4>pwd<BR>
 cwd</H4>
