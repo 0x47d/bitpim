@@ -230,7 +230,7 @@ class CLI(object):
         for _, _item in self.phone.listfiles(dirname).items():
             if wildcard is None or \
                fnmatch.fnmatch(self.phone.basename(_item['name']), wildcard):
-            self._cpfilefromphone(_item['name'], destdir)
+                self._cpfilefromphone(_item['name'], destdir)
 
     def _cpfromphone(self, args):
         # copy files from the phone
