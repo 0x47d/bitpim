@@ -53,6 +53,9 @@ class DateTime(prototypes.UINTlsb):
         """
         val=super(DateTime, self).getvalue()
         return time.gmtime(val+self._time_delta)[:5]
+    @classmethod
+    def now(_):
+        return time.localtime()[:5]
 
 class DateTime1(DateTime):
     # similar to DateTime, except getvalue includes seconds
