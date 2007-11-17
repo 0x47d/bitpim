@@ -35,6 +35,11 @@ URLTYPE=8
 UINT=UINTlsb
 BOOL=BOOLlsb
 
+AMSREGISTRY="ams/AmsRegistry"
+ENDTRANSACTION="ams/EndTransaction"
+RINGERPREFIX="ams/Ringers/cnts"
+WALLPAPERPREFIX="ams/Screen Savers/cnts"
+
 %}
 
 PACKET pbslot:

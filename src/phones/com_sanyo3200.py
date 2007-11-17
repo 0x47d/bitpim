@@ -25,6 +25,7 @@ import com_sanyo
 import com_sanyomedia
 import com_sanyonewer
 import com_sanyo3100
+import com_sanyo8300
 import prototypes
 import bpcalendar
 import call_history

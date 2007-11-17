@@ -26,6 +26,11 @@ URLTYPE=8
 UINT=UINTlsb
 BOOL=BOOLlsb
 
+AMSREGISTRY="ams/AmsRegistry"
+ENDTRANSACTION="ams/EndTransaction"
+RINGERPREFIX="ams/Ringers/cnts"
+WALLPAPERPREFIX="ams/Screen Savers/cnts"
+
 class pbslot(BaseProtogenClass):
     __fields=['valid', 'pbbook_index', 'c0', 'timestamp', 'pad']
 
@@ -1086,7 +1091,7 @@ class amsregistry(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_dunno0=DATA(**{'sizeinbytes': 900})
         self.__field_dunno0.readfrombuffer(buf)
-        self.__field_info=LIST(**{'elementclass': _gen_p_samsungsphm300_100, 'length': 320})
+        self.__field_info=LIST(**{'elementclass': _gen_p_samsungsphm300_105, 'length': 320})
         self.__field_info.readfrombuffer(buf)
         self.__field_dunno1=DATA(**{'sizeinbytes': 2000})
         self.__field_dunno1.readfrombuffer(buf)
@@ -1121,7 +1126,7 @@ class amsregistry(BaseProtogenClass):
         if isinstance(value,LIST):
             self.__field_info=value
         else:
-            self.__field_info=LIST(value,**{'elementclass': _gen_p_samsungsphm300_100, 'length': 320})
+            self.__field_info=LIST(value,**{'elementclass': _gen_p_samsungsphm300_105, 'length': 320})
 
     def __delfield_info(self): del self.__field_info
 
@@ -1205,7 +1210,7 @@ class amsregistry(BaseProtogenClass):
         yield ('dunno3', self.__field_dunno3, None)
 
     def getstring(self, ptr):
-        #Return the 0-terminated string starting index ptr from field strings
+        # Return the 0-terminated string starting index ptr from field strings
         try:
             return self.strings[ptr:self.strings.index('\x00', ptr)]
         except ValueError:
@@ -1224,7 +1229,7 @@ class amsregistry(BaseProtogenClass):
 
 
 
-class _gen_p_samsungsphm300_100(BaseProtogenClass):
+class _gen_p_samsungsphm300_105(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['dir_ptr', 'num2', 'name_ptr', 'version_ptr', 'vendor_ptr', 'downloaddomain_ptr', 'num7', 'filetype', 'mimetype_ptr', 'num12']
 
@@ -1233,8 +1238,8 @@ class _gen_p_samsungsphm300_100(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_samsungsphm300_100,self).__init__(**dict)
-        if self.__class__ is _gen_p_samsungsphm300_100:
+        super(_gen_p_samsungsphm300_105,self).__init__(**dict)
+        if self.__class__ is _gen_p_samsungsphm300_105:
             self._update(args,dict)
 
 
@@ -1243,7 +1248,7 @@ class _gen_p_samsungsphm300_100(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_samsungsphm300_100,self)._update(args,kwargs)
+        super(_gen_p_samsungsphm300_105,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -1251,7 +1256,7 @@ class _gen_p_samsungsphm300_100(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_samsungsphm300_100,kwargs)
+            self._complainaboutunusedargs(_gen_p_samsungsphm300_105,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
 
