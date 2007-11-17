@@ -117,3 +117,13 @@ PACKET scheduleevent:
 PACKET schedulefile:
     2 UINT numactiveitems
     * LIST {'elementclass': scheduleevent} +events
+
+PACKET textmemo:
+    4 GPSDATE { 'default': GPSDATE.now() } +cdate
+    304 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False } text
+    4 LGCALDATE memotime # time the memo was writen LG time
+    3 UNKNOWN zeros
+
+PACKET textmemofile:
+    4 UINT itemcount
+    * LIST { 'elementclass': textmemo } +items
