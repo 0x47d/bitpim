@@ -17,10 +17,13 @@ max_pb_slots=312
 max_pb_entries=312
 user_pb_entry_range=xrange(1, 301)
 max_number_entries=312
+max_media_index_entries=302
 
 slot_file_name='nvm/nvm/pclink_tbl'
 pb_file_name='nvm/nvm/dial_tbl'
 number_file_name='nvm/nvm/dial'
+ringer_index_file_name='nvm/nvm/name_ring'
+wallpaper_index_file_name='nvm/nvm/avatar'
 
 # Number type
 CELLTYPE=1
@@ -39,6 +42,20 @@ AMSREGISTRY="ams/AmsRegistry"
 ENDTRANSACTION="ams/EndTransaction"
 RINGERPREFIX="ams/Ringers/cnts"
 WALLPAPERPREFIX="ams/Screen Savers/cnts"
+
+FILETYPE_RINGER=12
+FILETYPE_WALLPAPER=13
+FILETYPE_APP=16
+exts={
+    'audio/vnd.qcelp': '.qcp',
+    'audio/midi': '.mid',
+    'application/x-pmd': '.pmd',
+    'audio/mpeg': '.mp3',
+    'image/jpeg': '.jpeg',
+    'image/png': '.png',
+    'image/gif': '.gif',
+    'image/bmp': '.bmp',
+    }
 
 %}
 
@@ -110,8 +127,9 @@ PACKET amsregistry:
         2 UINT downloaddomain_ptr
         8 DATA num7
         2 UINT filetype "12: Ringer, 13 Screen Saver, 15 Apps"
+        2 DATA num8
         2 UINT mimetype_ptr
-        12 DATA num12
+        10 DATA num12
     2000 DATA dunno1
     23000 DATA strings
     4 UINT dunno2
@@ -134,4 +152,46 @@ PACKET amsregistry:
         return self.getstring(self.info[idx].version_ptr)
     def vendor(self, idx):
         return self.getstring(self.info[idx].vendor_ptr)
+    def filename(self, idx):
+        # return the file name of this item
+        global exts
+        return self.name(idx)+exts.get(self.mimetype(idx), '')
+    def filepath(self, idx):
+        # return the full pathname of this item
+        return 'ams/'+self.dir(idx)
     %}
+
+PACKET CamFile:
+    4 UINT dunno0
+    1 UINT dunno1
+    16 USTRING { 'pascal': True,
+                 'terminator': None} caption
+    1 UINT dunno2
+    2 DATA dunno3
+    4 DateTime datetime
+    1 UINT dunno4
+    99 DATA pad
+    * DATA jpeg
+    %{
+    def _filename(self):
+        return '%(year)04d%(month)02d%(day)02d_%(name)s.jpg'%\
+               { 'year': self.datetime[0],
+                 'month': self.datetime[1],
+                 'day': self.datetime[2],
+                 'name': self.caption,
+                 }
+    filename=property(fget=_filename)
+    def save(self, filename=None):
+        # save the jpeg data to a file        
+        return file(filename if filename else self.filename, 'wb').write(self.jpeg)
+    %}
+
+PACKET IndexSlot:
+    1 UINT { 'default': 0 } +valid "=1 if valid slot"
+    1 UINT { 'default': 0 } +group "Group Index"
+    1 UINT { 'default': 0 } +index "Media Index"
+
+PACKET IndexFile:
+    * LIST { 'elementclass': IndexSlot,
+             'length': max_media_index_entries,
+             'createdefault': True } +entry

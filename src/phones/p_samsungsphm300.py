@@ -31,6 +31,20 @@ ENDTRANSACTION="ams/EndTransaction"
 RINGERPREFIX="ams/Ringers/cnts"
 WALLPAPERPREFIX="ams/Screen Savers/cnts"
 
+FILETYPE_RINGER=12
+FILETYPE_WALLPAPER=13
+FILETYPE_APP=16
+exts={
+    'audio/vnd.qcelp': '.qcp',
+    'audio/midi': '.mid',
+    'application/x-pmd': '.pmd',
+    'audio/mpeg': '.mp3',
+    'image/jpeg': '.jpeg',
+    'image/png': '.png',
+    'image/gif': '.gif',
+    'image/bmp': '.bmp',
+    }
+
 class pbslot(BaseProtogenClass):
     __fields=['valid', 'pbbook_index', 'c0', 'timestamp', 'pad']
 
@@ -1091,7 +1105,7 @@ class amsregistry(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_dunno0=DATA(**{'sizeinbytes': 900})
         self.__field_dunno0.readfrombuffer(buf)
-        self.__field_info=LIST(**{'elementclass': _gen_p_samsungsphm300_105, 'length': 320})
+        self.__field_info=LIST(**{'elementclass': _gen_p_samsungsphm300_119, 'length': 320})
         self.__field_info.readfrombuffer(buf)
         self.__field_dunno1=DATA(**{'sizeinbytes': 2000})
         self.__field_dunno1.readfrombuffer(buf)
@@ -1126,7 +1140,7 @@ class amsregistry(BaseProtogenClass):
         if isinstance(value,LIST):
             self.__field_info=value
         else:
-            self.__field_info=LIST(value,**{'elementclass': _gen_p_samsungsphm300_105, 'length': 320})
+            self.__field_info=LIST(value,**{'elementclass': _gen_p_samsungsphm300_119, 'length': 320})
 
     def __delfield_info(self): del self.__field_info
 
@@ -1225,21 +1239,28 @@ class amsregistry(BaseProtogenClass):
         return self.getstring(self.info[idx].version_ptr)
     def vendor(self, idx):
         return self.getstring(self.info[idx].vendor_ptr)
+    def filename(self, idx):
+        # return the file name of this item
+        global exts
+        return self.name(idx)+exts.get(self.mimetype(idx), '')
+    def filepath(self, idx):
+        # return the full pathname of this item
+        return 'ams/'+self.dir(idx)
 
 
 
 
-class _gen_p_samsungsphm300_105(BaseProtogenClass):
+class _gen_p_samsungsphm300_119(BaseProtogenClass):
     'Anonymous inner class'
-    __fields=['dir_ptr', 'num2', 'name_ptr', 'version_ptr', 'vendor_ptr', 'downloaddomain_ptr', 'num7', 'filetype', 'mimetype_ptr', 'num12']
+    __fields=['dir_ptr', 'num2', 'name_ptr', 'version_ptr', 'vendor_ptr', 'downloaddomain_ptr', 'num7', 'filetype', 'num8', 'mimetype_ptr', 'num12']
 
     def __init__(self, *args, **kwargs):
         dict={}
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_samsungsphm300_105,self).__init__(**dict)
-        if self.__class__ is _gen_p_samsungsphm300_105:
+        super(_gen_p_samsungsphm300_119,self).__init__(**dict)
+        if self.__class__ is _gen_p_samsungsphm300_119:
             self._update(args,dict)
 
 
@@ -1248,7 +1269,7 @@ class _gen_p_samsungsphm300_105(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_samsungsphm300_105,self)._update(args,kwargs)
+        super(_gen_p_samsungsphm300_119,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -1256,7 +1277,7 @@ class _gen_p_samsungsphm300_105(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_samsungsphm300_105,kwargs)
+            self._complainaboutunusedargs(_gen_p_samsungsphm300_119,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
 
@@ -1272,6 +1293,7 @@ class _gen_p_samsungsphm300_105(BaseProtogenClass):
         self.__field_downloaddomain_ptr.writetobuffer(buf)
         self.__field_num7.writetobuffer(buf)
         self.__field_filetype.writetobuffer(buf)
+        self.__field_num8.writetobuffer(buf)
         self.__field_mimetype_ptr.writetobuffer(buf)
         self.__field_num12.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -1298,9 +1320,11 @@ class _gen_p_samsungsphm300_105(BaseProtogenClass):
         self.__field_num7.readfrombuffer(buf)
         self.__field_filetype=UINT(**{'sizeinbytes': 2})
         self.__field_filetype.readfrombuffer(buf)
+        self.__field_num8=DATA(**{'sizeinbytes': 2})
+        self.__field_num8.readfrombuffer(buf)
         self.__field_mimetype_ptr=UINT(**{'sizeinbytes': 2})
         self.__field_mimetype_ptr.readfrombuffer(buf)
-        self.__field_num12=DATA(**{'sizeinbytes': 12})
+        self.__field_num12=DATA(**{'sizeinbytes': 10})
         self.__field_num12.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -1409,6 +1433,19 @@ class _gen_p_samsungsphm300_105(BaseProtogenClass):
 
     filetype=property(__getfield_filetype, __setfield_filetype, __delfield_filetype, "12: Ringer, 13 Screen Saver, 15 Apps")
 
+    def __getfield_num8(self):
+        return self.__field_num8.getvalue()
+
+    def __setfield_num8(self, value):
+        if isinstance(value,DATA):
+            self.__field_num8=value
+        else:
+            self.__field_num8=DATA(value,**{'sizeinbytes': 2})
+
+    def __delfield_num8(self): del self.__field_num8
+
+    num8=property(__getfield_num8, __setfield_num8, __delfield_num8, None)
+
     def __getfield_mimetype_ptr(self):
         return self.__field_mimetype_ptr.getvalue()
 
@@ -1429,7 +1466,7 @@ class _gen_p_samsungsphm300_105(BaseProtogenClass):
         if isinstance(value,DATA):
             self.__field_num12=value
         else:
-            self.__field_num12=DATA(value,**{'sizeinbytes': 12})
+            self.__field_num12=DATA(value,**{'sizeinbytes': 10})
 
     def __delfield_num12(self): del self.__field_num12
 
@@ -1447,8 +1484,227 @@ class _gen_p_samsungsphm300_105(BaseProtogenClass):
         yield ('downloaddomain_ptr', self.__field_downloaddomain_ptr, None)
         yield ('num7', self.__field_num7, None)
         yield ('filetype', self.__field_filetype, "12: Ringer, 13 Screen Saver, 15 Apps")
+        yield ('num8', self.__field_num8, None)
         yield ('mimetype_ptr', self.__field_mimetype_ptr, None)
         yield ('num12', self.__field_num12, None)
+
+
+
+
+class CamFile(BaseProtogenClass):
+    __fields=['dunno0', 'dunno1', 'caption', 'dunno2', 'dunno3', 'datetime', 'dunno4', 'pad', 'jpeg']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(CamFile,self).__init__(**dict)
+        if self.__class__ is CamFile:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(CamFile,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(CamFile,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_dunno0.writetobuffer(buf)
+        self.__field_dunno1.writetobuffer(buf)
+        self.__field_caption.writetobuffer(buf)
+        self.__field_dunno2.writetobuffer(buf)
+        self.__field_dunno3.writetobuffer(buf)
+        self.__field_datetime.writetobuffer(buf)
+        self.__field_dunno4.writetobuffer(buf)
+        self.__field_pad.writetobuffer(buf)
+        self.__field_jpeg.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_dunno0=UINT(**{'sizeinbytes': 4})
+        self.__field_dunno0.readfrombuffer(buf)
+        self.__field_dunno1=UINT(**{'sizeinbytes': 1})
+        self.__field_dunno1.readfrombuffer(buf)
+        self.__field_caption=USTRING(**{'sizeinbytes': 16,  'pascal': True,                 'terminator': None})
+        self.__field_caption.readfrombuffer(buf)
+        self.__field_dunno2=UINT(**{'sizeinbytes': 1})
+        self.__field_dunno2.readfrombuffer(buf)
+        self.__field_dunno3=DATA(**{'sizeinbytes': 2})
+        self.__field_dunno3.readfrombuffer(buf)
+        self.__field_datetime=DateTime(**{'sizeinbytes': 4})
+        self.__field_datetime.readfrombuffer(buf)
+        self.__field_dunno4=UINT(**{'sizeinbytes': 1})
+        self.__field_dunno4.readfrombuffer(buf)
+        self.__field_pad=DATA(**{'sizeinbytes': 99})
+        self.__field_pad.readfrombuffer(buf)
+        self.__field_jpeg=DATA()
+        self.__field_jpeg.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_dunno0(self):
+        return self.__field_dunno0.getvalue()
+
+    def __setfield_dunno0(self, value):
+        if isinstance(value,UINT):
+            self.__field_dunno0=value
+        else:
+            self.__field_dunno0=UINT(value,**{'sizeinbytes': 4})
+
+    def __delfield_dunno0(self): del self.__field_dunno0
+
+    dunno0=property(__getfield_dunno0, __setfield_dunno0, __delfield_dunno0, None)
+
+    def __getfield_dunno1(self):
+        return self.__field_dunno1.getvalue()
+
+    def __setfield_dunno1(self, value):
+        if isinstance(value,UINT):
+            self.__field_dunno1=value
+        else:
+            self.__field_dunno1=UINT(value,**{'sizeinbytes': 1})
+
+    def __delfield_dunno1(self): del self.__field_dunno1
+
+    dunno1=property(__getfield_dunno1, __setfield_dunno1, __delfield_dunno1, None)
+
+    def __getfield_caption(self):
+        return self.__field_caption.getvalue()
+
+    def __setfield_caption(self, value):
+        if isinstance(value,USTRING):
+            self.__field_caption=value
+        else:
+            self.__field_caption=USTRING(value,**{'sizeinbytes': 16,  'pascal': True,                 'terminator': None})
+
+    def __delfield_caption(self): del self.__field_caption
+
+    caption=property(__getfield_caption, __setfield_caption, __delfield_caption, None)
+
+    def __getfield_dunno2(self):
+        return self.__field_dunno2.getvalue()
+
+    def __setfield_dunno2(self, value):
+        if isinstance(value,UINT):
+            self.__field_dunno2=value
+        else:
+            self.__field_dunno2=UINT(value,**{'sizeinbytes': 1})
+
+    def __delfield_dunno2(self): del self.__field_dunno2
+
+    dunno2=property(__getfield_dunno2, __setfield_dunno2, __delfield_dunno2, None)
+
+    def __getfield_dunno3(self):
+        return self.__field_dunno3.getvalue()
+
+    def __setfield_dunno3(self, value):
+        if isinstance(value,DATA):
+            self.__field_dunno3=value
+        else:
+            self.__field_dunno3=DATA(value,**{'sizeinbytes': 2})
+
+    def __delfield_dunno3(self): del self.__field_dunno3
+
+    dunno3=property(__getfield_dunno3, __setfield_dunno3, __delfield_dunno3, None)
+
+    def __getfield_datetime(self):
+        return self.__field_datetime.getvalue()
+
+    def __setfield_datetime(self, value):
+        if isinstance(value,DateTime):
+            self.__field_datetime=value
+        else:
+            self.__field_datetime=DateTime(value,**{'sizeinbytes': 4})
+
+    def __delfield_datetime(self): del self.__field_datetime
+
+    datetime=property(__getfield_datetime, __setfield_datetime, __delfield_datetime, None)
+
+    def __getfield_dunno4(self):
+        return self.__field_dunno4.getvalue()
+
+    def __setfield_dunno4(self, value):
+        if isinstance(value,UINT):
+            self.__field_dunno4=value
+        else:
+            self.__field_dunno4=UINT(value,**{'sizeinbytes': 1})
+
+    def __delfield_dunno4(self): del self.__field_dunno4
+
+    dunno4=property(__getfield_dunno4, __setfield_dunno4, __delfield_dunno4, None)
+
+    def __getfield_pad(self):
+        return self.__field_pad.getvalue()
+
+    def __setfield_pad(self, value):
+        if isinstance(value,DATA):
+            self.__field_pad=value
+        else:
+            self.__field_pad=DATA(value,**{'sizeinbytes': 99})
+
+    def __delfield_pad(self): del self.__field_pad
+
+    pad=property(__getfield_pad, __setfield_pad, __delfield_pad, None)
+
+    def __getfield_jpeg(self):
+        return self.__field_jpeg.getvalue()
+
+    def __setfield_jpeg(self, value):
+        if isinstance(value,DATA):
+            self.__field_jpeg=value
+        else:
+            self.__field_jpeg=DATA(value,)
+
+    def __delfield_jpeg(self): del self.__field_jpeg
+
+    jpeg=property(__getfield_jpeg, __setfield_jpeg, __delfield_jpeg, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('dunno0', self.__field_dunno0, None)
+        yield ('dunno1', self.__field_dunno1, None)
+        yield ('caption', self.__field_caption, None)
+        yield ('dunno2', self.__field_dunno2, None)
+        yield ('dunno3', self.__field_dunno3, None)
+        yield ('datetime', self.__field_datetime, None)
+        yield ('dunno4', self.__field_dunno4, None)
+        yield ('pad', self.__field_pad, None)
+        yield ('jpeg', self.__field_jpeg, None)
+
+    def _filename(self):
+        return '%(year)04d%(month)02d%(day)02d_%(name)s.jpg'%\
+               { 'year': self.datetime[0],
+                 'month': self.datetime[1],
+                 'day': self.datetime[2],
+                 'name': self.caption,
+                 }
+    filename=property(fget=_filename)
+    def save(self, filename=None):
+        # save the jpeg data to a file        
+        return file(filename if filename else self.filename, 'wb').write(self.jpeg)
 
 
 
