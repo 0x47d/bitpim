@@ -12,18 +12,24 @@
 
 from prototypes import *
 from prototypes_samsung import *
+from p_samsung_packet import *
+
+NUMPHONENUMBERS=5
+NUMPHONEBOOKENTRIES=300
 
 max_pb_slots=312
 max_pb_entries=312
 user_pb_entry_range=xrange(1, 301)
 max_number_entries=312
 max_media_index_entries=302
+max_group_entries=6
 
 slot_file_name='nvm/nvm/pclink_tbl'
 pb_file_name='nvm/nvm/dial_tbl'
 number_file_name='nvm/nvm/dial'
 ringer_index_file_name='nvm/nvm/name_ring'
 wallpaper_index_file_name='nvm/nvm/avatar'
+group_file_name='nvm/nvm/group'
 
 # Number type
 CELLTYPE=1
@@ -59,7 +65,36 @@ exts={
 
 %}
 
-PACKET pbslot:
+# Packets describe single line AT responses or commands with no carriage
+# returns or line feeds.
+
+PACKET pbentry:
+    * CSVINT slot "Internal Slot"
+    * CSVINT uslot "User Slot, Speed dial"
+    * CSVINT group
+    * CSVINT {'default': 20} +ringtone
+    * CSVSTRING name
+    * CSVINT speeddial "Which phone number assigned to speed dial uslot"
+    * CSVINT {'default': 0} +dunno1
+    * LIST {'length': NUMPHONENUMBERS, 'createdefault': True, 'elementclass': phonenumber} +numbers
+    * CSVSTRING {'quotechar': None, 'default': ""} +dunno3
+    * CSVSTRING {'quotechar': None, 'default': ""} +dunno4
+    * CSVSTRING email
+    * CSVSTRING url
+    * CSVSTRING {'quotechar': None, 'default': ""} +dunno5
+    * CSVINT {'default': 20} +wallpaper
+    * CSVTIME {'terminator': None,
+               'default': DateTime.now()+(0,) } +timestamp "Use terminator None for last item"
+
+PACKET phonebookslotresponse:
+    * CSVSTRING {'quotechar': None, 'terminator': ord(' '), 'constant': '#PBOKR:'} command
+    * pbentry entry
+
+PACKET phonebookslotupdaterequest:
+    * CSVSTRING {'quotechar': None, 'terminator': None, 'default': '#PBOKW=0,'} +command
+    * pbentry entry
+
+PACKET fspbslot:
     1  UINT { 'default': 0 } +valid "1=valid entry"
     2  UINT { 'default': 0 } +pbbook_index "index into pbbook"
     if self.valid:
@@ -68,10 +103,10 @@ PACKET pbslot:
     else:
         6 DATA { 'default': '\x00'*6 } +pad
 
-PACKET pbslots:
-    *  LIST { 'length': max_pb_slots, 'elementclass': pbslot } +slot
+PACKET fspbslots:
+    *  LIST { 'length': max_pb_slots, 'elementclass': fspbslot } +slot
 
-PACKET pbentry:
+PACKET fspbentry:
     1  UINT { 'default': 0 } +valid "1=valid entry"
     if self.valid:
         2  UINT { 'default': 0x01BF } +c1
@@ -98,12 +133,12 @@ PACKET pbentry:
                  'default': '' } +memo # users see max 72
     13 DATA { 'default': '\x00'*13 } +pad
 
-PACKET pbbook:
+PACKET fspbbook:
     *  LIST  { 'length': max_pb_entries,
-               'elementclass': pbentry,
+               'elementclass': fspbentry,
                'createdefault': True } +entry
 
-PACKET number:
+PACKET fsnumber:
     2   UINT { 'default': 0 } +valid "1=valid entry"
     4   UINT { 'default': 0 } +c0
     74  USTRING { 'pascal': True,
@@ -111,9 +146,9 @@ PACKET number:
                   'default': '' } +name
     1   UINT { 'default': 0 } +number_type
 
-PACKET numbers:
+PACKET fsnumbers:
     *  LIST { 'length': max_number_entries,
-              'elementclass': number,
+              'elementclass': fsnumber,
               'createdefault': True } +entry
 
 PACKET amsregistry:
@@ -194,4 +229,23 @@ PACKET IndexSlot:
 PACKET IndexFile:
     * LIST { 'elementclass': IndexSlot,
              'length': max_media_index_entries,
+             'createdefault': True } +entry
+
+PACKET Group:
+    1 UINT { 'default': 0 } +num0
+    1 UINT { 'default': 1 if self.num0 else 0 } +num1
+    2 UINT { 'default': len(self.name) } +namelen
+    12 USTRING { 'terminator': None,
+                 'default': '' } +name
+    1 UINT { 'default': 0x30 if self.num0 else 0 } +num5
+    8 DATA { 'default': '\x00'*8 } +dunno
+    1 UINT { 'default': 1 if self.num0 else 0 } +nume3
+    if self.num0:
+        4 DateTime { 'default': DateTime.now() } +datetime
+    else:
+        4 UINT { 'default': 0 } +num4
+
+PACKET GroupFile:
+    * LIST { 'elementclass': Group,
+             'length': max_group_entries,
              'createdefault': True } +entry

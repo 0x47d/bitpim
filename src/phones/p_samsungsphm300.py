@@ -3,15 +3,24 @@
 
 from prototypes import *
 from prototypes_samsung import *
+from p_samsung_packet import *
+
+NUMPHONENUMBERS=5
+NUMPHONEBOOKENTRIES=300
 
 max_pb_slots=312
 max_pb_entries=312
 user_pb_entry_range=xrange(1, 301)
 max_number_entries=312
+max_media_index_entries=302
+max_group_entries=6
 
 slot_file_name='nvm/nvm/pclink_tbl'
 pb_file_name='nvm/nvm/dial_tbl'
 number_file_name='nvm/nvm/dial'
+ringer_index_file_name='nvm/nvm/name_ring'
+wallpaper_index_file_name='nvm/nvm/avatar'
+group_file_name='nvm/nvm/group'
 
 # Number type
 CELLTYPE=1
@@ -45,16 +54,16 @@ exts={
     'image/bmp': '.bmp',
     }
 
-class pbslot(BaseProtogenClass):
-    __fields=['valid', 'pbbook_index', 'c0', 'timestamp', 'pad']
+class pbentry(BaseProtogenClass):
+    __fields=['slot', 'uslot', 'group', 'ringtone', 'name', 'speeddial', 'dunno1', 'numbers', 'dunno3', 'dunno4', 'email', 'url', 'dunno5', 'wallpaper', 'timestamp']
 
     def __init__(self, *args, **kwargs):
         dict={}
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(pbslot,self).__init__(**dict)
-        if self.__class__ is pbslot:
+        super(pbentry,self).__init__(**dict)
+        if self.__class__ is pbentry:
             self._update(args,dict)
 
 
@@ -63,7 +72,7 @@ class pbslot(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(pbslot,self)._update(args,kwargs)
+        super(pbentry,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -71,7 +80,543 @@ class pbslot(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(pbslot,kwargs)
+            self._complainaboutunusedargs(pbentry,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_slot.writetobuffer(buf)
+        self.__field_uslot.writetobuffer(buf)
+        self.__field_group.writetobuffer(buf)
+        try: self.__field_ringtone
+        except:
+            self.__field_ringtone=CSVINT(**{'default': 20})
+        self.__field_ringtone.writetobuffer(buf)
+        self.__field_name.writetobuffer(buf)
+        self.__field_speeddial.writetobuffer(buf)
+        try: self.__field_dunno1
+        except:
+            self.__field_dunno1=CSVINT(**{'default': 0})
+        self.__field_dunno1.writetobuffer(buf)
+        try: self.__field_numbers
+        except:
+            self.__field_numbers=LIST(**{'length': NUMPHONENUMBERS, 'createdefault': True, 'elementclass': phonenumber})
+        self.__field_numbers.writetobuffer(buf)
+        try: self.__field_dunno3
+        except:
+            self.__field_dunno3=CSVSTRING(**{'quotechar': None, 'default': ""})
+        self.__field_dunno3.writetobuffer(buf)
+        try: self.__field_dunno4
+        except:
+            self.__field_dunno4=CSVSTRING(**{'quotechar': None, 'default': ""})
+        self.__field_dunno4.writetobuffer(buf)
+        self.__field_email.writetobuffer(buf)
+        self.__field_url.writetobuffer(buf)
+        try: self.__field_dunno5
+        except:
+            self.__field_dunno5=CSVSTRING(**{'quotechar': None, 'default': ""})
+        self.__field_dunno5.writetobuffer(buf)
+        try: self.__field_wallpaper
+        except:
+            self.__field_wallpaper=CSVINT(**{'default': 20})
+        self.__field_wallpaper.writetobuffer(buf)
+        try: self.__field_timestamp
+        except:
+            self.__field_timestamp=CSVTIME(**{'terminator': None,               'default': DateTime.now()+(0,) })
+        self.__field_timestamp.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_slot=CSVINT()
+        self.__field_slot.readfrombuffer(buf)
+        self.__field_uslot=CSVINT()
+        self.__field_uslot.readfrombuffer(buf)
+        self.__field_group=CSVINT()
+        self.__field_group.readfrombuffer(buf)
+        self.__field_ringtone=CSVINT(**{'default': 20})
+        self.__field_ringtone.readfrombuffer(buf)
+        self.__field_name=CSVSTRING()
+        self.__field_name.readfrombuffer(buf)
+        self.__field_speeddial=CSVINT()
+        self.__field_speeddial.readfrombuffer(buf)
+        self.__field_dunno1=CSVINT(**{'default': 0})
+        self.__field_dunno1.readfrombuffer(buf)
+        self.__field_numbers=LIST(**{'length': NUMPHONENUMBERS, 'createdefault': True, 'elementclass': phonenumber})
+        self.__field_numbers.readfrombuffer(buf)
+        self.__field_dunno3=CSVSTRING(**{'quotechar': None, 'default': ""})
+        self.__field_dunno3.readfrombuffer(buf)
+        self.__field_dunno4=CSVSTRING(**{'quotechar': None, 'default': ""})
+        self.__field_dunno4.readfrombuffer(buf)
+        self.__field_email=CSVSTRING()
+        self.__field_email.readfrombuffer(buf)
+        self.__field_url=CSVSTRING()
+        self.__field_url.readfrombuffer(buf)
+        self.__field_dunno5=CSVSTRING(**{'quotechar': None, 'default': ""})
+        self.__field_dunno5.readfrombuffer(buf)
+        self.__field_wallpaper=CSVINT(**{'default': 20})
+        self.__field_wallpaper.readfrombuffer(buf)
+        self.__field_timestamp=CSVTIME(**{'terminator': None,               'default': DateTime.now()+(0,) })
+        self.__field_timestamp.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_slot(self):
+        return self.__field_slot.getvalue()
+
+    def __setfield_slot(self, value):
+        if isinstance(value,CSVINT):
+            self.__field_slot=value
+        else:
+            self.__field_slot=CSVINT(value,)
+
+    def __delfield_slot(self): del self.__field_slot
+
+    slot=property(__getfield_slot, __setfield_slot, __delfield_slot, "Internal Slot")
+
+    def __getfield_uslot(self):
+        return self.__field_uslot.getvalue()
+
+    def __setfield_uslot(self, value):
+        if isinstance(value,CSVINT):
+            self.__field_uslot=value
+        else:
+            self.__field_uslot=CSVINT(value,)
+
+    def __delfield_uslot(self): del self.__field_uslot
+
+    uslot=property(__getfield_uslot, __setfield_uslot, __delfield_uslot, "User Slot, Speed dial")
+
+    def __getfield_group(self):
+        return self.__field_group.getvalue()
+
+    def __setfield_group(self, value):
+        if isinstance(value,CSVINT):
+            self.__field_group=value
+        else:
+            self.__field_group=CSVINT(value,)
+
+    def __delfield_group(self): del self.__field_group
+
+    group=property(__getfield_group, __setfield_group, __delfield_group, None)
+
+    def __getfield_ringtone(self):
+        try: self.__field_ringtone
+        except:
+            self.__field_ringtone=CSVINT(**{'default': 20})
+        return self.__field_ringtone.getvalue()
+
+    def __setfield_ringtone(self, value):
+        if isinstance(value,CSVINT):
+            self.__field_ringtone=value
+        else:
+            self.__field_ringtone=CSVINT(value,**{'default': 20})
+
+    def __delfield_ringtone(self): del self.__field_ringtone
+
+    ringtone=property(__getfield_ringtone, __setfield_ringtone, __delfield_ringtone, None)
+
+    def __getfield_name(self):
+        return self.__field_name.getvalue()
+
+    def __setfield_name(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_name=value
+        else:
+            self.__field_name=CSVSTRING(value,)
+
+    def __delfield_name(self): del self.__field_name
+
+    name=property(__getfield_name, __setfield_name, __delfield_name, None)
+
+    def __getfield_speeddial(self):
+        return self.__field_speeddial.getvalue()
+
+    def __setfield_speeddial(self, value):
+        if isinstance(value,CSVINT):
+            self.__field_speeddial=value
+        else:
+            self.__field_speeddial=CSVINT(value,)
+
+    def __delfield_speeddial(self): del self.__field_speeddial
+
+    speeddial=property(__getfield_speeddial, __setfield_speeddial, __delfield_speeddial, "Which phone number assigned to speed dial uslot")
+
+    def __getfield_dunno1(self):
+        try: self.__field_dunno1
+        except:
+            self.__field_dunno1=CSVINT(**{'default': 0})
+        return self.__field_dunno1.getvalue()
+
+    def __setfield_dunno1(self, value):
+        if isinstance(value,CSVINT):
+            self.__field_dunno1=value
+        else:
+            self.__field_dunno1=CSVINT(value,**{'default': 0})
+
+    def __delfield_dunno1(self): del self.__field_dunno1
+
+    dunno1=property(__getfield_dunno1, __setfield_dunno1, __delfield_dunno1, None)
+
+    def __getfield_numbers(self):
+        try: self.__field_numbers
+        except:
+            self.__field_numbers=LIST(**{'length': NUMPHONENUMBERS, 'createdefault': True, 'elementclass': phonenumber})
+        return self.__field_numbers.getvalue()
+
+    def __setfield_numbers(self, value):
+        if isinstance(value,LIST):
+            self.__field_numbers=value
+        else:
+            self.__field_numbers=LIST(value,**{'length': NUMPHONENUMBERS, 'createdefault': True, 'elementclass': phonenumber})
+
+    def __delfield_numbers(self): del self.__field_numbers
+
+    numbers=property(__getfield_numbers, __setfield_numbers, __delfield_numbers, None)
+
+    def __getfield_dunno3(self):
+        try: self.__field_dunno3
+        except:
+            self.__field_dunno3=CSVSTRING(**{'quotechar': None, 'default': ""})
+        return self.__field_dunno3.getvalue()
+
+    def __setfield_dunno3(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_dunno3=value
+        else:
+            self.__field_dunno3=CSVSTRING(value,**{'quotechar': None, 'default': ""})
+
+    def __delfield_dunno3(self): del self.__field_dunno3
+
+    dunno3=property(__getfield_dunno3, __setfield_dunno3, __delfield_dunno3, None)
+
+    def __getfield_dunno4(self):
+        try: self.__field_dunno4
+        except:
+            self.__field_dunno4=CSVSTRING(**{'quotechar': None, 'default': ""})
+        return self.__field_dunno4.getvalue()
+
+    def __setfield_dunno4(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_dunno4=value
+        else:
+            self.__field_dunno4=CSVSTRING(value,**{'quotechar': None, 'default': ""})
+
+    def __delfield_dunno4(self): del self.__field_dunno4
+
+    dunno4=property(__getfield_dunno4, __setfield_dunno4, __delfield_dunno4, None)
+
+    def __getfield_email(self):
+        return self.__field_email.getvalue()
+
+    def __setfield_email(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_email=value
+        else:
+            self.__field_email=CSVSTRING(value,)
+
+    def __delfield_email(self): del self.__field_email
+
+    email=property(__getfield_email, __setfield_email, __delfield_email, None)
+
+    def __getfield_url(self):
+        return self.__field_url.getvalue()
+
+    def __setfield_url(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_url=value
+        else:
+            self.__field_url=CSVSTRING(value,)
+
+    def __delfield_url(self): del self.__field_url
+
+    url=property(__getfield_url, __setfield_url, __delfield_url, None)
+
+    def __getfield_dunno5(self):
+        try: self.__field_dunno5
+        except:
+            self.__field_dunno5=CSVSTRING(**{'quotechar': None, 'default': ""})
+        return self.__field_dunno5.getvalue()
+
+    def __setfield_dunno5(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_dunno5=value
+        else:
+            self.__field_dunno5=CSVSTRING(value,**{'quotechar': None, 'default': ""})
+
+    def __delfield_dunno5(self): del self.__field_dunno5
+
+    dunno5=property(__getfield_dunno5, __setfield_dunno5, __delfield_dunno5, None)
+
+    def __getfield_wallpaper(self):
+        try: self.__field_wallpaper
+        except:
+            self.__field_wallpaper=CSVINT(**{'default': 20})
+        return self.__field_wallpaper.getvalue()
+
+    def __setfield_wallpaper(self, value):
+        if isinstance(value,CSVINT):
+            self.__field_wallpaper=value
+        else:
+            self.__field_wallpaper=CSVINT(value,**{'default': 20})
+
+    def __delfield_wallpaper(self): del self.__field_wallpaper
+
+    wallpaper=property(__getfield_wallpaper, __setfield_wallpaper, __delfield_wallpaper, None)
+
+    def __getfield_timestamp(self):
+        try: self.__field_timestamp
+        except:
+            self.__field_timestamp=CSVTIME(**{'terminator': None,               'default': DateTime.now()+(0,) })
+        return self.__field_timestamp.getvalue()
+
+    def __setfield_timestamp(self, value):
+        if isinstance(value,CSVTIME):
+            self.__field_timestamp=value
+        else:
+            self.__field_timestamp=CSVTIME(value,**{'terminator': None,               'default': DateTime.now()+(0,) })
+
+    def __delfield_timestamp(self): del self.__field_timestamp
+
+    timestamp=property(__getfield_timestamp, __setfield_timestamp, __delfield_timestamp, "Use terminator None for last item")
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('slot', self.__field_slot, "Internal Slot")
+        yield ('uslot', self.__field_uslot, "User Slot, Speed dial")
+        yield ('group', self.__field_group, None)
+        yield ('ringtone', self.__field_ringtone, None)
+        yield ('name', self.__field_name, None)
+        yield ('speeddial', self.__field_speeddial, "Which phone number assigned to speed dial uslot")
+        yield ('dunno1', self.__field_dunno1, None)
+        yield ('numbers', self.__field_numbers, None)
+        yield ('dunno3', self.__field_dunno3, None)
+        yield ('dunno4', self.__field_dunno4, None)
+        yield ('email', self.__field_email, None)
+        yield ('url', self.__field_url, None)
+        yield ('dunno5', self.__field_dunno5, None)
+        yield ('wallpaper', self.__field_wallpaper, None)
+        yield ('timestamp', self.__field_timestamp, "Use terminator None for last item")
+
+
+
+
+class phonebookslotresponse(BaseProtogenClass):
+    __fields=['command', 'entry']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(phonebookslotresponse,self).__init__(**dict)
+        if self.__class__ is phonebookslotresponse:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(phonebookslotresponse,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(phonebookslotresponse,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_command.writetobuffer(buf)
+        self.__field_entry.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_command=CSVSTRING(**{'quotechar': None, 'terminator': ord(' '), 'constant': '#PBOKR:'})
+        self.__field_command.readfrombuffer(buf)
+        self.__field_entry=pbentry()
+        self.__field_entry.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_command(self):
+        return self.__field_command.getvalue()
+
+    def __setfield_command(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_command=value
+        else:
+            self.__field_command=CSVSTRING(value,**{'quotechar': None, 'terminator': ord(' '), 'constant': '#PBOKR:'})
+
+    def __delfield_command(self): del self.__field_command
+
+    command=property(__getfield_command, __setfield_command, __delfield_command, None)
+
+    def __getfield_entry(self):
+        return self.__field_entry.getvalue()
+
+    def __setfield_entry(self, value):
+        if isinstance(value,pbentry):
+            self.__field_entry=value
+        else:
+            self.__field_entry=pbentry(value,)
+
+    def __delfield_entry(self): del self.__field_entry
+
+    entry=property(__getfield_entry, __setfield_entry, __delfield_entry, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('command', self.__field_command, None)
+        yield ('entry', self.__field_entry, None)
+
+
+
+
+class phonebookslotupdaterequest(BaseProtogenClass):
+    __fields=['command', 'entry']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(phonebookslotupdaterequest,self).__init__(**dict)
+        if self.__class__ is phonebookslotupdaterequest:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(phonebookslotupdaterequest,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(phonebookslotupdaterequest,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_command
+        except:
+            self.__field_command=CSVSTRING(**{'quotechar': None, 'terminator': None, 'default': '#PBOKW=0,'})
+        self.__field_command.writetobuffer(buf)
+        self.__field_entry.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_command=CSVSTRING(**{'quotechar': None, 'terminator': None, 'default': '#PBOKW=0,'})
+        self.__field_command.readfrombuffer(buf)
+        self.__field_entry=pbentry()
+        self.__field_entry.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_command(self):
+        try: self.__field_command
+        except:
+            self.__field_command=CSVSTRING(**{'quotechar': None, 'terminator': None, 'default': '#PBOKW=0,'})
+        return self.__field_command.getvalue()
+
+    def __setfield_command(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_command=value
+        else:
+            self.__field_command=CSVSTRING(value,**{'quotechar': None, 'terminator': None, 'default': '#PBOKW=0,'})
+
+    def __delfield_command(self): del self.__field_command
+
+    command=property(__getfield_command, __setfield_command, __delfield_command, None)
+
+    def __getfield_entry(self):
+        return self.__field_entry.getvalue()
+
+    def __setfield_entry(self, value):
+        if isinstance(value,pbentry):
+            self.__field_entry=value
+        else:
+            self.__field_entry=pbentry(value,)
+
+    def __delfield_entry(self): del self.__field_entry
+
+    entry=property(__getfield_entry, __setfield_entry, __delfield_entry, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('command', self.__field_command, None)
+        yield ('entry', self.__field_entry, None)
+
+
+
+
+class fspbslot(BaseProtogenClass):
+    __fields=['valid', 'pbbook_index', 'c0', 'timestamp', 'pad']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(fspbslot,self).__init__(**dict)
+        if self.__class__ is fspbslot:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(fspbslot,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(fspbslot,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
 
@@ -219,7 +764,7 @@ class pbslot(BaseProtogenClass):
 
 
 
-class pbslots(BaseProtogenClass):
+class fspbslots(BaseProtogenClass):
     __fields=['slot']
 
     def __init__(self, *args, **kwargs):
@@ -227,8 +772,8 @@ class pbslots(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(pbslots,self).__init__(**dict)
-        if self.__class__ is pbslots:
+        super(fspbslots,self).__init__(**dict)
+        if self.__class__ is fspbslots:
             self._update(args,dict)
 
 
@@ -237,7 +782,7 @@ class pbslots(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(pbslots,self)._update(args,kwargs)
+        super(fspbslots,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -245,9 +790,9 @@ class pbslots(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(pbslots,kwargs)
+            self._complainaboutunusedargs(fspbslots,kwargs)
         if len(args):
-            dict2={ 'length': max_pb_slots, 'elementclass': pbslot }
+            dict2={ 'length': max_pb_slots, 'elementclass': fspbslot }
             dict2.update(kwargs)
             kwargs=dict2
             self.__field_slot=LIST(*args,**dict2)
@@ -259,7 +804,7 @@ class pbslots(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_slot
         except:
-            self.__field_slot=LIST(**{ 'length': max_pb_slots, 'elementclass': pbslot })
+            self.__field_slot=LIST(**{ 'length': max_pb_slots, 'elementclass': fspbslot })
         self.__field_slot.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -269,7 +814,7 @@ class pbslots(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_slot=LIST(**{ 'length': max_pb_slots, 'elementclass': pbslot })
+        self.__field_slot=LIST(**{ 'length': max_pb_slots, 'elementclass': fspbslot })
         self.__field_slot.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -277,14 +822,14 @@ class pbslots(BaseProtogenClass):
     def __getfield_slot(self):
         try: self.__field_slot
         except:
-            self.__field_slot=LIST(**{ 'length': max_pb_slots, 'elementclass': pbslot })
+            self.__field_slot=LIST(**{ 'length': max_pb_slots, 'elementclass': fspbslot })
         return self.__field_slot.getvalue()
 
     def __setfield_slot(self, value):
         if isinstance(value,LIST):
             self.__field_slot=value
         else:
-            self.__field_slot=LIST(value,**{ 'length': max_pb_slots, 'elementclass': pbslot })
+            self.__field_slot=LIST(value,**{ 'length': max_pb_slots, 'elementclass': fspbslot })
 
     def __delfield_slot(self): del self.__field_slot
 
@@ -299,7 +844,7 @@ class pbslots(BaseProtogenClass):
 
 
 
-class pbentry(BaseProtogenClass):
+class fspbentry(BaseProtogenClass):
     __fields=['valid', 'c1', 'c1', 'main_num_index', 'mobile_num_index', 'home_num_index', 'office_num_index', 'pager_num_index', 'fax_num_index', 'unused_index', 'email_index', 'url_index', 'name', 'group_num', 'nick', 'memo', 'pad']
 
     def __init__(self, *args, **kwargs):
@@ -307,8 +852,8 @@ class pbentry(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(pbentry,self).__init__(**dict)
-        if self.__class__ is pbentry:
+        super(fspbentry,self).__init__(**dict)
+        if self.__class__ is fspbentry:
             self._update(args,dict)
 
 
@@ -317,7 +862,7 @@ class pbentry(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(pbentry,self)._update(args,kwargs)
+        super(fspbentry,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -325,7 +870,7 @@ class pbentry(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(pbentry,kwargs)
+            self._complainaboutunusedargs(fspbentry,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
 
@@ -749,7 +1294,7 @@ class pbentry(BaseProtogenClass):
 
 
 
-class pbbook(BaseProtogenClass):
+class fspbbook(BaseProtogenClass):
     __fields=['entry']
 
     def __init__(self, *args, **kwargs):
@@ -757,8 +1302,8 @@ class pbbook(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(pbbook,self).__init__(**dict)
-        if self.__class__ is pbbook:
+        super(fspbbook,self).__init__(**dict)
+        if self.__class__ is fspbbook:
             self._update(args,dict)
 
 
@@ -767,7 +1312,7 @@ class pbbook(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(pbbook,self)._update(args,kwargs)
+        super(fspbbook,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -775,9 +1320,9 @@ class pbbook(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(pbbook,kwargs)
+            self._complainaboutunusedargs(fspbbook,kwargs)
         if len(args):
-            dict2={ 'length': max_pb_entries,               'elementclass': pbentry,               'createdefault': True }
+            dict2={ 'length': max_pb_entries,               'elementclass': fspbentry,               'createdefault': True }
             dict2.update(kwargs)
             kwargs=dict2
             self.__field_entry=LIST(*args,**dict2)
@@ -789,7 +1334,7 @@ class pbbook(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_entry
         except:
-            self.__field_entry=LIST(**{ 'length': max_pb_entries,               'elementclass': pbentry,               'createdefault': True })
+            self.__field_entry=LIST(**{ 'length': max_pb_entries,               'elementclass': fspbentry,               'createdefault': True })
         self.__field_entry.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -799,7 +1344,7 @@ class pbbook(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_entry=LIST(**{ 'length': max_pb_entries,               'elementclass': pbentry,               'createdefault': True })
+        self.__field_entry=LIST(**{ 'length': max_pb_entries,               'elementclass': fspbentry,               'createdefault': True })
         self.__field_entry.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -807,14 +1352,14 @@ class pbbook(BaseProtogenClass):
     def __getfield_entry(self):
         try: self.__field_entry
         except:
-            self.__field_entry=LIST(**{ 'length': max_pb_entries,               'elementclass': pbentry,               'createdefault': True })
+            self.__field_entry=LIST(**{ 'length': max_pb_entries,               'elementclass': fspbentry,               'createdefault': True })
         return self.__field_entry.getvalue()
 
     def __setfield_entry(self, value):
         if isinstance(value,LIST):
             self.__field_entry=value
         else:
-            self.__field_entry=LIST(value,**{ 'length': max_pb_entries,               'elementclass': pbentry,               'createdefault': True })
+            self.__field_entry=LIST(value,**{ 'length': max_pb_entries,               'elementclass': fspbentry,               'createdefault': True })
 
     def __delfield_entry(self): del self.__field_entry
 
@@ -829,7 +1374,7 @@ class pbbook(BaseProtogenClass):
 
 
 
-class number(BaseProtogenClass):
+class fsnumber(BaseProtogenClass):
     __fields=['valid', 'c0', 'name', 'number_type']
 
     def __init__(self, *args, **kwargs):
@@ -837,8 +1382,8 @@ class number(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(number,self).__init__(**dict)
-        if self.__class__ is number:
+        super(fsnumber,self).__init__(**dict)
+        if self.__class__ is fsnumber:
             self._update(args,dict)
 
 
@@ -847,7 +1392,7 @@ class number(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(number,self)._update(args,kwargs)
+        super(fsnumber,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -855,7 +1400,7 @@ class number(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(number,kwargs)
+            self._complainaboutunusedargs(fsnumber,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
 
@@ -974,7 +1519,7 @@ class number(BaseProtogenClass):
 
 
 
-class numbers(BaseProtogenClass):
+class fsnumbers(BaseProtogenClass):
     __fields=['entry']
 
     def __init__(self, *args, **kwargs):
@@ -982,8 +1527,8 @@ class numbers(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(numbers,self).__init__(**dict)
-        if self.__class__ is numbers:
+        super(fsnumbers,self).__init__(**dict)
+        if self.__class__ is fsnumbers:
             self._update(args,dict)
 
 
@@ -992,7 +1537,7 @@ class numbers(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(numbers,self)._update(args,kwargs)
+        super(fsnumbers,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -1000,9 +1545,9 @@ class numbers(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(numbers,kwargs)
+            self._complainaboutunusedargs(fsnumbers,kwargs)
         if len(args):
-            dict2={ 'length': max_number_entries,              'elementclass': number,              'createdefault': True }
+            dict2={ 'length': max_number_entries,              'elementclass': fsnumber,              'createdefault': True }
             dict2.update(kwargs)
             kwargs=dict2
             self.__field_entry=LIST(*args,**dict2)
@@ -1014,7 +1559,7 @@ class numbers(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_entry
         except:
-            self.__field_entry=LIST(**{ 'length': max_number_entries,              'elementclass': number,              'createdefault': True })
+            self.__field_entry=LIST(**{ 'length': max_number_entries,              'elementclass': fsnumber,              'createdefault': True })
         self.__field_entry.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -1024,7 +1569,7 @@ class numbers(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_entry=LIST(**{ 'length': max_number_entries,              'elementclass': number,              'createdefault': True })
+        self.__field_entry=LIST(**{ 'length': max_number_entries,              'elementclass': fsnumber,              'createdefault': True })
         self.__field_entry.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -1032,14 +1577,14 @@ class numbers(BaseProtogenClass):
     def __getfield_entry(self):
         try: self.__field_entry
         except:
-            self.__field_entry=LIST(**{ 'length': max_number_entries,              'elementclass': number,              'createdefault': True })
+            self.__field_entry=LIST(**{ 'length': max_number_entries,              'elementclass': fsnumber,              'createdefault': True })
         return self.__field_entry.getvalue()
 
     def __setfield_entry(self, value):
         if isinstance(value,LIST):
             self.__field_entry=value
         else:
-            self.__field_entry=LIST(value,**{ 'length': max_number_entries,              'elementclass': number,              'createdefault': True })
+            self.__field_entry=LIST(value,**{ 'length': max_number_entries,              'elementclass': fsnumber,              'createdefault': True })
 
     def __delfield_entry(self): del self.__field_entry
 
@@ -1105,7 +1650,7 @@ class amsregistry(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_dunno0=DATA(**{'sizeinbytes': 900})
         self.__field_dunno0.readfrombuffer(buf)
-        self.__field_info=LIST(**{'elementclass': _gen_p_samsungsphm300_119, 'length': 320})
+        self.__field_info=LIST(**{'elementclass': _gen_p_samsungsphm300_157, 'length': 320})
         self.__field_info.readfrombuffer(buf)
         self.__field_dunno1=DATA(**{'sizeinbytes': 2000})
         self.__field_dunno1.readfrombuffer(buf)
@@ -1140,7 +1685,7 @@ class amsregistry(BaseProtogenClass):
         if isinstance(value,LIST):
             self.__field_info=value
         else:
-            self.__field_info=LIST(value,**{'elementclass': _gen_p_samsungsphm300_119, 'length': 320})
+            self.__field_info=LIST(value,**{'elementclass': _gen_p_samsungsphm300_157, 'length': 320})
 
     def __delfield_info(self): del self.__field_info
 
@@ -1250,7 +1795,7 @@ class amsregistry(BaseProtogenClass):
 
 
 
-class _gen_p_samsungsphm300_119(BaseProtogenClass):
+class _gen_p_samsungsphm300_157(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['dir_ptr', 'num2', 'name_ptr', 'version_ptr', 'vendor_ptr', 'downloaddomain_ptr', 'num7', 'filetype', 'num8', 'mimetype_ptr', 'num12']
 
@@ -1259,8 +1804,8 @@ class _gen_p_samsungsphm300_119(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_samsungsphm300_119,self).__init__(**dict)
-        if self.__class__ is _gen_p_samsungsphm300_119:
+        super(_gen_p_samsungsphm300_157,self).__init__(**dict)
+        if self.__class__ is _gen_p_samsungsphm300_157:
             self._update(args,dict)
 
 
@@ -1269,7 +1814,7 @@ class _gen_p_samsungsphm300_119(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_samsungsphm300_119,self)._update(args,kwargs)
+        super(_gen_p_samsungsphm300_157,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -1277,7 +1822,7 @@ class _gen_p_samsungsphm300_119(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_samsungsphm300_119,kwargs)
+            self._complainaboutunusedargs(_gen_p_samsungsphm300_157,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
 
@@ -1705,6 +2250,554 @@ class CamFile(BaseProtogenClass):
     def save(self, filename=None):
         # save the jpeg data to a file        
         return file(filename if filename else self.filename, 'wb').write(self.jpeg)
+
+
+
+
+class IndexSlot(BaseProtogenClass):
+    __fields=['valid', 'group', 'index']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(IndexSlot,self).__init__(**dict)
+        if self.__class__ is IndexSlot:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(IndexSlot,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(IndexSlot,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_valid
+        except:
+            self.__field_valid=UINT(**{'sizeinbytes': 1,  'default': 0 })
+        self.__field_valid.writetobuffer(buf)
+        try: self.__field_group
+        except:
+            self.__field_group=UINT(**{'sizeinbytes': 1,  'default': 0 })
+        self.__field_group.writetobuffer(buf)
+        try: self.__field_index
+        except:
+            self.__field_index=UINT(**{'sizeinbytes': 1,  'default': 0 })
+        self.__field_index.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_valid=UINT(**{'sizeinbytes': 1,  'default': 0 })
+        self.__field_valid.readfrombuffer(buf)
+        self.__field_group=UINT(**{'sizeinbytes': 1,  'default': 0 })
+        self.__field_group.readfrombuffer(buf)
+        self.__field_index=UINT(**{'sizeinbytes': 1,  'default': 0 })
+        self.__field_index.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_valid(self):
+        try: self.__field_valid
+        except:
+            self.__field_valid=UINT(**{'sizeinbytes': 1,  'default': 0 })
+        return self.__field_valid.getvalue()
+
+    def __setfield_valid(self, value):
+        if isinstance(value,UINT):
+            self.__field_valid=value
+        else:
+            self.__field_valid=UINT(value,**{'sizeinbytes': 1,  'default': 0 })
+
+    def __delfield_valid(self): del self.__field_valid
+
+    valid=property(__getfield_valid, __setfield_valid, __delfield_valid, "=1 if valid slot")
+
+    def __getfield_group(self):
+        try: self.__field_group
+        except:
+            self.__field_group=UINT(**{'sizeinbytes': 1,  'default': 0 })
+        return self.__field_group.getvalue()
+
+    def __setfield_group(self, value):
+        if isinstance(value,UINT):
+            self.__field_group=value
+        else:
+            self.__field_group=UINT(value,**{'sizeinbytes': 1,  'default': 0 })
+
+    def __delfield_group(self): del self.__field_group
+
+    group=property(__getfield_group, __setfield_group, __delfield_group, "Group Index")
+
+    def __getfield_index(self):
+        try: self.__field_index
+        except:
+            self.__field_index=UINT(**{'sizeinbytes': 1,  'default': 0 })
+        return self.__field_index.getvalue()
+
+    def __setfield_index(self, value):
+        if isinstance(value,UINT):
+            self.__field_index=value
+        else:
+            self.__field_index=UINT(value,**{'sizeinbytes': 1,  'default': 0 })
+
+    def __delfield_index(self): del self.__field_index
+
+    index=property(__getfield_index, __setfield_index, __delfield_index, "Media Index")
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('valid', self.__field_valid, "=1 if valid slot")
+        yield ('group', self.__field_group, "Group Index")
+        yield ('index', self.__field_index, "Media Index")
+
+
+
+
+class IndexFile(BaseProtogenClass):
+    __fields=['entry']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(IndexFile,self).__init__(**dict)
+        if self.__class__ is IndexFile:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(IndexFile,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(IndexFile,kwargs)
+        if len(args):
+            dict2={ 'elementclass': IndexSlot,             'length': max_media_index_entries,             'createdefault': True }
+            dict2.update(kwargs)
+            kwargs=dict2
+            self.__field_entry=LIST(*args,**dict2)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_entry
+        except:
+            self.__field_entry=LIST(**{ 'elementclass': IndexSlot,             'length': max_media_index_entries,             'createdefault': True })
+        self.__field_entry.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_entry=LIST(**{ 'elementclass': IndexSlot,             'length': max_media_index_entries,             'createdefault': True })
+        self.__field_entry.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_entry(self):
+        try: self.__field_entry
+        except:
+            self.__field_entry=LIST(**{ 'elementclass': IndexSlot,             'length': max_media_index_entries,             'createdefault': True })
+        return self.__field_entry.getvalue()
+
+    def __setfield_entry(self, value):
+        if isinstance(value,LIST):
+            self.__field_entry=value
+        else:
+            self.__field_entry=LIST(value,**{ 'elementclass': IndexSlot,             'length': max_media_index_entries,             'createdefault': True })
+
+    def __delfield_entry(self): del self.__field_entry
+
+    entry=property(__getfield_entry, __setfield_entry, __delfield_entry, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('entry', self.__field_entry, None)
+
+
+
+
+class Group(BaseProtogenClass):
+    __fields=['num0', 'num1', 'namelen', 'name', 'num5', 'dunno', 'nume3', 'datetime', 'num4']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(Group,self).__init__(**dict)
+        if self.__class__ is Group:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(Group,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(Group,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_num0
+        except:
+            self.__field_num0=UINT(**{'sizeinbytes': 1,  'default': 0 })
+        self.__field_num0.writetobuffer(buf)
+        try: self.__field_num1
+        except:
+            self.__field_num1=UINT(**{'sizeinbytes': 1,  'default': 1 if self.num0 else 0 })
+        self.__field_num1.writetobuffer(buf)
+        try: self.__field_namelen
+        except:
+            self.__field_namelen=UINT(**{'sizeinbytes': 2,  'default': len(self.name) })
+        self.__field_namelen.writetobuffer(buf)
+        try: self.__field_name
+        except:
+            self.__field_name=USTRING(**{'sizeinbytes': 12,  'terminator': None,                 'default': '' })
+        self.__field_name.writetobuffer(buf)
+        try: self.__field_num5
+        except:
+            self.__field_num5=UINT(**{'sizeinbytes': 1,  'default': 0x30 if self.num0 else 0 })
+        self.__field_num5.writetobuffer(buf)
+        try: self.__field_dunno
+        except:
+            self.__field_dunno=DATA(**{'sizeinbytes': 8,  'default': '\x00'*8 })
+        self.__field_dunno.writetobuffer(buf)
+        try: self.__field_nume3
+        except:
+            self.__field_nume3=UINT(**{'sizeinbytes': 1,  'default': 1 if self.num0 else 0 })
+        self.__field_nume3.writetobuffer(buf)
+        if self.num0:
+            try: self.__field_datetime
+            except:
+                self.__field_datetime=DateTime(**{'sizeinbytes': 4,  'default': DateTime.now() })
+            self.__field_datetime.writetobuffer(buf)
+        else:
+            try: self.__field_num4
+            except:
+                self.__field_num4=UINT(**{'sizeinbytes': 4,  'default': 0 })
+            self.__field_num4.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_num0=UINT(**{'sizeinbytes': 1,  'default': 0 })
+        self.__field_num0.readfrombuffer(buf)
+        self.__field_num1=UINT(**{'sizeinbytes': 1,  'default': 1 if self.num0 else 0 })
+        self.__field_num1.readfrombuffer(buf)
+        self.__field_namelen=UINT(**{'sizeinbytes': 2,  'default': len(self.name) })
+        self.__field_namelen.readfrombuffer(buf)
+        self.__field_name=USTRING(**{'sizeinbytes': 12,  'terminator': None,                 'default': '' })
+        self.__field_name.readfrombuffer(buf)
+        self.__field_num5=UINT(**{'sizeinbytes': 1,  'default': 0x30 if self.num0 else 0 })
+        self.__field_num5.readfrombuffer(buf)
+        self.__field_dunno=DATA(**{'sizeinbytes': 8,  'default': '\x00'*8 })
+        self.__field_dunno.readfrombuffer(buf)
+        self.__field_nume3=UINT(**{'sizeinbytes': 1,  'default': 1 if self.num0 else 0 })
+        self.__field_nume3.readfrombuffer(buf)
+        if self.num0:
+            self.__field_datetime=DateTime(**{'sizeinbytes': 4,  'default': DateTime.now() })
+            self.__field_datetime.readfrombuffer(buf)
+        else:
+            self.__field_num4=UINT(**{'sizeinbytes': 4,  'default': 0 })
+            self.__field_num4.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_num0(self):
+        try: self.__field_num0
+        except:
+            self.__field_num0=UINT(**{'sizeinbytes': 1,  'default': 0 })
+        return self.__field_num0.getvalue()
+
+    def __setfield_num0(self, value):
+        if isinstance(value,UINT):
+            self.__field_num0=value
+        else:
+            self.__field_num0=UINT(value,**{'sizeinbytes': 1,  'default': 0 })
+
+    def __delfield_num0(self): del self.__field_num0
+
+    num0=property(__getfield_num0, __setfield_num0, __delfield_num0, None)
+
+    def __getfield_num1(self):
+        try: self.__field_num1
+        except:
+            self.__field_num1=UINT(**{'sizeinbytes': 1,  'default': 1 if self.num0 else 0 })
+        return self.__field_num1.getvalue()
+
+    def __setfield_num1(self, value):
+        if isinstance(value,UINT):
+            self.__field_num1=value
+        else:
+            self.__field_num1=UINT(value,**{'sizeinbytes': 1,  'default': 1 if self.num0 else 0 })
+
+    def __delfield_num1(self): del self.__field_num1
+
+    num1=property(__getfield_num1, __setfield_num1, __delfield_num1, None)
+
+    def __getfield_namelen(self):
+        try: self.__field_namelen
+        except:
+            self.__field_namelen=UINT(**{'sizeinbytes': 2,  'default': len(self.name) })
+        return self.__field_namelen.getvalue()
+
+    def __setfield_namelen(self, value):
+        if isinstance(value,UINT):
+            self.__field_namelen=value
+        else:
+            self.__field_namelen=UINT(value,**{'sizeinbytes': 2,  'default': len(self.name) })
+
+    def __delfield_namelen(self): del self.__field_namelen
+
+    namelen=property(__getfield_namelen, __setfield_namelen, __delfield_namelen, None)
+
+    def __getfield_name(self):
+        try: self.__field_name
+        except:
+            self.__field_name=USTRING(**{'sizeinbytes': 12,  'terminator': None,                 'default': '' })
+        return self.__field_name.getvalue()
+
+    def __setfield_name(self, value):
+        if isinstance(value,USTRING):
+            self.__field_name=value
+        else:
+            self.__field_name=USTRING(value,**{'sizeinbytes': 12,  'terminator': None,                 'default': '' })
+
+    def __delfield_name(self): del self.__field_name
+
+    name=property(__getfield_name, __setfield_name, __delfield_name, None)
+
+    def __getfield_num5(self):
+        try: self.__field_num5
+        except:
+            self.__field_num5=UINT(**{'sizeinbytes': 1,  'default': 0x30 if self.num0 else 0 })
+        return self.__field_num5.getvalue()
+
+    def __setfield_num5(self, value):
+        if isinstance(value,UINT):
+            self.__field_num5=value
+        else:
+            self.__field_num5=UINT(value,**{'sizeinbytes': 1,  'default': 0x30 if self.num0 else 0 })
+
+    def __delfield_num5(self): del self.__field_num5
+
+    num5=property(__getfield_num5, __setfield_num5, __delfield_num5, None)
+
+    def __getfield_dunno(self):
+        try: self.__field_dunno
+        except:
+            self.__field_dunno=DATA(**{'sizeinbytes': 8,  'default': '\x00'*8 })
+        return self.__field_dunno.getvalue()
+
+    def __setfield_dunno(self, value):
+        if isinstance(value,DATA):
+            self.__field_dunno=value
+        else:
+            self.__field_dunno=DATA(value,**{'sizeinbytes': 8,  'default': '\x00'*8 })
+
+    def __delfield_dunno(self): del self.__field_dunno
+
+    dunno=property(__getfield_dunno, __setfield_dunno, __delfield_dunno, None)
+
+    def __getfield_nume3(self):
+        try: self.__field_nume3
+        except:
+            self.__field_nume3=UINT(**{'sizeinbytes': 1,  'default': 1 if self.num0 else 0 })
+        return self.__field_nume3.getvalue()
+
+    def __setfield_nume3(self, value):
+        if isinstance(value,UINT):
+            self.__field_nume3=value
+        else:
+            self.__field_nume3=UINT(value,**{'sizeinbytes': 1,  'default': 1 if self.num0 else 0 })
+
+    def __delfield_nume3(self): del self.__field_nume3
+
+    nume3=property(__getfield_nume3, __setfield_nume3, __delfield_nume3, None)
+
+    def __getfield_datetime(self):
+        try: self.__field_datetime
+        except:
+            self.__field_datetime=DateTime(**{'sizeinbytes': 4,  'default': DateTime.now() })
+        return self.__field_datetime.getvalue()
+
+    def __setfield_datetime(self, value):
+        if isinstance(value,DateTime):
+            self.__field_datetime=value
+        else:
+            self.__field_datetime=DateTime(value,**{'sizeinbytes': 4,  'default': DateTime.now() })
+
+    def __delfield_datetime(self): del self.__field_datetime
+
+    datetime=property(__getfield_datetime, __setfield_datetime, __delfield_datetime, None)
+
+    def __getfield_num4(self):
+        try: self.__field_num4
+        except:
+            self.__field_num4=UINT(**{'sizeinbytes': 4,  'default': 0 })
+        return self.__field_num4.getvalue()
+
+    def __setfield_num4(self, value):
+        if isinstance(value,UINT):
+            self.__field_num4=value
+        else:
+            self.__field_num4=UINT(value,**{'sizeinbytes': 4,  'default': 0 })
+
+    def __delfield_num4(self): del self.__field_num4
+
+    num4=property(__getfield_num4, __setfield_num4, __delfield_num4, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('num0', self.__field_num0, None)
+        yield ('num1', self.__field_num1, None)
+        yield ('namelen', self.__field_namelen, None)
+        yield ('name', self.__field_name, None)
+        yield ('num5', self.__field_num5, None)
+        yield ('dunno', self.__field_dunno, None)
+        yield ('nume3', self.__field_nume3, None)
+        if self.num0:
+            yield ('datetime', self.__field_datetime, None)
+        else:
+            yield ('num4', self.__field_num4, None)
+
+
+
+
+class GroupFile(BaseProtogenClass):
+    __fields=['entry']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(GroupFile,self).__init__(**dict)
+        if self.__class__ is GroupFile:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(GroupFile,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(GroupFile,kwargs)
+        if len(args):
+            dict2={ 'elementclass': Group,             'length': max_group_entries,             'createdefault': True }
+            dict2.update(kwargs)
+            kwargs=dict2
+            self.__field_entry=LIST(*args,**dict2)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_entry
+        except:
+            self.__field_entry=LIST(**{ 'elementclass': Group,             'length': max_group_entries,             'createdefault': True })
+        self.__field_entry.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_entry=LIST(**{ 'elementclass': Group,             'length': max_group_entries,             'createdefault': True })
+        self.__field_entry.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_entry(self):
+        try: self.__field_entry
+        except:
+            self.__field_entry=LIST(**{ 'elementclass': Group,             'length': max_group_entries,             'createdefault': True })
+        return self.__field_entry.getvalue()
+
+    def __setfield_entry(self, value):
+        if isinstance(value,LIST):
+            self.__field_entry=value
+        else:
+            self.__field_entry=LIST(value,**{ 'elementclass': Group,             'length': max_group_entries,             'createdefault': True })
+
+    def __delfield_entry(self): del self.__field_entry
+
+    entry=property(__getfield_entry, __setfield_entry, __delfield_entry, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('entry', self.__field_entry, None)
 
 
 
