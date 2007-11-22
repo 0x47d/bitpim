@@ -5,6 +5,7 @@
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
 ###
+### $Id$
 
 %{
 
@@ -120,7 +121,7 @@ PACKET schedulefile:
 
 PACKET textmemo:
     4 GPSDATE { 'default': GPSDATE.now() } +cdate
-    304 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False } text
+    301 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False } text
     4 LGCALDATE memotime # time the memo was writen LG time
     3 UNKNOWN zeros
 

@@ -1905,7 +1905,7 @@ class textmemo(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_cdate=GPSDATE(**{'sizeinbytes': 4,  'default': GPSDATE.now() })
         self.__field_cdate.readfrombuffer(buf)
-        self.__field_text=USTRING(**{'sizeinbytes': 304, 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False })
+        self.__field_text=USTRING(**{'sizeinbytes': 301, 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False })
         self.__field_text.readfrombuffer(buf)
         self.__field_memotime=LGCALDATE(**{'sizeinbytes': 4})
         self.__field_memotime.readfrombuffer(buf)
@@ -1937,7 +1937,7 @@ class textmemo(BaseProtogenClass):
         if isinstance(value,USTRING):
             self.__field_text=value
         else:
-            self.__field_text=USTRING(value,**{'sizeinbytes': 304, 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False })
+            self.__field_text=USTRING(value,**{'sizeinbytes': 301, 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False })
 
     def __delfield_text(self): del self.__field_text
 
