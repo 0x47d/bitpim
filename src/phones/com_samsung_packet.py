@@ -261,26 +261,9 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         print "returning keys",result.keys()
         
         return pbook
-        
-    def extractphonebookentry(self, entry, fundamentals):
-        res={}
 
-        res['serials']=[ {'sourcetype': self.serialsname,
-                          'slot': entry.slot,
-                          'sourceuniqueid': fundamentals['uniqueserial']} ]
-        # only one name
-        res['names']=[ {'full': entry.name} ]
-        # only one category
-        cat=fundamentals['groups'].get(entry.group, {'name': "Unassigned"})['name']
-        if cat!="Unassigned":
-            res['categories']=[ {'category': cat} ]
-        # only one email
-        if len(entry.email):
-            res['emails']=[ {'email': entry.email} ]
-        # only one url
-        if len(entry.url):
-            res['urls']=[ {'url': entry.url} ]
-
+    def _extractphonebook_numbers(self, entry, fundamentals, res):
+        """Extract and build phone numbers"""
         res['numbers']=[]
         secret=0
 
@@ -300,18 +283,43 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         # Field after each number is secret flag.  Setting secret on
         # phone sets secret flag for every defined phone number
         res['flags']=[ {'secret': secret} ]
-
+    def _extractphonebook_ringtone(self, entry, fundamentals, res):
+        """Extract ringtone info"""
         if entry.ringtone != self.protocolclass.DEFAULT_RINGTONE:
             tone=self.serialsname+"Index_"+`entry.ringtone`
             res['ringtones']=[{'ringtone': tone, 'use': 'call'}]
-            
+    def _extractphonebook_wallpaper(self, entry, fundamentals, res):
+        """Extract wallpaper info"""
         try:
             if entry.wallpaper != self.protocolclass.DEFAULT_WALLPAPER:
                 tone=self.serialsname+"Index_"+`entry.wallpaper`
                 res['wallpapers']=[{'wallpaper': tone, 'use': 'call'}]
-
         except:
             pass
+
+    def extractphonebookentry(self, entry, fundamentals):
+        res={}
+
+        res['serials']=[ {'sourcetype': self.serialsname,
+                          'slot': entry.slot,
+                          'sourceuniqueid': fundamentals['uniqueserial']} ]
+        # only one name
+        res['names']=[ {'full': entry.name} ]
+        # only one category
+        cat=fundamentals['groups'].get(entry.group, {'name': "Unassigned"})['name']
+        if cat!="Unassigned":
+            res['categories']=[ {'category': cat} ]
+        # only one email
+        if len(entry.email):
+            res['emails']=[ {'email': entry.email} ]
+        # only one url
+        if len(entry.url):
+            res['urls']=[ {'url': entry.url} ]
+        # separate the following processing into methods so subclass can
+        # customize them
+        self._extractphonebook_numbers(entry, fundamentals, res)
+        self._extractphonebook_ringtone(entry, fundamentals, res)
+        self._extractphonebook_wallpaper(entry, fundamentals, res)
 
         # We don't have a place to put these
         # print entry.name, entry.birthday

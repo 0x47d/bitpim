@@ -16,6 +16,7 @@ from p_samsung_packet import *
 
 NUMPHONENUMBERS=5
 NUMPHONEBOOKENTRIES=300
+NUMGROUPS=5
 
 max_pb_slots=312
 max_pb_entries=312
@@ -67,6 +68,17 @@ exts={
 
 # Packets describe single line AT responses or commands with no carriage
 # returns or line feeds.
+
+PACKET groupnameentry:
+    * CSVINT gid
+    * CSVSTRING groupname
+    * CSVINT ringtone "Ringtone assignment?"
+    * CSVSTRING {'quotechar': None} dunno2 "A single character C or S"
+    * CSVTIME {'terminator': None} timestamp
+
+PACKET groupnameresponse:
+    * CSVSTRING {'quotechar': None, 'terminator': ord(' '), 'constant': '#PBGRR:'} command
+    * groupnameentry entry
 
 PACKET pbentry:
     * CSVINT slot "Internal Slot"
