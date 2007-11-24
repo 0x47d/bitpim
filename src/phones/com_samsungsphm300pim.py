@@ -139,6 +139,9 @@ class Profile(parentprofile):
     phone_model='SPH-A620/152'
     numbertypetab=Phone.numbertypetab
 
+    imageorigins={}
+    imagetargets={}
+
     _supportedsyncs=(
         ('phonebook', 'read', None),  # all phonebook reading
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
@@ -161,3 +164,52 @@ class Profile(parentprofile):
         d=self.RINGTONE_LIMITS.copy()
         d['format']='QCP'
         return ('qcp', fileinfo.AudioFileInfo(afi, **d))
+
+    field_color_data={
+        'phonebook': {
+            'name': {
+                'first': 1, 'middle': 1, 'last': 1, 'full': 1,
+                'nickname': 0, 'details': 1 },
+            'number': {
+                'type': 5, 'speeddial': 0, 'number': 5, 'details': 5 },
+            'email': 1,
+            'address': {
+                'type': 0, 'company': 0, 'street': 0, 'street2': 0,
+                'city': 0, 'state': 0, 'postalcode': 0, 'country': 0,
+                'details': 0 },
+            'url': 1,
+            'memo': 0,
+            'category': 1,
+            'wallpaper': 1,
+            'ringtone': 1,
+            'storage': 0,
+            },
+        'calendar': {
+            'description': True, 'location': False, 'allday': False,
+            'start': True, 'end': True, 'priority': True,
+            'alarm': True, 'vibrate': False,
+            'repeat': False,
+            'memo': False,
+            'category': False,
+            'wallpaper': False,
+            'ringtone': False,
+            },
+        'memo': {
+            'subject': False,
+            'date': False,
+            'secret': False,
+            'category': False,
+            'memo': True,
+            },
+        'todo': {
+            'summary': True,
+            'status': False,
+            'due_date': True,
+            'percent_complete': False,
+            'completion_date': False,
+            'private': False,
+            'priority': True,
+            'category': False,
+            'memo': False,
+            },
+        }
