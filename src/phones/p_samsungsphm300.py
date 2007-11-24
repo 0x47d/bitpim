@@ -8,6 +8,7 @@ from p_samsung_packet import *
 NUMPHONENUMBERS=5
 NUMPHONEBOOKENTRIES=300
 NUMGROUPS=5
+MAXNUMBERLEN=32
 
 max_pb_slots=312
 max_pb_entries=312
@@ -281,7 +282,7 @@ class groupnameresponse(BaseProtogenClass):
 
 
 class pbentry(BaseProtogenClass):
-    __fields=['slot', 'uslot', 'group', 'ringtone', 'name', 'speeddial', 'dunno1', 'numbers', 'dunno3', 'dunno4', 'email', 'url', 'dunno5', 'wallpaper', 'timestamp']
+    __fields=['writeflg', 'slot', 'uslot', 'group', 'ringtone', 'name', 'speeddial', 'dunno1', 'numbers', 'extranumber', 'dunno3', 'dunno4', 'email', 'url', 'birthday', 'wallpaper', 'timestamp']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -309,6 +310,9 @@ class pbentry(BaseProtogenClass):
             self._complainaboutunusedargs(pbentry,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
+        try: self.__field_writeflg
+        except:
+            self.__field_writeflg=BOOL(**{ 'default': False })
 
 
     def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
@@ -331,6 +335,11 @@ class pbentry(BaseProtogenClass):
         except:
             self.__field_numbers=LIST(**{'length': NUMPHONENUMBERS, 'createdefault': True, 'elementclass': phonenumber})
         self.__field_numbers.writetobuffer(buf)
+        if self.writeflg:
+            try: self.__field_extranumber
+            except:
+                self.__field_extranumber=phonenumber()
+            self.__field_extranumber.writetobuffer(buf)
         try: self.__field_dunno3
         except:
             self.__field_dunno3=CSVSTRING(**{'quotechar': None, 'default': ""})
@@ -341,10 +350,10 @@ class pbentry(BaseProtogenClass):
         self.__field_dunno4.writetobuffer(buf)
         self.__field_email.writetobuffer(buf)
         self.__field_url.writetobuffer(buf)
-        try: self.__field_dunno5
+        try: self.__field_birthday
         except:
-            self.__field_dunno5=CSVSTRING(**{'quotechar': None, 'default': ""})
-        self.__field_dunno5.writetobuffer(buf)
+            self.__field_birthday=CSVSTRING(**{'quotechar': None, 'default': ""})
+        self.__field_birthday.writetobuffer(buf)
         try: self.__field_wallpaper
         except:
             self.__field_wallpaper=CSVINT(**{'default': 20})
@@ -377,6 +386,9 @@ class pbentry(BaseProtogenClass):
         self.__field_dunno1.readfrombuffer(buf)
         self.__field_numbers=LIST(**{'length': NUMPHONENUMBERS, 'createdefault': True, 'elementclass': phonenumber})
         self.__field_numbers.readfrombuffer(buf)
+        if self.writeflg:
+            self.__field_extranumber=phonenumber()
+            self.__field_extranumber.readfrombuffer(buf)
         self.__field_dunno3=CSVSTRING(**{'quotechar': None, 'default': ""})
         self.__field_dunno3.readfrombuffer(buf)
         self.__field_dunno4=CSVSTRING(**{'quotechar': None, 'default': ""})
@@ -385,14 +397,30 @@ class pbentry(BaseProtogenClass):
         self.__field_email.readfrombuffer(buf)
         self.__field_url=CSVSTRING()
         self.__field_url.readfrombuffer(buf)
-        self.__field_dunno5=CSVSTRING(**{'quotechar': None, 'default': ""})
-        self.__field_dunno5.readfrombuffer(buf)
+        self.__field_birthday=CSVSTRING(**{'quotechar': None, 'default': ""})
+        self.__field_birthday.readfrombuffer(buf)
         self.__field_wallpaper=CSVINT(**{'default': 20})
         self.__field_wallpaper.readfrombuffer(buf)
         self.__field_timestamp=CSVTIME(**{'terminator': None,               'default': DateTime.now()+(0,) })
         self.__field_timestamp.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
+
+    def __getfield_writeflg(self):
+        try: self.__field_writeflg
+        except:
+            self.__field_writeflg=BOOL(**{ 'default': False })
+        return self.__field_writeflg.getvalue()
+
+    def __setfield_writeflg(self, value):
+        if isinstance(value,BOOL):
+            self.__field_writeflg=value
+        else:
+            self.__field_writeflg=BOOL(value,**{ 'default': False })
+
+    def __delfield_writeflg(self): del self.__field_writeflg
+
+    writeflg=property(__getfield_writeflg, __setfield_writeflg, __delfield_writeflg, "Set to True when writing to phone")
 
     def __getfield_slot(self):
         return self.__field_slot.getvalue()
@@ -507,6 +535,22 @@ class pbentry(BaseProtogenClass):
 
     numbers=property(__getfield_numbers, __setfield_numbers, __delfield_numbers, None)
 
+    def __getfield_extranumber(self):
+        try: self.__field_extranumber
+        except:
+            self.__field_extranumber=phonenumber()
+        return self.__field_extranumber.getvalue()
+
+    def __setfield_extranumber(self, value):
+        if isinstance(value,phonenumber):
+            self.__field_extranumber=value
+        else:
+            self.__field_extranumber=phonenumber(value,)
+
+    def __delfield_extranumber(self): del self.__field_extranumber
+
+    extranumber=property(__getfield_extranumber, __setfield_extranumber, __delfield_extranumber, None)
+
     def __getfield_dunno3(self):
         try: self.__field_dunno3
         except:
@@ -565,21 +609,21 @@ class pbentry(BaseProtogenClass):
 
     url=property(__getfield_url, __setfield_url, __delfield_url, None)
 
-    def __getfield_dunno5(self):
-        try: self.__field_dunno5
+    def __getfield_birthday(self):
+        try: self.__field_birthday
         except:
-            self.__field_dunno5=CSVSTRING(**{'quotechar': None, 'default': ""})
-        return self.__field_dunno5.getvalue()
+            self.__field_birthday=CSVSTRING(**{'quotechar': None, 'default': ""})
+        return self.__field_birthday.getvalue()
 
-    def __setfield_dunno5(self, value):
+    def __setfield_birthday(self, value):
         if isinstance(value,CSVSTRING):
-            self.__field_dunno5=value
+            self.__field_birthday=value
         else:
-            self.__field_dunno5=CSVSTRING(value,**{'quotechar': None, 'default': ""})
+            self.__field_birthday=CSVSTRING(value,**{'quotechar': None, 'default': ""})
 
-    def __delfield_dunno5(self): del self.__field_dunno5
+    def __delfield_birthday(self): del self.__field_birthday
 
-    dunno5=property(__getfield_dunno5, __setfield_dunno5, __delfield_dunno5, None)
+    birthday=property(__getfield_birthday, __setfield_birthday, __delfield_birthday, None)
 
     def __getfield_wallpaper(self):
         try: self.__field_wallpaper
@@ -617,6 +661,7 @@ class pbentry(BaseProtogenClass):
         return True
 
     def containerelements(self):
+        yield ('writeflg', self.__field_writeflg, "Set to True when writing to phone")
         yield ('slot', self.__field_slot, "Internal Slot")
         yield ('uslot', self.__field_uslot, "User Slot, Speed dial")
         yield ('group', self.__field_group, None)
@@ -625,11 +670,13 @@ class pbentry(BaseProtogenClass):
         yield ('speeddial', self.__field_speeddial, "Which phone number assigned to speed dial uslot")
         yield ('dunno1', self.__field_dunno1, None)
         yield ('numbers', self.__field_numbers, None)
+        if self.writeflg:
+            yield ('extranumber', self.__field_extranumber, None)
         yield ('dunno3', self.__field_dunno3, None)
         yield ('dunno4', self.__field_dunno4, None)
         yield ('email', self.__field_email, None)
         yield ('url', self.__field_url, None)
-        yield ('dunno5', self.__field_dunno5, None)
+        yield ('birthday', self.__field_birthday, None)
         yield ('wallpaper', self.__field_wallpaper, None)
         yield ('timestamp', self.__field_timestamp, "Use terminator None for last item")
 
@@ -1876,7 +1923,7 @@ class amsregistry(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_dunno0=DATA(**{'sizeinbytes': 900})
         self.__field_dunno0.readfrombuffer(buf)
-        self.__field_info=LIST(**{'elementclass': _gen_p_samsungsphm300_169, 'length': 320})
+        self.__field_info=LIST(**{'elementclass': _gen_p_samsungsphm300_173, 'length': 320})
         self.__field_info.readfrombuffer(buf)
         self.__field_dunno1=DATA(**{'sizeinbytes': 2000})
         self.__field_dunno1.readfrombuffer(buf)
@@ -1911,7 +1958,7 @@ class amsregistry(BaseProtogenClass):
         if isinstance(value,LIST):
             self.__field_info=value
         else:
-            self.__field_info=LIST(value,**{'elementclass': _gen_p_samsungsphm300_169, 'length': 320})
+            self.__field_info=LIST(value,**{'elementclass': _gen_p_samsungsphm300_173, 'length': 320})
 
     def __delfield_info(self): del self.__field_info
 
@@ -2021,7 +2068,7 @@ class amsregistry(BaseProtogenClass):
 
 
 
-class _gen_p_samsungsphm300_169(BaseProtogenClass):
+class _gen_p_samsungsphm300_173(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['dir_ptr', 'num2', 'name_ptr', 'version_ptr', 'vendor_ptr', 'downloaddomain_ptr', 'num7', 'filetype', 'num8', 'mimetype_ptr', 'num12']
 
@@ -2030,8 +2077,8 @@ class _gen_p_samsungsphm300_169(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_samsungsphm300_169,self).__init__(**dict)
-        if self.__class__ is _gen_p_samsungsphm300_169:
+        super(_gen_p_samsungsphm300_173,self).__init__(**dict)
+        if self.__class__ is _gen_p_samsungsphm300_173:
             self._update(args,dict)
 
 
@@ -2040,7 +2087,7 @@ class _gen_p_samsungsphm300_169(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_samsungsphm300_169,self)._update(args,kwargs)
+        super(_gen_p_samsungsphm300_173,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -2048,7 +2095,7 @@ class _gen_p_samsungsphm300_169(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_samsungsphm300_169,kwargs)
+            self._complainaboutunusedargs(_gen_p_samsungsphm300_173,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
 

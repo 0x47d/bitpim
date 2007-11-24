@@ -84,7 +84,7 @@ class Phone(parentphone):
                 numhash={'number': entry.numbers[numberindex].number, 'type': type }
                 if speeddialtype==numberindex:
                     # this is the main number
-                    res['numbers']=[numhash]+res['numbers']
+                    res['numbers'].insert(0, numhash)
                 else:
                     res['numbers'].append(numhash)
 
@@ -102,3 +102,64 @@ class Phone(parentphone):
                                 'use': 'call'}]
         except KeyError:
             pass
+
+    def makeentry(self, entry, fundamentals):
+        e=parentphone.makeentry(self, entry, fundamentals)
+        e.writeflg=True
+        # this model can only set built-in ringtones and images,
+        # everything else would be set to default
+        try:
+            e.ringtone=list(self.builtinringtones).index(entry['ringtone'])
+        except ValueError:
+            pass
+        try:
+            e.wallpaper=list(self.builtinimages).index(entry['wallpaper'])
+        except ValueError:
+            pass
+        return e
+
+    getwallpapers=NotImplemented
+    getringtones=NotImplemented
+    getmemo=NotImplemented
+    gettodo=NotImplemented
+    getsms=NotImplemented
+    getcallhistory=NotImplemented
+    getplaylist=NotImplemented
+    gett9db=NotImplemented
+
+parentprofile=com_samsung_packet.Profile
+class Profile(parentprofile):
+    protocolclass=Phone.protocolclass
+    serialsname=Phone.serialsname
+
+    MAX_RINGTONE_BASENAME_LENGTH=19
+    RINGTONE_FILENAME_CHARS="abcdefghijklmnopqrstuvwxyz0123456789_ ."
+    RINGTONE_LIMITS= {
+        'MAXSIZE': 250000
+    }
+    phone_manufacturer='SAMSUNG'
+    phone_model='SPH-A620/152'
+    numbertypetab=Phone.numbertypetab
+
+    _supportedsyncs=(
+        ('phonebook', 'read', None),  # all phonebook reading
+        ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
+        ('calendar', 'read', None),   # all calendar reading
+        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
+        ('todo', 'read', None),     # all todo list reading
+        ('todo', 'write', 'OVERWRITE'),  # all todo list writing
+        ('memo', 'read', None),     # all memo list reading
+        ('memo', 'write', 'OVERWRITE'),  # all memo list writing
+        )
+
+    __audio_ext={ 'MIDI': 'mid', 'PMD': 'pmd', 'QCP': 'qcp' }
+    def QueryAudio(self, origin, currentextension, afi):
+        # we don't modify any of these
+        print "afi.format=",afi.format
+        if afi.format in ("MIDI", "PMD", "QCP"):
+            for k,n in self.RINGTONE_LIMITS.items():
+                setattr(afi, k, n)
+            return currentextension, afi
+        d=self.RINGTONE_LIMITS.copy()
+        d['format']='QCP'
+        return ('qcp', fileinfo.AudioFileInfo(afi, **d))

@@ -250,7 +250,11 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
                 entry=self.extractphonebookentry(res[0].entry, result)
                 pbook[count]=entry
                 count+=1
-            self.progress(slot, self.protocolclass.NUMPHONEBOOKENTRIES, lastname)
+            else:
+                lastname=""
+            self.progress(slot, self.protocolclass.NUMPHONEBOOKENTRIES,
+                          'Reading entry %(slot)d: %(name)s'%{ 'slot': slot,
+                                                               'name': lastname })
         
         result['phonebook']=pbook
         cats=[]
@@ -378,8 +382,6 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
             slot=keys[i]
             req=self.protocolclass.phonebookslotupdaterequest()
             req.entry=self.makeentry(pb[slot],data)
-            req.entry.ringtone=self.protocolclass.DEFAULT_RINGTONE
-            req.entry.wallpaper=self.protocolclass.DEFAULT_WALLPAPER
             if names[slot]==req.entry.name:
                 req.entry.birthday=birthdays[slot]
             self.log('Writing entry '+`slot`+" - "+req.entry.name)
@@ -414,6 +416,8 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
                 continue
             # everything else we just set
             setattr(e, k, entry[k])
+        e.ringtone=self.protocolclass.DEFAULT_RINGTONE
+        e.wallpaper=self.protocolclass.DEFAULT_WALLPAPER
         return e
 
     def getcalendar(self, result):

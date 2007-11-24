@@ -17,6 +17,7 @@ from p_samsung_packet import *
 NUMPHONENUMBERS=5
 NUMPHONEBOOKENTRIES=300
 NUMGROUPS=5
+MAXNUMBERLEN=32
 
 max_pb_slots=312
 max_pb_entries=312
@@ -81,6 +82,7 @@ PACKET groupnameresponse:
     * groupnameentry entry
 
 PACKET pbentry:
+    P BOOL { 'default': False } +writeflg "Set to True when writing to phone"
     * CSVINT slot "Internal Slot"
     * CSVINT uslot "User Slot, Speed dial"
     * CSVINT group
@@ -89,11 +91,13 @@ PACKET pbentry:
     * CSVINT speeddial "Which phone number assigned to speed dial uslot"
     * CSVINT {'default': 0} +dunno1
     * LIST {'length': NUMPHONENUMBERS, 'createdefault': True, 'elementclass': phonenumber} +numbers
+    if self.writeflg:
+        * phonenumber +extranumber
     * CSVSTRING {'quotechar': None, 'default': ""} +dunno3
     * CSVSTRING {'quotechar': None, 'default': ""} +dunno4
     * CSVSTRING email
     * CSVSTRING url
-    * CSVSTRING {'quotechar': None, 'default': ""} +dunno5
+    * CSVSTRING {'quotechar': None, 'default': ""} +birthday
     * CSVINT {'default': 20} +wallpaper
     * CSVTIME {'terminator': None,
                'default': DateTime.now()+(0,) } +timestamp "Use terminator None for last item"
