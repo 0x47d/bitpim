@@ -640,12 +640,12 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
             
             req.slot=todo_cnt
             if todo.priority is not None and todo.priority<5:
-                req.priority=0
-            else:
                 req.priority=1
+            else:
+                req.priority=0
                 
             dd=todo.due_date
-            req.duedate=(int(dd[0:3]),int(dd[4:5]),int(dd[6:7]),0,0,0)
+            req.duedate=(int(dd[:4]),int(dd[4:6]),int(dd[6:10]),0,0,0)
             req.timestamp=list(time.localtime(time.time())[0:6])
             req.subject=todo.summary
             self.sendpbcommand(req,self.protocolclass.todoupdateresponse)

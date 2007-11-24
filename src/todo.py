@@ -349,7 +349,7 @@ class DateControl(wx.Panel, widgets.BitPimWidget):
             dt=datetime.date.today()
         else:
             dt=self._dt
-        with guihelper.WXDailogWrapper(wx.lib.calendar.CalenDlg(self,
+        with guihelper.WXDialogWrapper(wx.lib.calendar.CalenDlg(self,
                                                                 month=dt.month,
                                                                 day=dt.day,
                                                                 year=dt.year)) as dlg:
