@@ -19,6 +19,11 @@ pn_file_name    = 'pim/pbnumber.dat'
 speed_file_name = 'pim/pbspeed.dat'
 ice_file_name   = 'pim/pbice.dat'
 
+# SMS index files
+inbox_index     = "dload/inbox.dat"
+outbox_index    = "dload/outbox.dat"
+drafts_index    = "dload/drafts.dat"
+
 class indexentry(BaseProtogenClass):
     __fields=['filename', 'size', 'date', 'type', 'unknown']
 
@@ -60,6 +65,9 @@ class indexentry(BaseProtogenClass):
             self.__field_date=UINT(**{'sizeinbytes': 4, 'default': 0})
         self.__field_date.writetobuffer(buf)
         self.__field_type.writetobuffer(buf)
+        try: self.__field_unknown
+        except:
+            self.__field_unknown=UINT(**{'sizeinbytes': 4, 'default': 0})
         self.__field_unknown.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -138,6 +146,9 @@ class indexentry(BaseProtogenClass):
     type=property(__getfield_type, __setfield_type, __delfield_type, None)
 
     def __getfield_unknown(self):
+        try: self.__field_unknown
+        except:
+            self.__field_unknown=UINT(**{'sizeinbytes': 4, 'default': 0})
         return self.__field_unknown.getvalue()
 
     def __setfield_unknown(self, value):

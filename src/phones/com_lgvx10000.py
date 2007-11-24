@@ -25,7 +25,7 @@ import helpids
 parentphone=com_lgvx8800.Phone
 class Phone(parentphone):
     desc="LG-VX10000"
-    helpid=None
+    helpid=helpids.ID_PHONE_LGVX10000
     protocolclass=p_lgvx10000
     serialsname='lgvx10000'
 
@@ -53,8 +53,8 @@ class Profile(parentprofile):
     phone_manufacturer='LG Electronics Inc'
     phone_model='VX10000'
     # inside screen resoluation
-    WALLPAPER_WIDTH=176  # TODO -- update this
-    WALLPAPER_HEIGHT=220 # TODO -- update this
+    WALLPAPER_WIDTH  = 400
+    WALLPAPER_HEIGHT = 240
 
     imageorigins={}
     imageorigins.update(common.getkv(parentprofile.stockimageorigins, "images"))
@@ -64,10 +64,10 @@ class Profile(parentprofile):
 
     # our targets are the same for all origins
     imagetargets={}
-    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "fullscreen",
-                                      {'width': 238, 'height': 246, 'format': "JPEG"}))
+    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "outsidelcd",
+                                      {'width': 240, 'height': 400, 'format': "JPEG"}))
     imagetargets.update(common.getkv(parentprofile.stockimagetargets, "wallpaper",
-                                      {'width': 240, 'height': 274, 'format': "JPEG"}))
+                                      {'width': 400, 'height': 240, 'format': "JPEG"}))
     imagetargets.update(common.getkv(parentprofile.stockimagetargets, "pictureid",
                                       {'width': 120, 'height': 100, 'format': "JPEG"}))
 

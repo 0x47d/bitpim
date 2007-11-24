@@ -199,6 +199,11 @@ BEGIN_TOC
             TOCITEM_2(Howtos,phone-lgvx8600-howtos.htm)
             ENDTOC_2
         TOCITEM_1(LG VX-8700,phone-lgvx8700.htm)
+        TOCITEM_1(LG VX-8800,phone-lgvx8800.htm)
+            TOC_2
+            TOCITEM_2(Cables,phone-lgvx8800-cables.htm)
+            TOCITEM_2(Notes,phone-lgvx8800-notes.htm)
+            ENDTOC_2
         TOCITEM_1(LG VX-9800,phone-lgvx9800.htm)
             TOC_2
             TOCITEM_2(Cables,phone-lgvx9800-cables.htm)
@@ -210,6 +215,11 @@ BEGIN_TOC
             TOCITEM_2(Cables,phone-lgvx9900-cables.htm)
             TOCITEM_2(Notes,phone-lgvx9900-notes.htm)
             TOCITEM_2(Howtos,phone-lgvx9900-howtos.htm)
+            ENDTOC_2
+        TOCITEM_1(LG VX-10000,phone-lgvx10000.htm)
+            TOC_2
+            TOCITEM_2(Cables,phone-lgvx10000-cables.htm)
+            TOCITEM_2(Notes,phone-lgvx10000-notes.htm)
             ENDTOC_2
         TOCITEM_1(Motorola E815,phone-motoe815.htm)
             TOC_2

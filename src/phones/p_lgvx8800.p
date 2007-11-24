@@ -28,6 +28,11 @@ pn_file_name    = 'pim/pbnumber.dat'
 speed_file_name = 'pim/pbspeed.dat'
 ice_file_name   = 'pim/pbice.dat'
 
+# SMS index files
+inbox_index     = "dload/inbox.dat"
+outbox_index    = "dload/outbox.dat"
+drafts_index    = "dload/drafts.dat"
+
 %}
 
 PACKET indexentry:
@@ -37,7 +42,7 @@ PACKET indexentry:
     4 UINT size
     4 UINT {'default': 0} +date
     4 UINT type
-    4 UINT {'default': 0} unknown
+    4 UINT {'default': 0} +unknown
 
 PACKET indexfile:
     "Used for tracking wallpaper and ringtones"

@@ -25,7 +25,7 @@ import helpids
 parentphone=com_lgvx8550.Phone
 class Phone(parentphone):
     desc="LG-VX8800"
-    helpid=None
+    helpid=helpids.ID_PHONE_LGVX8800
     protocolclass=p_lgvx8800
     serialsname='lgvx8800'
 
@@ -45,10 +45,10 @@ class Phone(parentphone):
 
     def _readsms(self):
         res={}
-        # go through the sms directory looking for messages
-        for item in self.listfiles("sms/draft").values():
-                buf=prototypes.buffer(self.getfilecontents(item['name'], True))
-                self.logdata("SMS message file " +item['name'], buf.getdata())
+        # The Voyager and Venus use index files to keep track of SMS messages
+        for item in self.getindex(self.protocolclass.drafts_index):
+                buf=prototypes.buffer(self.getfilecontents(item.filename, True))
+                self.logdata("SMS message file " +item.filename, buf.getdata())
                 sf=self.protocolclass.sms_saved()
                 sf.readfrombuffer(buf, logtitle="SMS saved item")
                 if sf.outboxmsg:
@@ -57,16 +57,16 @@ class Phone(parentphone):
                     entry=self._getinboxmessage(sf.inbox)
                 entry.folder=entry.Folder_Saved
                 res[entry.id]=entry
-        for item in self.listfiles("sms/inbox").values():
-                buf=prototypes.buffer(self.getfilecontents(item['name'], True))
-                self.logdata("SMS message file " +item['name'], buf.getdata())
+        for item in self.getindex(self.protocolclass.inbox_index):
+                buf=prototypes.buffer(self.getfilecontents(item.filename, True))
+                self.logdata("SMS message file " +item.filename, buf.getdata())
                 sf=self.protocolclass.sms_in()
                 sf.readfrombuffer(buf, logtitle="SMS inbox item")
                 entry=self._getinboxmessage(sf)
                 res[entry.id]=entry
-        for item in self.listfiles("sms/outbox").values():
-                buf=prototypes.buffer(self.getfilecontents(item['name'], True))
-                self.logdata("SMS message file " +item['name'], buf.getdata())
+        for item in self.getindex(self.protocolclass.outbox_index):
+                buf=prototypes.buffer(self.getfilecontents(item.filename, True))
+                self.logdata("SMS message file " +item.filename, buf.getdata())
                 sf=self.protocolclass.sms_out()
                 sf.readfrombuffer(buf, logtitle="SMS sent item")
                 entry=self._getoutboxmessage(sf)
@@ -83,9 +83,9 @@ class Profile(parentprofile):
     phone_manufacturer='LG Electronics Inc'
     phone_model='VX8800'
     # inside screen resoluation
-    WALLPAPER_WIDTH=176  # TODO -- update this
-    WALLPAPER_HEIGHT=220 # TODO -- update this
-
+    WALLPAPER_WIDTH  = 240
+    WALLPAPER_HEIGHT = 320
+    
     imageorigins={}
     imageorigins.update(common.getkv(parentprofile.stockimageorigins, "images"))
     imageorigins.update(common.getkv(parentprofile.stockimageorigins, "video"))
@@ -95,9 +95,7 @@ class Profile(parentprofile):
     # our targets are the same for all origins
     imagetargets={}
     imagetargets.update(common.getkv(parentprofile.stockimagetargets, "fullscreen",
-                                      {'width': 238, 'height': 246, 'format': "JPEG"}))
-    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "wallpaper",
-                                      {'width': 240, 'height': 274, 'format': "JPEG"}))
+                                      {'width': 240, 'height': 320, 'format': "JPEG"}))
     imagetargets.update(common.getkv(parentprofile.stockimagetargets, "pictureid",
                                       {'width': 120, 'height': 100, 'format': "JPEG"}))
 

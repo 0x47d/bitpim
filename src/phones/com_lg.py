@@ -1297,6 +1297,8 @@ class LGUncountedIndexedMedia:
                         data=''
                 except (com_brew.BrewNoSuchFileException,com_brew.BrewBadPathnameException,com_brew.BrewNameTooLongException):
                     self.log("It was in the index, but not on the filesystem")
+                except (com_brew.BrewFileLockedException):
+                    self.log("Could not read " + item.filename + " possibly due to SD card not being present.")
                 except com_brew.BrewAccessDeniedException:
                     # firmware wouldn't let us read this file, just mark it then
                     self.log('Failed to read file: '+item.filename)
@@ -1638,7 +1640,7 @@ class LGDMPhone:
 
     def _OnTimer(self):
         if self._in_DM:
-            self.log('Transitioned out of DM assumed.')
+            self.log('Transition out of DM assumed.')
             self._in_DM=None
         del self._timer
         self._timer=None
