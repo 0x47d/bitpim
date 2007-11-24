@@ -1,0 +1,34 @@
+#include "pagestart.h"
+
+<H3>Firmware Version</H3>
+<UL>
+<LI>The firmware version is <B>M300 AE07</B>.
+<LI>The hardware version is <B>M300.06a</B>.
+</UL>
+
+<H3>Phonebook</H3>
+<UL>
+<LI>BitPim supports up to 300 phonebook contacts.
+<LI>The field <B>Nick Name</B> and <B>Memo</B> are not supported by BitPim and will be lost upon reading/sending phonebook data from/to the phone.
+<LI>BitPim can neither read nor set <B>Speed Dials</B>.  All <B>Speed Dial</B> settings will be lost when reading phonebook data from the phone or sending to the phone.
+<LI>BitPim can only read and set <B>built-in ringtones</B> for <B>Ringer ID</B> and <B>built-in wallpapers</B> for <B>Picture ID</B>.
+</UL>
+
+<H3>Calendar</H3>
+<UL>
+<LI>BitPim supports up to 70 calendar events.
+<LI>This phone model does not support recurring (repeat) events.
+</UL>
+
+<H3>Task List</H3>
+<UL>
+<LI>BitPim supports up to 9 task lists.
+<LI>BitPim does not support the <B>Due Time</B> field.  It ignores this field when reading data from the phone, and sets it to 12:00am when writing data to the phone.
+</UL>
+
+<H3>Memo Pad</H3>
+<UL>
+<LI>BitPim supports up to 9 memo pad items.
+</UL>
+
+#include "pageend.h"
