@@ -9,6 +9,7 @@ NUMPHONENUMBERS=5
 NUMPHONEBOOKENTRIES=300
 NUMGROUPS=5
 MAXNUMBERLEN=32
+NUMMEMOENTRIES=9
 
 max_pb_slots=312
 max_pb_entries=312
@@ -1923,7 +1924,7 @@ class amsregistry(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_dunno0=DATA(**{'sizeinbytes': 900})
         self.__field_dunno0.readfrombuffer(buf)
-        self.__field_info=LIST(**{'elementclass': _gen_p_samsungsphm300_173, 'length': 320})
+        self.__field_info=LIST(**{'elementclass': _gen_p_samsungsphm300_174, 'length': 320})
         self.__field_info.readfrombuffer(buf)
         self.__field_dunno1=DATA(**{'sizeinbytes': 2000})
         self.__field_dunno1.readfrombuffer(buf)
@@ -1958,7 +1959,7 @@ class amsregistry(BaseProtogenClass):
         if isinstance(value,LIST):
             self.__field_info=value
         else:
-            self.__field_info=LIST(value,**{'elementclass': _gen_p_samsungsphm300_173, 'length': 320})
+            self.__field_info=LIST(value,**{'elementclass': _gen_p_samsungsphm300_174, 'length': 320})
 
     def __delfield_info(self): del self.__field_info
 
@@ -2068,7 +2069,7 @@ class amsregistry(BaseProtogenClass):
 
 
 
-class _gen_p_samsungsphm300_173(BaseProtogenClass):
+class _gen_p_samsungsphm300_174(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['dir_ptr', 'num2', 'name_ptr', 'version_ptr', 'vendor_ptr', 'downloaddomain_ptr', 'num7', 'filetype', 'num8', 'mimetype_ptr', 'num12']
 
@@ -2077,8 +2078,8 @@ class _gen_p_samsungsphm300_173(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_samsungsphm300_173,self).__init__(**dict)
-        if self.__class__ is _gen_p_samsungsphm300_173:
+        super(_gen_p_samsungsphm300_174,self).__init__(**dict)
+        if self.__class__ is _gen_p_samsungsphm300_174:
             self._update(args,dict)
 
 
@@ -2087,7 +2088,7 @@ class _gen_p_samsungsphm300_173(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_samsungsphm300_173,self)._update(args,kwargs)
+        super(_gen_p_samsungsphm300_174,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -2095,7 +2096,7 @@ class _gen_p_samsungsphm300_173(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_samsungsphm300_173,kwargs)
+            self._complainaboutunusedargs(_gen_p_samsungsphm300_174,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
 

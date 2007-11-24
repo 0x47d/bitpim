@@ -692,6 +692,7 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
             dd=memo.set_date_isostr
             req.timestamp=list(time.localtime(time.time())[0:6])
             req.text=memo.text
+            req.slot=memo_cnt
             self.sendpbcommand(req,self.protocolclass.memoupdateresponse)
             memo_cnt += 1
 

@@ -120,8 +120,6 @@ class Phone(parentphone):
 
     getwallpapers=NotImplemented
     getringtones=NotImplemented
-    getmemo=NotImplemented
-    gettodo=NotImplemented
     getsms=NotImplemented
     getcallhistory=NotImplemented
     getplaylist=NotImplemented
