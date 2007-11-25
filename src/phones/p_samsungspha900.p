@@ -12,17 +12,15 @@
 """Proposed descriptions of data usign AT commands"""
 
 from prototypes import *
-from p_samsung_packet import *
-from p_samsungspha620 import *
 
 # We use LSB for all integer like fields in diagnostic mode
 UINT=UINTlsb
 BOOL=BOOLlsb
 #
 
-NUMPHONEBOOKENTRIES=300
+NUMPHONEBOOKENTRIES=500
 NUMEMAILS=3
-NUMPHONENUMBERS=6
+NUMPHONENUMBERS=5
 MAXNUMBERLEN=32
 NUMTODOENTRIES=9
 NUMSMSENTRIES=94
@@ -36,27 +34,60 @@ DEFAULT_WALLPAPER=0
 
 %}
 
+PACKET firmwarerequest:
+    1 UINT {'constant': 0x00} +command
+
+PACKET firmwareresponse:
+    1 UINT command
+    * UNKNOWN unknown
 
 PACKET numberheader:
-    * UINT {'constant': 0x26} +head1
-    * UINT {'constant': 0x39} +head2
-    * UINT {'constant': 0x0} +head3
+    1 UINT {'constant': 0x26} +head1
+    1 UINT {'constant': 0x39} +head2
+    1 UINT {'constant': 0x0} +head3
 
 PACKET nameheader:
-    * UINT {'constant': 0xd3} +head1
-    * UINT {'constant': 0x59} +head2
-    * UINT {'constant': 0x0e} +head3
+    1 UINT {'constant': 0xd3} +head1
+    1 UINT {'constant': 0x59} +head2
+    1 UINT {'constant': 0x0e} +head3
 
 PACKET numberrequest:
-    * numberheader header
+    * numberheader +header
     2 UINT slot
-    128 UNKNOWN pad
+    128 UNKNOWN +pad
 
 PACKET numberresponse:
     * numberheader header
-    5 UINT pad1
+    2 UINT slot
+    1 UINT pad1
+    1 UINT pos
+    1 UINT numbertype
+    2 UINT pad2
     1 UINT numlen
     48 USTRING {'raiseonunterminatedread': False} num
-                
-               
-            
+    * UNKNOWN pad
+
+PACKET namerequest:
+    * nameheader +header
+    2 UINT slot
+    140 UNKNOWN +pad
+
+PACKET nameresponse:
+    * nameheader header
+    2 UINT slot
+    2 UINT bitmask
+    2 UINT p2
+    * LIST {'length': NUMPHONENUMBERS} +numberps:
+        2 UINT {'default': 0xffff} slot
+    2 UINT {'default': 0xffff} +emailp
+    2 UINT {'default': 0xffff} +urlp
+    2 UINT p3
+    1 UINT name_len
+    2 UNKNOWN pad1
+    20 USTRING {'raiseonunterminatedread': False} name
+    1 UNKNOWN pad2
+    20 USTRING {'raiseonunterminatedread': False} nickname
+    1 UNKNOWN pad3
+    72 USTRING {'raiseonunterminatedread': False} memo
+    * UNKNOWN pad4
+    
