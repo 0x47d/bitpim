@@ -35,6 +35,14 @@ number_file_name='nvm/nvm/dial'
 ringer_index_file_name='nvm/nvm/name_ring'
 wallpaper_index_file_name='nvm/nvm/avatar'
 group_file_name='nvm/nvm/group'
+camera_dir='cam/jpeg'
+savedtophone_dir='cam/dldJpeg'
+
+camera_index=100 # starting media index for camera images
+camera_origin='camera-fullsize'
+savedtophone_index=200  # starting media index for saved-to-phone images
+savedtophone_origin='camera'
+ams_index=300   # starting media index for AmsRegistry items
 
 # Number type
 CELLTYPE=1
@@ -68,6 +76,10 @@ exts={
     'image/bmp': '.bmp',
     }
 
+origins={
+    FILETYPE_RINGER: 'ringers',
+    FILETYPE_WALLPAPER: 'images',
+    }
 %}
 
 # Packets describe single line AT responses or commands with no carriage
@@ -213,6 +225,10 @@ PACKET amsregistry:
     def filepath(self, idx):
         # return the full pathname of this item
         return 'ams/'+self.dir(idx)
+    def origin(self, idx):
+        # return the origin based on the file type
+        global origins
+        return origins.get(self.info[idx].filetype, None)
     %}
 
 PACKET CamFile:

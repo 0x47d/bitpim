@@ -26,6 +26,14 @@ number_file_name='nvm/nvm/dial'
 ringer_index_file_name='nvm/nvm/name_ring'
 wallpaper_index_file_name='nvm/nvm/avatar'
 group_file_name='nvm/nvm/group'
+camera_dir='cam/jpeg'
+savedtophone_dir='cam/dldJpeg'
+
+camera_index=100 # starting media index for camera images
+camera_origin='camera-fullsize'
+savedtophone_index=200  # starting media index for saved-to-phone images
+savedtophone_origin='camera'
+ams_index=300   # starting media index for AmsRegistry items
 
 # Number type
 CELLTYPE=1
@@ -59,6 +67,10 @@ exts={
     'image/bmp': '.bmp',
     }
 
+origins={
+    FILETYPE_RINGER: 'ringers',
+    FILETYPE_WALLPAPER: 'images',
+    }
 class groupnameentry(BaseProtogenClass):
     __fields=['gid', 'groupname', 'ringtone', 'dunno2', 'timestamp']
 
@@ -1926,7 +1938,7 @@ class amsregistry(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_dunno0=DATA(**{'sizeinbytes': 900})
         self.__field_dunno0.readfrombuffer(buf)
-        self.__field_info=LIST(**{'elementclass': _gen_p_samsungsphm300_176, 'length': 320})
+        self.__field_info=LIST(**{'elementclass': _gen_p_samsungsphm300_188, 'length': 320})
         self.__field_info.readfrombuffer(buf)
         self.__field_dunno1=DATA(**{'sizeinbytes': 2000})
         self.__field_dunno1.readfrombuffer(buf)
@@ -1961,7 +1973,7 @@ class amsregistry(BaseProtogenClass):
         if isinstance(value,LIST):
             self.__field_info=value
         else:
-            self.__field_info=LIST(value,**{'elementclass': _gen_p_samsungsphm300_176, 'length': 320})
+            self.__field_info=LIST(value,**{'elementclass': _gen_p_samsungsphm300_188, 'length': 320})
 
     def __delfield_info(self): del self.__field_info
 
@@ -2067,11 +2079,15 @@ class amsregistry(BaseProtogenClass):
     def filepath(self, idx):
         # return the full pathname of this item
         return 'ams/'+self.dir(idx)
+    def origin(self, idx):
+        # return the origin based on the file type
+        global origins
+        return origins.get(self.info[idx].filetype, None)
 
 
 
 
-class _gen_p_samsungsphm300_176(BaseProtogenClass):
+class _gen_p_samsungsphm300_188(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['dir_ptr', 'num2', 'name_ptr', 'version_ptr', 'vendor_ptr', 'downloaddomain_ptr', 'num7', 'filetype', 'num8', 'mimetype_ptr', 'num12']
 
@@ -2080,8 +2096,8 @@ class _gen_p_samsungsphm300_176(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_samsungsphm300_176,self).__init__(**dict)
-        if self.__class__ is _gen_p_samsungsphm300_176:
+        super(_gen_p_samsungsphm300_188,self).__init__(**dict)
+        if self.__class__ is _gen_p_samsungsphm300_188:
             self._update(args,dict)
 
 
@@ -2090,7 +2106,7 @@ class _gen_p_samsungsphm300_176(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_samsungsphm300_176,self)._update(args,kwargs)
+        super(_gen_p_samsungsphm300_188,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -2098,7 +2114,7 @@ class _gen_p_samsungsphm300_176(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_samsungsphm300_176,kwargs)
+            self._complainaboutunusedargs(_gen_p_samsungsphm300_188,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
 

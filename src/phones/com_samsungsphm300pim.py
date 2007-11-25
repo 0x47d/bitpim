@@ -19,6 +19,7 @@ class Phone(parentphone):
     "Talk to a Samsung SPH-M300 (PIM) phone"
 
     desc="SPH-M300"
+##    helpid=helpids.ID_PHONE_SAMSUNGSPHM300
     helpid=None
     protocolclass=p_samsungsphm300
     serialsname='sphm300'
