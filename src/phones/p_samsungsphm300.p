@@ -269,9 +269,9 @@ PACKET IndexFile:
 PACKET Group:
     1 UINT { 'default': 0 } +num0
     1 UINT { 'default': 1 if self.num0 else 0 } +num1
-    2 UINT { 'default': len(self.name) } +namelen
+    2 UINT { 'default': 0 } +namelen
     12 USTRING { 'terminator': None,
-                 'default': '' } +name
+                 'default': '' } +namestr
     1 UINT { 'default': 0x30 if self.num0 else 0 } +num5
     8 DATA { 'default': '\x00'*8 } +dunno
     1 UINT { 'default': 1 if self.num0 else 0 } +nume3
@@ -279,6 +279,11 @@ PACKET Group:
         4 DateTime { 'default': DateTime.now() } +datetime
     else:
         4 UINT { 'default': 0 } +num4
+    %{
+    def _get_name(self):
+        return self.namestr[:self.namelen] if self.namelen else ""
+    name=property(fget=_get_name)
+    %}
 
 PACKET GroupFile:
     * LIST { 'elementclass': Group,

@@ -31,4 +31,22 @@
 <LI>BitPim supports up to 9 memo pad items.
 </UL>
 
+<H3>Camera Images</H3>
+<UL>
+<LI>BitPim can retrieve <B>In Camera</B> pictures from the phone and place them under <B>Media/camera-fullsize</B> view.
+<LI>BitPim can retrieve <B>Saved to Phone</B> pictures and place them under <B>Media/camera</B> view.
+<LI>To avoid accidental deletion, BitPim will not write or delete pictures/images in the <B>In Camera</B> and <B>Saved to Phone</B> section.  Users will have to manually delete them from the phone.
+</UL>
+
+<H3>Screen Savers (Wallpapers)</H3>
+<UL>
+<LI><B>Screen Savers (Wallpapers)</B> can be retrieved, added, deleted and sent to the phone via the <B>Media/images</B> view.
+<LI>The default format of <B>Screen Saver</B> images is <B>JPEG</B>.  The default resolution is 128x160.
+</UL>
+
+<H3>Ringers (Ringtones)</H3>
+<UL>
+<LI>Ringers can be retrieved, added, deleted, and sent to the phone via the <B>Media/ringers</B> view.
+<LI>This phone model can accept <B>MIDI</B>, <B>QCP</B>, and <B>PMD</B> format.
+</UL>
 #include "pageend.h"

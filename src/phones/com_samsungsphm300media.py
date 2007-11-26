@@ -12,19 +12,21 @@
 import sha
 
 import common
+import commport
 import com_brew
 import com_phone
 import com_samsung_packet
 import helpids
 import prototypes
+import p_brew
 import p_samsungsphm300
+import re
 
 class Phone(com_phone.Phone, com_brew.BrewProtocol):
     "Talk to a Samsung SPH-M300 (Diag) phone"
 
     desc="SPH-M300"
-##    helpid=helpids.ID_PHONE_SAMSUNGSPHM300
-    helpid=None
+    helpid=helpids.ID_PHONE_SAMSUNGSPHM300
     protocolclass=p_samsungsphm300
     serialsname='sphm300'
 
@@ -38,17 +40,33 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
                    tuple(['Animal %d'%x for x in range(1, 11)])+\
                    ('No Image',)
     numbertypetab=('cell', 'home', 'office', 'pager', 'fax')
+    builtingroups=('Unassigned', 'Family', 'Friends', 'Colleagues',
+                   'VIPs', None)
+
+    __audio_mimetype={ 'mid': 'audio/midi', 'qcp': 'audio/vnd.qcelp', 'pmd': 'application/x-pmd'}
+    __image_mimetype={ 'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'gif': 'image/gif', 'bmp': 'image/bmp', 'png': 'image/png'}
 
     def __init__(self, logtarget, commport):
         com_phone.Phone.__init__(self, logtarget, commport)
 	com_brew.BrewProtocol.__init__(self)
         self.mode=self.MODENONE
 
+    def read_groups(self):
+        """Read and return the group dict"""
+        _buf=prototypes.buffer(self.getfilecontents(self.protocolclass.group_file_name))
+        _groups=self.protocolclass.GroupFile()
+        _groups.readfrombuffer(_buf, logtitle='Reading Group File')
+        _res={}
+        for _idx,_item in enumerate(_groups.entry):
+            _res[_idx]={ 'name': _item.name if _item.num0 else \
+                         self.builtingroups[_idx] }
+        return _res
     def getfundamentals(self, results):
         """Gets information fundamental to interopating with the phone and UI."""
         self.log("Retrieving fundamental phone information")
         self.log("Phone serial number")
         results['uniqueserial']=sha.new(self.get_brew_esn()).hexdigest()
+        results['groups']=self.read_groups()
         self.getmediaindex(results)
         return results
 
@@ -68,6 +86,14 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
                         'location': _item['name'],
                         'origin': self.protocolclass.savedtophone_origin }
             _cnt+=1
+    def _get_builtin_index(self, rt_index, wp_index):
+        """Get the indices of builtin ringtones and wallpapers"""
+        for _idx,_item in enumerate(self.builtinringtones):
+            rt_index[_idx]={ 'name': _item,
+                             'origin': 'builtin' }
+        for _idx, _item in enumerate(self.builtinimages):
+            wp_index[_idx]={ 'name': _item,
+                             'origin': 'builtin' }
     def _get_ams_index(self, rt_index, wp_index):
         """Get the index of ringtones and wallpapers in AmsRegistry"""
         buf=prototypes.buffer(self.getfilecontents(self.protocolclass.AMSREGISTRY))
@@ -91,6 +117,7 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
     def getmediaindex(self, results):
         wp_index={}
         rt_index={}
+        self._get_builtin_index(rt_index, wp_index)
         self._get_camera_index(wp_index)
         self._get_savedtophone_index(wp_index)
         self._get_ams_index(rt_index, wp_index)
@@ -115,8 +142,8 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
             if _origin=='images':
                 _media=[_name]=self.getfilecontents(_item['location'],
                                                     True)
-            elif _origin==self.protocolclass.camera_origin or \
-                 _origin==self.protocolclass.savedtophone_origin:
+            elif _origin in (self.protocolclass.camera_origin,
+                             self.protocolclass.savedtophone_origin):
                 _buf=prototypes.buffer(self.getfilecontents(_item['location'],
                                                             True))
                 _cam=self.protocolclass.CamFile()
@@ -124,6 +151,211 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
                 _item['name']=_cam.filename
                 _media[_item['name']]=_cam.jpeg
         results['wallpapers']=_media
+
+    # Following code lifted from module com_samsungspha620 
+    def makegcd(self, filename,size,mimetable):
+        "Build a GCD file for filename"
+        ext=common.getext(filename.lower())
+        try:
+            mimetype=mimetable[ext]
+        except:
+            return ""
+        
+        noextname=common.stripext(filename)
+        gcdcontent="Content-Type: "+mimetype+"\nContent-Name: "+noextname+"\nContent-Version: 1.0\nContent-Vendor: BitPim\nContent-URL: file:"+filename+"\nContent-Size: "+`size`+"\n\n\n"
+        return gcdcontent
+        
+    def saveringtones(self, result, merge):
+        dircache=self.DirCache(self)
+        media_prefix=self.protocolclass.RINGERPREFIX
+        endtransactionpath=self.protocolclass.ENDTRANSACTION
+        media=result.get('ringtone', {})
+        media_index=result.get('ringtone-index', {})
+        media_names=[x['name'] for x in media.values() \
+                     if x.get('origin', None)=='ringers' ]
+        index_names=[x['name'] for x in media_index.values() \
+                     if x.get('origin', None)=='ringers' ]
+        if merge:
+            del_names=[]
+        else:
+            del_names=[common.stripext(x) for x in index_names if x not in media_names]
+            gcdpattern=re.compile("[\n\r]Content-Name: +(.*?)[\n\r]")
+        new_names=[x for x in media_names if x not in index_names]
+
+        progressmax=len(del_names)+len(new_names)
+        progresscur=0
+        self.log("Writing ringers")
+        self.progress(progresscur, progressmax, "Writing ringers")
+
+        for icnt in range(1,101):
+            if not (new_names or del_names):
+                break
+            fname=media_prefix+`icnt`
+            fnamegcd=media_prefix+`icnt`+".gcd"
+            fstat=dircache.stat(fnamegcd)
+            if del_names and fstat:
+                # See if this file is in list of files to delete
+                gcdcontents=dircache.readfile(fnamegcd)
+                thisfile=gcdpattern.search(gcdcontents).groups()[0]
+                if thisfile in del_names:
+                    self.log("Deleting ringer "+thisfile)
+                    self.progress(progresscur, progressmax, "Deleting ringer "+thisfile)
+                    progresscur+=1
+                    dircache.rmfile(fname)
+                    dircache.rmfile(fnamegcd)
+                    del_names.remove(thisfile)
+                    fstat=False
+            if new_names and not fstat:
+                newname=new_names.pop()
+                contents=""
+                for k in media.keys():
+                    if media[k]['name']==newname:
+                        contents=media[k]['data']
+                        break
+
+                contentsize=len(contents)
+                if contentsize:
+                    gcdcontents=self.makegcd(newname,contentsize,self.__audio_mimetype)
+                    self.log("Writing ringer "+newname)
+                    self.progress(progresscur, progressmax, "Deleting ringer "+newname)
+                    progresscur+=1
+                    dircache.writefile(fname,contents)
+                    dircache.writefile(fnamegcd,gcdcontents)
+
+        fstat=dircache.stat(endtransactionpath)
+        self.log("Finished writing ringers")
+        self.progress(progressmax, progressmax, "Finished writing ringers")
+        if fstat:
+            dircache.rmfile(endtransactionpath)
+        result['rebootphone']=True
+
+        return
+
+    def savewallpapers(self, result, merge):
+        dircache=self.DirCache(self)
+        media_prefix=self.protocolclass.WALLPAPERPREFIX
+        endtransactionpath=self.protocolclass.ENDTRANSACTION
+        media=result.get('wallpapers', {})
+        media_index=result.get('wallpaper-index', {})
+        media_names=[x['name'] for x in media.values() \
+                     if x.get('origin', None)=='images' ]
+        index_names=[x['name'] for x in media_index.values() \
+                     if x.get('origin', None)=='images' ]
+        if merge:
+            del_names=[]
+        else:
+            del_names=[common.stripext(x) for x in index_names if x not in media_names]
+            gcdpattern=re.compile("[\n\r]Content-Name: +(.*?)[\n\r]")
+        new_names=[x for x in media_names if x not in index_names]
+
+        progressmax=len(del_names)+len(new_names)
+        progresscur=0
+        self.log("Writing images")
+        self.progress(progresscur, progressmax, "Writing images")
+
+        for icnt in range(1,101):
+            if not (new_names or del_names):
+                break
+            fname=media_prefix+`icnt`
+            fnamegcd=media_prefix+`icnt`+".gcd"
+            fstat=dircache.stat(fnamegcd)
+            if del_names and fstat:
+                # See if this file is in list of files to delete
+                gcdcontents=dircache.readfile(fnamegcd)
+                thisfile=gcdpattern.search(gcdcontents).groups()[0]
+                if thisfile in del_names:
+                    self.log("Deleting image "+thisfile)
+                    self.progress(progresscur, progressmax, "Deleting image "+thisfile)
+                    progresscur+=1
+                    dircache.rmfile(fname)
+                    dircache.rmfile(fnamegcd)
+                    del_names.remove(thisfile)
+                    fstat=False
+            if new_names and not fstat:
+                newname=new_names.pop()
+                contents=""
+                for k in media.keys():
+                    if media[k]['name']==newname:
+                        contents=media[k]['data']
+                        break
+
+                contentsize=len(contents)
+                if contentsize:
+                    gcdcontents=self.makegcd(newname,contentsize,self.__image_mimetype)
+                    self.log("Writing image "+newname)
+                    self.progress(progresscur, progressmax, "Deleting image "+newname)
+                    progresscur+=1
+                    dircache.writefile(fname,contents)
+                    dircache.writefile(fnamegcd,gcdcontents)
+
+        fstat=dircache.stat(endtransactionpath)
+        self.log("Finished writing images")
+        self.progress(progressmax, progressmax, "Finished writing images")
+        if fstat:
+            dircache.rmfile(endtransactionpath)
+        result['rebootphone']=True
+
+        return
+
+    # Phone detection stuff-----------------------------------------------------
+    def is_mode_brew(self):
+        req=p_brew.memoryconfigrequest()
+        respc=p_brew.memoryconfigresponse
+        
+        for baud in 0, 38400, 115200:
+            if baud:
+                if not self.comm.setbaudrate(baud):
+                    continue
+            try:
+                self.sendbrewcommand(req, respc, callsetmode=False)
+                return True
+            except com_phone.modeignoreerrortypes:
+                pass
+        return False
+
+    def get_detect_data(self, res):
+        try:
+            req=p_brew.firmwarerequest()
+            resp=self.sendbrewcommand(req, p_brew.data)
+            res['firmwareresponse']=resp.bytes
+        except com_brew.BrewBadBrewCommandException:
+            pass
+
+    def eval_detect_data(self, res):
+        _fw=res['firmwareresponse']
+        if len(_fw)>47 and _fw[39:47]=='SPH-M300':
+            # found it
+            res['model']=Profile.phone_model
+            res['manufacturer']=Profile.phone_manufacturer
+            res['esn']=self.get_brew_esn()
+
+    @classmethod
+    def detectphone(_, coms, likely_ports, res, _module, _log):
+        if not likely_ports:
+            # cannot detect any likely ports
+            return None
+        for port in likely_ports:
+            if not res.has_key(port):
+                res[port]={ 'mode_modem': None, 'mode_brew': None,
+                            'manufacturer': None, 'model': None,
+                            'firmware_version': None, 'esn': None,
+                            'firmwareresponse': None }
+            try:
+                if res[port]['mode_brew']==False or \
+                   res[port]['model']:
+                    # either phone is not in BREW, or a model has already
+                    # been found, not much we can do now
+                    continue
+                p=_module.Phone(_log, commport.CommConnection(_log, port, timeout=1))
+                if res[port]['mode_brew'] is None:
+                    res[port]['mode_brew']=p.is_mode_brew()
+                if res[port]['mode_brew']:
+                    p.get_detect_data(res[port])
+                p.eval_detect_data(res[port])
+                p.comm.close()
+            except:
+                if __debug__:
+                    raise
 
     getphonebook=NotImplemented
     getcalendar=NotImplemented
@@ -142,8 +374,11 @@ class Profile(parentprofile):
         'MAXSIZE': 250000
     }
     phone_manufacturer='SAMSUNG'
-    phone_model='SPH-A620/152'
+    phone_model='SPH-M300'
     numbertypetab=Phone.numbertypetab
+
+    usbids=( ( 0x04e8, 0x6640, 2),)
+    deviceclasses=("serial",)
 
     ringtoneorigins=('ringers',)
     excluded_ringtone_origins=('ringers',)
@@ -158,7 +393,7 @@ class Profile(parentprofile):
 
     imagetargets={}
     imagetargets.update(common.getkv(parentprofile.stockimagetargets, "wallpaper",
-                                      {'width': 224, 'height': 168, 'format': "JPEG"}))
+                                      {'width': 128, 'height': 160, 'format': "JPEG"}))
     def GetTargetsForImageOrigin(self, origin):
         return self.imagetargets
 

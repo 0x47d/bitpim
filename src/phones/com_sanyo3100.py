@@ -111,6 +111,8 @@ class Phone(com_sanyo8300.Phone):
                 if res[port]['mode_brew']:
                     p.check_my_phone(res[port])
                 p.comm.close()
+            except com_brew.BrewBadBrewCommandException:
+                pass
             except:
                 if __debug__:
                     raise

@@ -12,6 +12,7 @@
 import sha
 
 import com_samsung_packet
+import helpids
 import p_samsungsphm300
 
 parentphone=com_samsung_packet.Phone
@@ -19,8 +20,7 @@ class Phone(parentphone):
     "Talk to a Samsung SPH-M300 (PIM) phone"
 
     desc="SPH-M300"
-##    helpid=helpids.ID_PHONE_SAMSUNGSPHM300
-    helpid=None
+    helpid=helpids.ID_PHONE_SAMSUNGSPHM300
     protocolclass=p_samsungsphm300
     serialsname='sphm300'
 

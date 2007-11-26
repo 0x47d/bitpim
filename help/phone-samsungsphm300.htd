@@ -2,7 +2,7 @@
 
 <h2>What works</h2>
 
-<P>The support for the Samsung SPH-M300 (Sprint) is divided into 2 separate models: SPH-M300PIM and SPH-M300MDEDIA.  SPH-M300PIM provides support for Phonebook, Calendar, Memo (Notepad), and To-do (Task List) feature.  SPH-M300MEDIA provides support for ringtones and wallpapers (including camera images) feature.
+<P>The support for the <B>Samsung SPH-M300 (Sprint)</B> is divided into 2 separate models: <B>SPH-M300PIM</B> and <B>SPH-M300MDEDIA</B>.  SPH-M300PIM provides support for Phonebook, Calendar, Memo (Notepad), and To-do (Task List) feature.  SPH-M300MEDIA provides support for ringtones and wallpapers (including camera images) feature.  BitPim can auto-detect model SPH-M300MEDIA via the diag port.  Users will have to manually select model SPH-300MPIM via the modem port.
 
 <h2>Contents</h2>
 

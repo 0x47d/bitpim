@@ -2749,7 +2749,7 @@ class IndexFile(BaseProtogenClass):
 
 
 class Group(BaseProtogenClass):
-    __fields=['num0', 'num1', 'namelen', 'name', 'num5', 'dunno', 'nume3', 'datetime', 'num4']
+    __fields=['num0', 'num1', 'namelen', 'namestr', 'num5', 'dunno', 'nume3', 'datetime', 'num4']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -2792,12 +2792,12 @@ class Group(BaseProtogenClass):
         self.__field_num1.writetobuffer(buf)
         try: self.__field_namelen
         except:
-            self.__field_namelen=UINT(**{'sizeinbytes': 2,  'default': len(self.name) })
+            self.__field_namelen=UINT(**{'sizeinbytes': 2,  'default': 0 })
         self.__field_namelen.writetobuffer(buf)
-        try: self.__field_name
+        try: self.__field_namestr
         except:
-            self.__field_name=USTRING(**{'sizeinbytes': 12,  'terminator': None,                 'default': '' })
-        self.__field_name.writetobuffer(buf)
+            self.__field_namestr=USTRING(**{'sizeinbytes': 12,  'terminator': None,                 'default': '' })
+        self.__field_namestr.writetobuffer(buf)
         try: self.__field_num5
         except:
             self.__field_num5=UINT(**{'sizeinbytes': 1,  'default': 0x30 if self.num0 else 0 })
@@ -2832,10 +2832,10 @@ class Group(BaseProtogenClass):
         self.__field_num0.readfrombuffer(buf)
         self.__field_num1=UINT(**{'sizeinbytes': 1,  'default': 1 if self.num0 else 0 })
         self.__field_num1.readfrombuffer(buf)
-        self.__field_namelen=UINT(**{'sizeinbytes': 2,  'default': len(self.name) })
+        self.__field_namelen=UINT(**{'sizeinbytes': 2,  'default': 0 })
         self.__field_namelen.readfrombuffer(buf)
-        self.__field_name=USTRING(**{'sizeinbytes': 12,  'terminator': None,                 'default': '' })
-        self.__field_name.readfrombuffer(buf)
+        self.__field_namestr=USTRING(**{'sizeinbytes': 12,  'terminator': None,                 'default': '' })
+        self.__field_namestr.readfrombuffer(buf)
         self.__field_num5=UINT(**{'sizeinbytes': 1,  'default': 0x30 if self.num0 else 0 })
         self.__field_num5.readfrombuffer(buf)
         self.__field_dunno=DATA(**{'sizeinbytes': 8,  'default': '\x00'*8 })
@@ -2886,34 +2886,34 @@ class Group(BaseProtogenClass):
     def __getfield_namelen(self):
         try: self.__field_namelen
         except:
-            self.__field_namelen=UINT(**{'sizeinbytes': 2,  'default': len(self.name) })
+            self.__field_namelen=UINT(**{'sizeinbytes': 2,  'default': 0 })
         return self.__field_namelen.getvalue()
 
     def __setfield_namelen(self, value):
         if isinstance(value,UINT):
             self.__field_namelen=value
         else:
-            self.__field_namelen=UINT(value,**{'sizeinbytes': 2,  'default': len(self.name) })
+            self.__field_namelen=UINT(value,**{'sizeinbytes': 2,  'default': 0 })
 
     def __delfield_namelen(self): del self.__field_namelen
 
     namelen=property(__getfield_namelen, __setfield_namelen, __delfield_namelen, None)
 
-    def __getfield_name(self):
-        try: self.__field_name
+    def __getfield_namestr(self):
+        try: self.__field_namestr
         except:
-            self.__field_name=USTRING(**{'sizeinbytes': 12,  'terminator': None,                 'default': '' })
-        return self.__field_name.getvalue()
+            self.__field_namestr=USTRING(**{'sizeinbytes': 12,  'terminator': None,                 'default': '' })
+        return self.__field_namestr.getvalue()
 
-    def __setfield_name(self, value):
+    def __setfield_namestr(self, value):
         if isinstance(value,USTRING):
-            self.__field_name=value
+            self.__field_namestr=value
         else:
-            self.__field_name=USTRING(value,**{'sizeinbytes': 12,  'terminator': None,                 'default': '' })
+            self.__field_namestr=USTRING(value,**{'sizeinbytes': 12,  'terminator': None,                 'default': '' })
 
-    def __delfield_name(self): del self.__field_name
+    def __delfield_namestr(self): del self.__field_namestr
 
-    name=property(__getfield_name, __setfield_name, __delfield_name, None)
+    namestr=property(__getfield_namestr, __setfield_namestr, __delfield_namestr, None)
 
     def __getfield_num5(self):
         try: self.__field_num5
@@ -3002,7 +3002,7 @@ class Group(BaseProtogenClass):
         yield ('num0', self.__field_num0, None)
         yield ('num1', self.__field_num1, None)
         yield ('namelen', self.__field_namelen, None)
-        yield ('name', self.__field_name, None)
+        yield ('namestr', self.__field_namestr, None)
         yield ('num5', self.__field_num5, None)
         yield ('dunno', self.__field_dunno, None)
         yield ('nume3', self.__field_nume3, None)
@@ -3010,6 +3010,10 @@ class Group(BaseProtogenClass):
             yield ('datetime', self.__field_datetime, None)
         else:
             yield ('num4', self.__field_num4, None)
+
+    def _get_name(self):
+        return self.namestr[:self.namelen] if self.namelen else ""
+    name=property(fget=_get_name)
 
 
 
