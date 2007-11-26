@@ -97,10 +97,44 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         results['ringtone-index']=rt_index
         results['wallpaper-index']=wp_index
 
+    def getringtones(self, results):
+        _media={}
+        _rt_index=results.get('ringtone-index', {})
+        for _item in _rt_index.values():
+            if _item.get('origin', None)=='ringers':
+                _media[_item['name']]=self.getfilecontents(_item['location'],
+                                                           True)
+        results['ringtone']=_media
+
+    def getwallpapers(self, results):
+        _media={}
+        _wp_index=results.get('wallpaper-index', {})
+        for _item in _wp_index.values():
+            _origin=_item.get('origin', None)
+            _name=_item['name']
+            if _origin=='images':
+                _media=[_name]=self.getfilecontents(_item['location'],
+                                                    True)
+            elif _origin==self.protocolclass.camera_origin or \
+                 _origin==self.protocolclass.savedtophone_origin:
+                _buf=prototypes.buffer(self.getfilecontents(_item['location'],
+                                                            True))
+                _cam=self.protocolclass.CamFile()
+                _cam.readfrombuffer(_buf, logtitle='Reading CAM file')
+                _item['name']=_cam.filename
+                _media[_item['name']]=_cam.jpeg
+        results['wallpapers']=_media
+
+    getphonebook=NotImplemented
+    getcalendar=NotImplemented
+
 parentprofile=com_samsung_packet.Profile
 class Profile(parentprofile):
     protocolclass=Phone.protocolclass
     serialsname=Phone.serialsname
+
+    WALLPAPER_WIDTH=128
+    WALLPAPER_HEIGHT=160
 
     MAX_RINGTONE_BASENAME_LENGTH=19
     RINGTONE_FILENAME_CHARS="abcdefghijklmnopqrstuvwxyz0123456789_ ."
@@ -112,14 +146,21 @@ class Profile(parentprofile):
     numbertypetab=Phone.numbertypetab
 
     ringtoneorigins=('ringers',)
+    excluded_ringtone_origins=('ringers',)
+
     excluded_wallpaper_origins=('camera', 'camera-fullsize')
     imageorigins={}
     imageorigins.update(common.getkv(parentprofile.stockimageorigins, "images"))
     imageorigins.update(common.getkv(parentprofile.stockimageorigins, "camera"))
     imageorigins.update(common.getkv(parentprofile.stockimageorigins, "camera-fullsize"))
+    def GetImageOrigins(self):
+        return self.imageorigins
+
     imagetargets={}
     imagetargets.update(common.getkv(parentprofile.stockimagetargets, "wallpaper",
                                       {'width': 224, 'height': 168, 'format': "JPEG"}))
+    def GetTargetsForImageOrigin(self, origin):
+        return self.imagetargets
 
     _supportedsyncs=(
         ('wallpaper', 'read', None),  # all wallpaper reading
