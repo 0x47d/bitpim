@@ -140,8 +140,8 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
             _origin=_item.get('origin', None)
             _name=_item['name']
             if _origin=='images':
-                _media=[_name]=self.getfilecontents(_item['location'],
-                                                    True)
+                _media[_name]=self.getfilecontents(_item['location'],
+                                                   True)
             elif _origin in (self.protocolclass.camera_origin,
                              self.protocolclass.savedtophone_origin):
                 _buf=prototypes.buffer(self.getfilecontents(_item['location'],
@@ -374,7 +374,7 @@ class Profile(parentprofile):
         'MAXSIZE': 250000
     }
     phone_manufacturer='SAMSUNG'
-    phone_model='SPH-M300'
+    phone_model='SPH-M300MEDIA'
     numbertypetab=Phone.numbertypetab
 
     usbids=( ( 0x04e8, 0x6640, 2),)
