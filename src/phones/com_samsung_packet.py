@@ -181,12 +181,31 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         req=self.protocolclass.esnrequest()
         res=self.sendpbcommand(req, self.protocolclass.esnresponse)
         try:
-            print res[0].esn
             return res[0].esn
         except:
             pass
         return ''
-
+    def get_model(self):
+        req=self.protocolclass.modelreq()
+        res=self.sendpbcommand(req, self.protocolclass.modelresp)
+        try:
+            return res[0].model
+        except:
+            return ''
+    def get_manufacturer(self):
+        req=self.protocolclass.manufacturerreq()
+        res=self.sendpbcommand(req, self.protocolclass.manufacturerresp)
+        try:
+            return res[0].manufacturer
+        except:
+            return ''
+    def get_battery_level(self):
+        req=self.protocolclass.batterylevelreq()
+        res=self.sendpbcommand(req, self.protocolclass.batterylevelresp)
+        try:
+            return res[0].levelstr
+        except:
+            return ''
     def read_groups(self):
 
         g={}
@@ -701,7 +720,15 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
             req.slot=slot
             self.sendpbcommand(req,self.protocolclass.memoupdateresponse)
 
-    
+    # return some basic info about this phone
+    def getbasicinfo(self, phoneinfo):
+        self.log('Getting Basic Phone Info')
+        for _key,_ in phoneinfo.standard_keys:
+            _val=getattr(self, 'get_'+_key,
+                         lambda *_: '')()
+            if _val:
+                setattr(phoneinfo, _key, _val)
+    getphoneinfo=getbasicinfo        
     getcallhistory=None
         
 class Profile(com_phone.Profile):

@@ -162,3 +162,31 @@ PACKET esnresponse:
 #at#psrmr=1
 #PSRMR: 1,0,1,20031205T091836,"To avoid service interruption, please call Sprint PCS at 800-808-1336.",
  
+PACKET manufacturerreq:
+    * CSVSTRING { 'quotechar': None,
+                  'terminator': None,
+                  'default': '+GMI' } +command
+PACKET manufacturerresp:
+    * CSVSTRING { 'quotechar': None,
+                  'terminator': ord(' ') } command
+    * STRING {'terminator': None } manufacturer
+
+PACKET modelreq:
+    * STRING { 'terminator': None,
+               'default': '+GMM' } +command
+PACKET modelresp:
+    * STRING { 'terminator': ord(' ') } command
+    * STRING { 'terminator': None } model
+
+PACKET batterylevelreq:
+    * STRING { 'terminator': None,
+               'default':'+CBC?' } +command
+PACKET batterylevelresp:
+    * STRING { 'terminator': ord(' ') } command
+    * CSVINT zero
+    * CSVINT { 'terminator': None } level
+    %{
+    def _levelstr(self):
+        return '%d%%'%self.level
+    levelstr=property(fget=_levelstr)
+    %}
