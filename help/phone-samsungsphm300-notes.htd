@@ -49,4 +49,9 @@
 <LI>Ringers can be retrieved, added, deleted, and sent to the phone via the <B>Media/ringers</B> view.
 <LI>This phone model can accept <B>MIDI</B>, <B>QCP</B>, and <B>PMD</B> format.
 </UL>
+
+<H3>SMS</H3>
+<UL>
+<LI>BitPim <B>MAY</B> be able to retrieve SMS Inbox text messages from the phone.  However, since the loaner unit is not activated, no test data (messages) were available to develop and test this feature.  Currently, the SMS reading feature is available only for data recording purposes.  If you'd like to help with this effort, please do data recording and email the DR file to djpham@bitpim.org.
+</UL>
 #include "pageend.h"

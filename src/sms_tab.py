@@ -223,7 +223,7 @@ class SMSWidget(wx.Panel, widgets.BitPimWidget):
     def get_selected_data(self):
         # return a dict of selected items
         res={}
-        for sel_idx in self.list_widget._item_list.GetSelections():
+        for sel_idx in self.list_widget._item_list.GetSelections().values():
             k=self.list_widget._item_list.GetItemData(sel_idx)
             if k:
                 res[k]=self._data[k]
@@ -231,6 +231,13 @@ class SMSWidget(wx.Panel, widgets.BitPimWidget):
 
     def get_data(self):
         return self._data
+
+    def get_keys(self):
+        """Return the list of keys as being displayed"""
+        return self.list_widget.GetAllKeys()
+    def get_selected_keys(self):
+        """Return the list of keys of selected items being displayed"""
+        return self.list_widget.GetSelectedKeys()
 
     def populate(self, dict, force=False):
         if self.read_only and not force:
@@ -589,3 +596,12 @@ class SMSList(wx.Panel, widgets.BitPimWidget):
         self._stats.OnPrintDialog(mainwindow, config)
     def CanPrint(self):
         return True
+    def GetAllKeys(self):
+        return [ self._item_list.GetItemData(x) \
+                 for x in range(self._item_list.GetItemCount()) ]
+    def GetSelectedKeys(self):
+        _sel_items=self._item_list.GetSelections()
+        _keys=_sel_items.keys()
+        _keys.sort()
+        return [ self._item_list.GetItemData(_sel_items[x]) \
+                 for x in _keys ]

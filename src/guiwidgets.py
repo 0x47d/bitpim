@@ -2265,10 +2265,10 @@ class SMSPrintDialog(PrintDialog):
     def _get_print_data(self):
         if self.rows_all.GetValue():
             _items=self._data
+            _keys=self._widget.get_keys()
         else:
             _items=self._sel_data
-        _keys=_items.keys()
-        _keys.sort()
+            _keys=self._widget.get_selected_keys()
         self._dns['items']=_items
         self._dns['keys']=_keys
 
