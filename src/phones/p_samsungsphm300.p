@@ -21,6 +21,7 @@ MAXNUMBERLEN=32
 NUMMEMOENTRIES=9
 NUMTODOENTRIES=9
 NUMCALENDAREVENTS=70
+NUMSMSINENTRIES=211
 
 max_pb_slots=312
 max_pb_entries=312
@@ -124,6 +125,14 @@ PACKET phonebookslotresponse:
 PACKET phonebookslotupdaterequest:
     * CSVSTRING {'quotechar': None, 'terminator': None, 'default': '#PBOKW=0,'} +command
     * pbentry entry
+
+PACKET smsinrequest:
+    * CSVSTRING {'quotechar': None,
+                 'terminator': None,
+                 'default': '#PSRMR='} +command
+    * CSVINT {'terminator': None} slot
+PACKET smsinresponse:
+    * DATA bytes
 
 PACKET fspbslot:
     1  UINT { 'default': 0 } +valid "1=valid entry"

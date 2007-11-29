@@ -12,6 +12,7 @@ MAXNUMBERLEN=32
 NUMMEMOENTRIES=9
 NUMTODOENTRIES=9
 NUMCALENDAREVENTS=70
+NUMSMSINENTRIES=211
 
 max_pb_slots=312
 max_pb_entries=312
@@ -874,6 +875,173 @@ class phonebookslotupdaterequest(BaseProtogenClass):
     def containerelements(self):
         yield ('command', self.__field_command, None)
         yield ('entry', self.__field_entry, None)
+
+
+
+
+class smsinrequest(BaseProtogenClass):
+    __fields=['command', 'slot']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(smsinrequest,self).__init__(**dict)
+        if self.__class__ is smsinrequest:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(smsinrequest,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(smsinrequest,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_command
+        except:
+            self.__field_command=CSVSTRING(**{'quotechar': None,                 'terminator': None,                 'default': '#PSRMR='})
+        self.__field_command.writetobuffer(buf)
+        self.__field_slot.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_command=CSVSTRING(**{'quotechar': None,                 'terminator': None,                 'default': '#PSRMR='})
+        self.__field_command.readfrombuffer(buf)
+        self.__field_slot=CSVINT(**{'terminator': None})
+        self.__field_slot.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_command(self):
+        try: self.__field_command
+        except:
+            self.__field_command=CSVSTRING(**{'quotechar': None,                 'terminator': None,                 'default': '#PSRMR='})
+        return self.__field_command.getvalue()
+
+    def __setfield_command(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_command=value
+        else:
+            self.__field_command=CSVSTRING(value,**{'quotechar': None,                 'terminator': None,                 'default': '#PSRMR='})
+
+    def __delfield_command(self): del self.__field_command
+
+    command=property(__getfield_command, __setfield_command, __delfield_command, None)
+
+    def __getfield_slot(self):
+        return self.__field_slot.getvalue()
+
+    def __setfield_slot(self, value):
+        if isinstance(value,CSVINT):
+            self.__field_slot=value
+        else:
+            self.__field_slot=CSVINT(value,**{'terminator': None})
+
+    def __delfield_slot(self): del self.__field_slot
+
+    slot=property(__getfield_slot, __setfield_slot, __delfield_slot, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('command', self.__field_command, None)
+        yield ('slot', self.__field_slot, None)
+
+
+
+
+class smsinresponse(BaseProtogenClass):
+    __fields=['bytes']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(smsinresponse,self).__init__(**dict)
+        if self.__class__ is smsinresponse:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(smsinresponse,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(smsinresponse,kwargs)
+        if len(args):
+            dict2={}
+            dict2.update(kwargs)
+            kwargs=dict2
+            self.__field_bytes=DATA(*args,**dict2)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_bytes.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_bytes=DATA()
+        self.__field_bytes.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_bytes(self):
+        return self.__field_bytes.getvalue()
+
+    def __setfield_bytes(self, value):
+        if isinstance(value,DATA):
+            self.__field_bytes=value
+        else:
+            self.__field_bytes=DATA(value,)
+
+    def __delfield_bytes(self): del self.__field_bytes
+
+    bytes=property(__getfield_bytes, __setfield_bytes, __delfield_bytes, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('bytes', self.__field_bytes, None)
 
 
 
@@ -1938,7 +2106,7 @@ class amsregistry(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_dunno0=DATA(**{'sizeinbytes': 900})
         self.__field_dunno0.readfrombuffer(buf)
-        self.__field_info=LIST(**{'elementclass': _gen_p_samsungsphm300_188, 'length': 320})
+        self.__field_info=LIST(**{'elementclass': _gen_p_samsungsphm300_197, 'length': 320})
         self.__field_info.readfrombuffer(buf)
         self.__field_dunno1=DATA(**{'sizeinbytes': 2000})
         self.__field_dunno1.readfrombuffer(buf)
@@ -1973,7 +2141,7 @@ class amsregistry(BaseProtogenClass):
         if isinstance(value,LIST):
             self.__field_info=value
         else:
-            self.__field_info=LIST(value,**{'elementclass': _gen_p_samsungsphm300_188, 'length': 320})
+            self.__field_info=LIST(value,**{'elementclass': _gen_p_samsungsphm300_197, 'length': 320})
 
     def __delfield_info(self): del self.__field_info
 
@@ -2087,7 +2255,7 @@ class amsregistry(BaseProtogenClass):
 
 
 
-class _gen_p_samsungsphm300_188(BaseProtogenClass):
+class _gen_p_samsungsphm300_197(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['dir_ptr', 'num2', 'name_ptr', 'version_ptr', 'vendor_ptr', 'downloaddomain_ptr', 'num7', 'filetype', 'num8', 'mimetype_ptr', 'num12']
 
@@ -2096,8 +2264,8 @@ class _gen_p_samsungsphm300_188(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_samsungsphm300_188,self).__init__(**dict)
-        if self.__class__ is _gen_p_samsungsphm300_188:
+        super(_gen_p_samsungsphm300_197,self).__init__(**dict)
+        if self.__class__ is _gen_p_samsungsphm300_197:
             self._update(args,dict)
 
 
@@ -2106,7 +2274,7 @@ class _gen_p_samsungsphm300_188(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_samsungsphm300_188,self)._update(args,kwargs)
+        super(_gen_p_samsungsphm300_197,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -2114,7 +2282,7 @@ class _gen_p_samsungsphm300_188(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_samsungsphm300_188,kwargs)
+            self._complainaboutunusedargs(_gen_p_samsungsphm300_197,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
 

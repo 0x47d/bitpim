@@ -119,9 +119,23 @@ class Phone(parentphone):
             pass
         return e
 
+    def getsms(self, results):
+        """retrieve SMS data"""
+        # It's not working for now, used for data recording/collection from
+        # users to determine the return format
+        self.log('Reading SMS data')
+        _req=self.protocolclass.smsinrequest()
+        for _cnt in range(self.protocolclass.NUMSMSINENTRIES):
+            self.progress(_cnt, self.protocolclass.NUMSMSINENTRIES,
+                          'Reading SMS entry %d'%_cnt)
+            _req.slot=_cnt
+            _resp=self.sendpbcommand(_req, self.protocolclass.smsinresponse)
+        results['canned_msg']=[]
+        results['sms']={}
+        return results
+
     getwallpapers=NotImplemented
     getringtones=NotImplemented
-    getsms=NotImplemented
     getcallhistory=NotImplemented
     getplaylist=NotImplemented
     gett9db=NotImplemented
@@ -152,6 +166,7 @@ class Profile(parentprofile):
         ('todo', 'write', 'OVERWRITE'),  # all todo list writing
         ('memo', 'read', None),     # all memo list reading
         ('memo', 'write', 'OVERWRITE'),  # all memo list writing
+        ('sms', 'read', None),         # all SMS list reading
         )
 
     __audio_ext={ 'MIDI': 'mid', 'PMD': 'pmd', 'QCP': 'qcp' }
