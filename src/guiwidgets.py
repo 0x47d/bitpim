@@ -2269,6 +2269,8 @@ class SMSPrintDialog(PrintDialog):
         else:
             _items=self._sel_data
             _keys=self._widget.get_selected_keys()
+        if not _keys:
+            _keys=_items.keys()
         self._dns['items']=_items
         self._dns['keys']=_keys
 
