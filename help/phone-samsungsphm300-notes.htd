@@ -18,6 +18,7 @@
 <UL>
 <LI>BitPim supports up to 70 calendar events.
 <LI>This phone model does not support recurring (repeat) events.
+<LI>Due to timing issues, when getting or sending calendar data from/to the phone, <B>ONLY</B> the calendar item should be selected (and nothing else) in the <B>Get Data from Phone</B> and <B>Send Data to Phone</B> dialog.
 </UL>
 
 <H3>Task List</H3>
