@@ -122,30 +122,35 @@ class USBDevice:
 class USBInterface:
 
     # currently we only deal with first configuration
-    def __init__(self, device, iface):
+    def __init__(self, device, iface, alt=None):
         self.iface=iface
         self.device=device
-        self.desc=iface.altsetting
+        self.desc=alt or iface.altsetting
 
     def number(self):
         return self.desc.bInterfaceNumber
+
+    def altnumber(self):
+        return self.desc.bAlternateSetting
 
     def classdetails(self):
         return self.desc.bInterfaceClass, \
                self.desc.bInterfaceSubClass, \
                self.desc.bInterfaceProtocol
 
-    def openbulk(self):
+    def openbulk(self,epinno=None,epoutno=None):
         "Returns a filelike object you can use to read and write"
         # find the endpoints
+        match=lambda ep1, ep2: (ep1 is None) or (ep2 is None) or ((ep1 & 0x7f) == (ep2 & 0x7f))
+
         epin=None
         epout=None
         for ep in self.endpoints():
             if ep.isbulk():
                 if ep.direction()==ep.IN:
-                    epin=ep
+                    if (not epin) and match(epinno,ep.address()): epin=ep
                 else:
-                    epout=ep
+                    if (not epout) and match(epoutno,ep.address()): epout=ep
         assert epin is not None
         assert epout is not None
 
@@ -166,9 +171,21 @@ class USBInterface:
         if res<0:
             raise USBException()
 
+        # set the alt setting
+        print "alt setting", self.altnumber()
+        res=usb.usb_set_altinterface(self.device.handle, self.altnumber())
+        if TRACE: print "usb_set_alt_interface(%s, %d)=%d" % (self.device.handle, self.altnumber(), res)
+        if res<0:
+            raise USBException()
+
         # we now have the file
         return USBFile(self, epin, epout)
-        
+
+    def alternates(self):
+       for i in range(self.iface.num_altsetting):
+           yield USBInterface(self.device,self.iface,usb.usb_interface_descriptor_index(self.iface.altsetting,i))
+    # a generator raises its StopIteration() by itself
+
     def endpoints(self):
        for i in range(self.desc.bNumEndpoints):
            yield USBEndpoint(usb.usb_endpoint_descriptor_index(self.desc.endpoint, i))

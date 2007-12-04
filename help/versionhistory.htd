@@ -13,6 +13,7 @@
       <LI><P>New phone support: <B>LG VX-8350</B> (initial).
       <LI><P>New phone support: <B>LG VX-5400</B> (initial).
       <LI><P>Improvement: print SMS items in sorted order.
+      <LI><P>Maintenance: patches to libusb wrapper as submitted by Mark Rages and Thomas Rachel.
     </ul>
 
    <h2><a name="1.0.2">Changes in 1.0.2</a></h2>
