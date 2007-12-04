@@ -14,6 +14,7 @@
       <LI><P>New phone support: <B>LG VX-5400</B> (initial).
       <LI><P>Improvement: print SMS items in sorted order.
       <LI><P>Maintenance: patches to libusb wrapper as submitted by Mark Rages and Thomas Rachel.
+      <LI><P>Maintenance: Upgrade to SQLite 3.5.3.
     </ul>
 
    <h2><a name="1.0.2">Changes in 1.0.2</a></h2>
