@@ -1,4 +1,3 @@
-### BITPIM
 ###
 ### Copyright (C) 2007 Nathan Hjelm <hjelmn@users.sourceforge.net>
 ###
@@ -16,6 +15,8 @@ from p_lgvx8700 import *
 
 NUMPHONEBOOKENTRIES=1000
 NUMPHONENUMBERENTRIES=5000
+
+NUMCALENDARENTRIES=300
 
 # sizes of pbfileentry and pnfileentry
 PHONEBOOKENTRYSIZE=256
@@ -76,9 +77,7 @@ PACKET pnfileentry:
     25  LGHEXPN phone_number
     2   UINT type
     3   UINT { 'default': 0 } +unk2
-    6   USTRING { 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False, 'default': '</PN>'} +exit_tag # some entries don't have this??    
-    
-
+    6   USTRING { 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False, 'default': '</PN>'} +exit_tag # some entries don't have this??       
 PACKET pnfile:
     * LIST { 'elementclass': pnfileentry } +items
 
@@ -93,23 +92,24 @@ PACKET PathIndexFile:
 # calendar
 # The event file format on the VX-8550 are almost identical to that of the VX-8700.
 PACKET scheduleevent:
-    4  UINT pos "position within file, used as an event id"
-    33 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False } description
+    P  UINT { 'constant': 138 } packet_size
+    4  UINT { 'default': 0 } +pos "position within file, used as an event id"
+    33 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False, 'default': '' } +description
     4  GPSDATE { 'default': GPSDATE.now() } +cdate      # creation date
     4  GPSDATE { 'default': GPSDATE.now() } +mdate      # modification date
-    4  LGCALDATE start
-    4  LGCALDATE end_time
-    4  LGCALDATE end_date
-    4  LGCALREPEAT repeat # complicated bit mapped field
-    1  UINT alarmindex_vibrate #LSBit of this set vibrate ON(0)/OFF(1), the 7 MSBits are the alarm index
-                              #the alarmindex is the index into the amount of time in advance of the 
-                              #event to notify the user. It is directly related to the alarmminutes 
-                              #and alarmhours below, valid values are
-                              # 8=2days, 7=1day, 6=2hours, 5=1hour, 4=15mins, 3=10mins, 2=5mins, 1=0mins, 0=NoAlarm
-    1  UINT ringtone
-    1  UINT unknown1
-    1  UINT alarmminutes  "a value of 0xFF indicates not set"
-    1  UINT alarmhours    "a value of 0xFF indicates not set"
+    4  LGCALDATE { 'default': (0,0,0,0,0) } +start
+    4  LGCALDATE { 'default': (0,0,0,0,0) } +end_time
+    4  LGCALDATE { 'default': (0,0,0,0,0) } +end_date
+    4  LGCALREPEAT { 'default': (0,0,0,0,0) } +repeat # complicated bit mapped field
+    1  UINT { 'default': 0 } +alarmindex_vibrate #LSBit of this set vibrate ON(0)/OFF(1), the 7 MSBits are the alarm index
+                                                 #the alarmindex is the index into the amount of time in advance of the 
+                                                 #event to notify the user. It is directly related to the alarmminutes 
+                                                 #and alarmhours below, valid values are
+                                                 # 8=2days, 7=1day, 6=2hours, 5=1hour, 4=15mins, 3=10mins, 2=5mins, 1=0mins, 0=NoAlarm
+    1  UINT { 'default': 0 } +ringtone
+    1  UINT { 'default': 0 } +unknown1
+    1  UINT { 'default': 0xff } +alarmminutes  "a value of 0xFF indicates not set"
+    1  UINT { 'default': 0xff } +alarmhours    "a value of 0xFF indicates not set"
     1  UINT { 'default': 0 } +unknown2
     2  UINT { 'default': 0x01FB } +unknown3
     4  UINT { 'default': 0 } +unknown4
@@ -117,13 +117,18 @@ PACKET scheduleevent:
 
 PACKET schedulefile:
     2 UINT numactiveitems
-    * LIST {'elementclass': scheduleevent} +events
+    * LIST { 'elementclass': scheduleevent, 'length': NUMCALENDARENTRIES, 'createdefault': True } +events
+
+PACKET scheduleringerfile:
+    4 UINT numringers
+    * LIST +ringerpaths:
+        256 USTRING { 'encoding': PHONE_ENCODING, 'raiseontruncate': True } path
 
 PACKET textmemo:
     4 GPSDATE { 'default': GPSDATE.now() } +cdate
     301 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False } text
     4 LGCALDATE memotime # time the memo was writen LG time
-    3 UNKNOWN zeros
+    3 UNKNOWN +zeros
 
 PACKET textmemofile:
     4 UINT itemcount

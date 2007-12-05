@@ -16,11 +16,14 @@ Communicate with the LG VX8550 cell phone.
 # BitPim modules
 import common
 import com_brew
+import bpcalendar
 import prototypes
 import com_lgvx8700
 import com_lgvx8500
 import p_lgvx8550
+import p_brew
 import helpids
+import copy
 
 #-------------------------------------------------------------------------------
 parentphone=com_lgvx8700.Phone
@@ -32,6 +35,8 @@ class Phone(parentphone):
 
     my_model='VX8550'
 
+    calendarringerlocation='sch/toolsRinger.dat'
+
     def setDMversion(self):
         self._DMv5=True
 
@@ -41,6 +46,26 @@ class Phone(parentphone):
     #  - getwallpaperindices - LGUncountedIndexedMedia
     #  - getringtoneindices  - LGUncountedIndexedMedia
     #  - DM Version          - 5
+
+    def _write_path_index(self, pbentries, pbmediakey, media_index, index_file, invalid_values):
+        _path_entry=self.protocolclass.PathIndexEntry()
+        _path_file=self.protocolclass.PathIndexFile()
+        for _ in range(self.protocolclass.NUMPHONEBOOKENTRIES):
+            _path_file.items.append(_path_entry)
+        for _entry in pbentries.items:
+            _idx = getattr(_entry, pbmediakey)
+            if _idx in invalid_values or not media_index.has_key(_idx):
+                continue
+            if media_index[_idx].get('origin', None)=='builtin':
+                _filename = media_index[_idx]['name']
+            elif media_index[_idx].get('filename', None):
+                _filename = media_index[_idx]['filename']
+            else:
+                continue
+            _path_file.items[_entry.entry_number0]=self.protocolclass.PathIndexEntry(pathname=_filename)
+        _buf=prototypes.buffer()
+        _path_file.writetobuffer(_buf, logtitle='Writing Path ID')
+        self.writefile(index_file, _buf.getvalue())
 
     def savephonebook (self, data):
         "Saves out the phonebook"
@@ -130,9 +155,15 @@ class Phone(parentphone):
         # finally, write out the new phone number database
         self.writefile (self.protocolclass.pn_file_name, new_pb_numbersbuf.getvalue())
 
+        _rt_index=data.get('ringtone-index', {})
+        _wp_index=data.get('wallpaper-index', {})
+
+        # fix up ringtone index
+        self._write_path_index(pb_entries, 'ringtone', _rt_index, self.protocolclass.RTPathIndexFile, (0xffff,))
+        # fix up wallpaer index
+        self._write_path_index(pb_entries, 'wallpaper', _wp_index, self.protocolclass.WPPathIndexFile, (0, 0xffff,))
 
         # might need to update the ICE index as well
-
 
         # update speed dials
         req=self.protocolclass.speeddials()
@@ -144,7 +175,7 @@ class Phone(parentphone):
             req.speeddials.append(sd)
         buffer=prototypes.buffer()
         req.writetobuffer(buffer, logtitle="New speed dials")
-                    
+
         # We check the existing speed dial file as changes require a reboot
         self.log("Checking existing speed dials")
         if buffer.getvalue()!=self.getfilecontents(self.protocolclass.speed_file_name):
@@ -369,6 +400,145 @@ class Phone(parentphone):
                 if _sd_dict.get(type, None):
                     res['numbers'][i]['speeddial']=_sd_dict[type]
         return res
+
+    def getcalendar(self,result):
+        res={}
+        # Read exceptions file first
+        exceptions = self.getexceptions()
+
+        try:
+            buf = prototypes.buffer(self.getfilecontents(self.calendarringerlocation))
+            ringersf = self.protocolclass.scheduleringerfile()
+            ringersf.readfrombuffer (buf)
+        except:
+            self.log ("unable to read schedule ringer path file")
+        
+        # Now read schedule
+        try:
+            buf=prototypes.buffer(self.getfilecontents(self.calendarlocation))
+            if len(buf.getdata())<3:
+                # file is empty, and hence same as non-existent
+                raise com_brew.BrewNoSuchFileException()
+            sc=self.protocolclass.schedulefile()
+            sc.readfrombuffer(buf, logtitle="Calendar")
+            for event in sc.events:
+                # the vx8100 has a bad entry when the calender is empty
+                # stop processing the calender when we hit this record
+                if event.pos==0: #invalid entry
+                    continue
+                entry=bpcalendar.CalendarEntry()
+                try: # delete events are still in the calender file but have garbage dates
+                    self.getcalendarcommon(entry, event)
+                except ValueError:
+                    continue
+                try:
+                    if (event.ringtone >= 100):   # MIC Ringer is downloaded to phone or microSD
+                        entry.ringtone = common.basename(ringersf.ringerpaths[event.ringtone-100].path)
+                    else:                         # MIC Ringer is built-in
+                        entry.ringtone=self.builtinringtones[event.ringtone]
+                except:
+                    self.log ("Setting default ringer for event\n")
+                    # hack, not having a phone makes it hard to figure out the best approach
+                    if entry.alarm==None:
+                        entry.ringtone='No Ring'
+                    else:
+                        entry.ringtone='Loud Beeps'
+                # check for exceptions and remove them
+                if event.repeat[3] and exceptions.has_key(event.pos):
+                    for year, month, day in exceptions[event.pos]:
+                        entry.suppress_repeat_entry(year, month, day)
+                res[entry.id]=entry
+
+            assert sc.numactiveitems==len(res)
+        except com_brew.BrewNoSuchFileException:
+            pass # do nothing if file doesn't exist
+        result['calendar']=res
+        return result
+
+    def _scheduleextras(self, data, fwversion):
+        data.serial_number = '000000ca-00000000-00000000-' + fwversion
+        data.unknown3 = 0x01fb
+        
+    def savecalendar(self, dict, merge):
+        # ::TODO::
+        # what will be written to the files
+        eventsf     = self.protocolclass.schedulefile()
+        exceptionsf = self.protocolclass.scheduleexceptionfile()
+        ringersf    = self.protocolclass.scheduleringerfile()
+        # what are we working with
+        cal=dict['calendar']
+        newcal={}
+        #sort into start order, makes it possible to see if the calendar has changed
+        keys=[(x.start, k) for k,x in cal.items()]
+        keys.sort()
+        # apply limiter
+        keys=keys[:self.protocolclass.NUMCALENDARENTRIES]
+        # number of entries
+        eventsf.numactiveitems=len(keys)
+        ringersf.numringers = 0
+        pos = 0
+        # get phone firmware version for serial number
+        try:
+            req = p_brew.firmwarerequest()
+            res = self.sendbrewcommand(req, self.protocolclass.firmwareresponse)
+            _fwversion = res.firmware
+        except:
+            _fwversion = '00000000'
+
+        # play with each entry
+        for (_,k) in keys:
+            # entry is what we will return to user
+            entry=cal[k]
+            data=self.protocolclass.scheduleevent()
+            # using the packetsize() method here will fill the LIST with default entries
+            data.pos = pos * data.packet_size + 2
+            self._schedulecommon(entry, data)
+            alarm_set=self.setalarm(entry, data)
+            if alarm_set:
+                if entry.ringtone=="No Ring" and not entry.vibrate:
+                    alarm_name="Low Beep Once"
+                else:
+                    alarm_name=entry.ringtone
+            else: # set alarm to "No Ring" gets rid of alarm icon on phone
+                alarm_name="No Ring"
+            for i in dict['ringtone-index']:
+                self.log ('ringtone ' + str(i) + ': ' + dict['ringtone-index'][i]['name'] + ' alarm-name = ' + alarm_name)  
+                if dict['ringtone-index'][i]['name']==alarm_name:
+                    if dict['ringtone-index'][i].get('filename', None):
+                        data.ringtone = 100 + ringersf.numringers
+                        ringersf.ringerpaths.append(dict['ringtone-index'][i]['filename'])
+                        ringersf.numringers = ringersf.numringers + 1
+                    else:
+                        # builtin ringer
+                        data.ringtone=i      # Set to proper index
+                    break
+            # check for exceptions and add them to the exceptions list
+            self._scheduleexceptions(entry, data, exceptionsf)
+            self._scheduleextras(data, _fwversion)
+            # put entry in nice shiny new dict we are building
+            entry=copy.copy(entry)
+            newcal[data.pos]=entry
+            eventsf.events.append(data)            
+            pos = pos + 1
+
+        buf=prototypes.buffer()
+        eventsf.writetobuffer(buf, logtitle="New Calendar")
+        self.writefile(self.calendarlocation, buf.getvalue())
+        self.log("Your phone has to be rebooted due to the calendar changing")
+        dict["rebootphone"]=True
+
+        buf=prototypes.buffer()
+        exceptionsf.writetobuffer(buf, logtitle="Writing calendar exceptions")
+        self.writefile(self.calendarexceptionlocation, buf.getvalue())
+
+        buf = prototypes.buffer()
+        ringersf.writetobuffer(buf, logtitle="Writing calendar ringers")
+        self.writefile(self.calendarringerlocation, buf.getvalue())
+
+        # fix passed in dict
+        dict['calendar']=newcal
+
+        return dict
 
 #-------------------------------------------------------------------------------
 parentprofile=com_lgvx8500.Profile

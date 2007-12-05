@@ -31,6 +31,10 @@ class Phone(parentphone):
 
     my_model='VX8800'
 
+    builtinringtones= ('Low Beep Once', 'Low Beeps', 'Loud Beep Once', 'Loud Beeps', 'Door Bell', 'VZW Default Ringtone') + \
+                      tuple(['Ringtone '+`n` for n in range(1,20)]) + \
+                      ('No Ring',)
+
     def setDMversion(self):
         self._DMv5=True
         self._timeout=5 # The Voyager/Venus time out fast
@@ -72,6 +76,10 @@ class Phone(parentphone):
                 entry=self._getoutboxmessage(sf)
                 res[entry.id]=entry
         return res 
+
+    def _scheduleextras(self, data, fwversion):
+        data.serial_number = '000000cc-00000000-00000000-' + fwversion
+        data.unknown3 = 0x00f9
 
 #-------------------------------------------------------------------------------
 parentprofile=com_lgvx8550.Profile
