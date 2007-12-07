@@ -204,11 +204,14 @@ class LGCALREPEAT(prototypes.UINTlsb):
 
 class GPSDATE(prototypes.UINTlsb):
     _time_t_ofs=calendar.timegm((1980, 1, 6, 0, 0, 0))
+    _counter=0
     def __init__(self, *args, **kwargs):
         """A date/time as used in the LG call history files,
+        @keyword unique: (True/False, Optional) Ensure that each GSPDATE instance
+                          is unique.
         """
         super(GPSDATE, self).__init__(*args, **kwargs)
-
+        self._unique=False
         dict={'sizeinbytes': 4}
         dict.update(kwargs)
 
@@ -216,9 +219,11 @@ class GPSDATE(prototypes.UINTlsb):
             self._update(args, dict)
 
     def _update(self, args, kwargs):
+        self._consumekw(kwargs, ('unique',))
         for k in 'constant', 'default', 'value':
             if kwargs.has_key(k):
                 kwargs[k]=self._converttoint(kwargs[k])
+
         if len(args)==0:
             pass
         elif len(args)==1:
@@ -240,7 +245,13 @@ class GPSDATE(prototypes.UINTlsb):
 
     def _converttoint(self, date):
         assert len(date)==6
-        return calendar.timegm(date)-self._time_t_ofs
+        _val=calendar.timegm(date)-self._time_t_ofs
+        if self._unique:
+            _val+=GPSDATE._counter
+            GPSDATE._counter+=1
+            if GPSDATE._counter==0xffff:
+                GPSDATE._counter=0
+        return _val
     @classmethod
     def now(_):
         return time.gmtime()[:6]

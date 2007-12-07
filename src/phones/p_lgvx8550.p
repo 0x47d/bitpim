@@ -125,7 +125,8 @@ PACKET scheduleringerfile:
         256 USTRING { 'encoding': PHONE_ENCODING, 'raiseontruncate': True } path
 
 PACKET textmemo:
-    4 GPSDATE { 'default': GPSDATE.now() } +cdate
+    4 GPSDATE { 'default': GPSDATE.now(),
+                'unique': True } +cdate
     301 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False } text
     4 LGCALDATE memotime # time the memo was writen LG time
     3 UNKNOWN +zeros
