@@ -86,8 +86,8 @@ class Phone(parentphone):
         entry_num = 0
         existingpbook={}
         for pb_entry in pb_entries.items:
-            if pb_entry.entry_number0 == 0xffff:
-                break
+            if pb_entry.entry_number1 == 0xffffffffL:
+                continue
 
             entry_group = []
             for item in pb_entry.entrygroup:
@@ -296,8 +296,9 @@ class Phone(parentphone):
 
         pbook={}
         for pb_entry in pb_entries.items:
-            if pb_entry.entry_number0 == 0xffff:
-                break
+            # skip blank entries
+            if pb_entry.entry_number1 == 0xffffffffL:
+                continue
 
             try:
                 self.log("Parse entry "+`numentries`+" - " + pb_entry.name)
