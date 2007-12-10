@@ -24,6 +24,8 @@ import p_lgvx8550
 import p_brew
 import helpids
 import copy
+import time
+import os.path
 
 #-------------------------------------------------------------------------------
 parentphone=com_lgvx8700.Phone
@@ -47,68 +49,33 @@ class Phone(parentphone):
     #  - getringtoneindices  - LGUncountedIndexedMedia
     #  - DM Version          - 5
 
-    def _write_path_index(self, pbentries, pbmediakey, media_index, index_file, invalid_values):
-        _path_entry=self.protocolclass.PathIndexEntry()
+    def _get_path_index(self, index_file):
+        buf = prototypes.buffer(self.getfilecontents(index_file))
         _path_file=self.protocolclass.PathIndexFile()
-        for _ in range(self.protocolclass.NUMPHONEBOOKENTRIES):
-            _path_file.items.append(_path_entry)
-        for _entry in pbentries.items:
-            _idx = getattr(_entry, pbmediakey)
-            if _idx in invalid_values or not media_index.has_key(_idx):
-                continue
-            if media_index[_idx].get('origin', None)=='builtin':
-                _filename = media_index[_idx]['name']
-            elif media_index[_idx].get('filename', None):
-                _filename = media_index[_idx]['filename']
-            else:
-                continue
-            _path_file.items[_entry.entry_number0]=self.protocolclass.PathIndexEntry(pathname=_filename)
-        _buf=prototypes.buffer()
-        _path_file.writetobuffer(_buf, logtitle='Writing Path ID')
-        self.writefile(index_file, _buf.getvalue())
+        _path_file.readfrombuffer(buf, logtitle="Read path index: " + index_file)
+        return _path_file
 
     def savephonebook (self, data):
         "Saves out the phonebook"
         self.savegroups (data)
 
-        # the VX-8550 does not appear to support the LG phonebook protocol so /pim files are used
-        pb_entrybuf = prototypes.buffer(self.getfilecontents(self.protocolclass.pb_file_name))
-        pb_entries = self.protocolclass.pbfile()
-        self.progress (1, 2, "Parsing phonebook")
-        pb_entries.readfrombuffer(pb_entrybuf, logtitle="Read phonebook entries")
-
-        pb_numberbuf = prototypes.buffer(self.getfilecontents(self.protocolclass.pn_file_name))
-        pb_numbers = self.protocolclass.pnfile()
-        self.progress (2, 2, "Parsing phone numbers")
-        pb_numbers.readfrombuffer(pb_numberbuf, logtitle="Read phonebook numbers")
-
-        # read the existing phonebook
-        entry_num = 0
-        existingpbook={}
-        for pb_entry in pb_entries.items:
-            if pb_entry.entry_number1 == 0xffffffffL:
-                continue
-
-            entry_group = []
-            for item in pb_entry.entrygroup:
-                entry_group.append(item.value)
-
-            entry = { 'name': pb_entry.name, 'type': pb_entry.entry_type, 'entrygroup': entry_group }
-            self.log ("Parsed entry "+`entry_num`+" - "+entry['name'])
-            existingpbook[entry_num] = entry
-
-            entry_num += 1
+        ring_pathf=self.protocolclass.PathIndexFile()
+        picid_pathf=self.protocolclass.PathIndexFile()
 
         # the pbentry.dat will will be overwritten so there is no need to delete entries
         pbook = data['phonebook']
         keys = pbook.keys ()
         keys.sort ()
 
+        _rt_index=data.get('ringtone-index', {})
+        _wp_index=data.get('wallpaper-index', {})
+
         entry_num = 0
         new_pn_entries = {}
         newspeeds = {}
+        pb_entries = self.protocolclass.pbfile()
         for i in keys:
-            pb_entries.items[entry_num] = self.make_entry (new_pn_entries, entry_num, pbook[i], existingpbook, data)
+            pb_entries.items.append(self.make_entry (new_pn_entries, entry_num, pbook[i], data, ring_pathf, _rt_index, picid_pathf, _wp_index))
 
             # already know the new index so speed dials can be redone here
             if len (data['speeddials']):
@@ -155,14 +122,16 @@ class Phone(parentphone):
         # finally, write out the new phone number database
         self.writefile (self.protocolclass.pn_file_name, new_pb_numbersbuf.getvalue())
 
-        _rt_index=data.get('ringtone-index', {})
-        _wp_index=data.get('wallpaper-index', {})
+        # write ringtone index
+        _buf=prototypes.buffer()
+        ring_pathf.writetobuffer(_buf, logtitle='Writing Ringtone ID')
+        self.writefile(self.protocolclass.RTPathIndexFile, _buf.getvalue())
 
-        # fix up ringtone index
-        self._write_path_index(pb_entries, 'ringtone', _rt_index, self.protocolclass.RTPathIndexFile, (0xffff,))
-        # fix up wallpaer index
-        self._write_path_index(pb_entries, 'wallpaper', _wp_index, self.protocolclass.WPPathIndexFile, (0, 0xffff,))
-
+        # write wallpaer index
+        _buf=prototypes.buffer()
+        picid_pathf.writetobuffer(_buf, logtitle='Writing Wallpaper ID')
+        self.writefile(self.protocolclass.WPPathIndexFile, _buf.getvalue())
+    
         # might need to update the ICE index as well
 
         # update speed dials
@@ -188,46 +157,32 @@ class Phone(parentphone):
 
         return data
 
-    def get_existing_assoc (self, pb_entry, existingpbook, assoc):
-        for existing_entry in existingpbook:
-            if existingpbook[existing_entry]['name'] == pb_entry['name']:
-                return existingpbook[existing_entry][assoc]
-
-        # no existing association
-        if assoc == 'type':
-            return 0x000707D7 # default type
-        elif assoc == 'entrygroup':
-            # arbitrary value -- the value does not need to be unique
-            return [0x0006, 0x0010, 0x0010, 0x0010]
-
-    def make_pn_entry (self, phone_number, number_type, pn_id, pe_id, pe_entry_type, pe_entrygroup):
+    def make_pn_entry (self, phone_number, number_type, pn_id, pbpn_id, pe_id, date):
         """ Create a non-blank pnfileentry frome a phone number string """
         if len(phone_number) == 0:
             raise
         
         new_entry = self.protocolclass.pnfileentry()
 
-        new_entry.entry_type = pe_entry_type
-        for item in pe_entrygroup:
-            new_entry.entrygroup.append (item)
+        for i in range(0, 6):
+            new_entry.mod_date.append(date[i])
         new_entry.pn_id = pn_id
         new_entry.pe_id = pe_id
         new_entry.phone_number = phone_number
         new_entry.type = number_type
+        new_entry.unk0 = pbpn_id
 
         return new_entry
 
-    def make_entry (self, pn_entries, entry_num, pb_entry, existingpbook, data):
+    def make_entry (self, pn_entries, entry_num, pb_entry, data, ring_pathf, rt_index, picid_pathf, wp_index):
         """ Create a pbfileentry from a bitpim phonebook entry """
         new_entry = self.protocolclass.pbfileentry()
 
-        pe_entry_type = self.get_existing_assoc (pb_entry, existingpbook, 'type')
-        pe_entrygroup = self.get_existing_assoc (pb_entry, existingpbook, 'entrygroup')
+        # set modification date to current date
+        date = time.localtime()
+        for i in range(0, 6):
+            new_entry.mod_date.append(date[i])
 
-        for item in pe_entrygroup:
-            new_entry.entrygroup.append (item)
-
-        new_entry.entry_type = pe_entry_type
         new_entry.entry_number0 = entry_num
         new_entry.entry_number1 = entry_num + 1
 
@@ -246,14 +201,28 @@ class Phone(parentphone):
                         break
 
                     try:
-                         pn_entries[new_pn_id] = self.make_pn_entry (pb_entry[key][i], pb_entry['numbertypes'][i], new_pn_id, entry_num, pe_entry_type, pe_entrygroup)
+                         pn_entries[new_pn_id] = self.make_pn_entry (pb_entry[key][i], pb_entry['numbertypes'][i], new_pn_id, i, entry_num, date)
                          l.append (new_pn_id)
                     except:
                          l.append (0xffff)
             elif key == 'ringtone':
                 new_entry.ringtone = self._findmediainindex(data['ringtone-index'], pb_entry['ringtone'], pb_entry['name'], 'ringtone')
+                try:
+                    _filename = rt_index[new_entry.ringtone]['filename']
+                    ring_pathf.items.append(self.protocolclass.PathIndexEntry(pathname=_filename))
+                    new_entry.ringtone = 0x64
+                    self.log ('Contact ringtone: ' + _filename)
+                except:
+                    ring_pathf.items.append(self.protocolclass.PathIndexEntry())
             elif key == 'wallpaper':
                 new_entry.wallpaper = self._findmediainindex(data['wallpaper-index'], pb_entry['wallpaper'], pb_entry['name'], 'wallpaper')
+                try:
+                    _filename = wp_index[new_entry.wallpaper]['filename']
+                    picid_pathf.items.append(self.protocolclass.PathIndexEntry(pathname=_filename))
+                    new_entry.ringtone = 0x64
+                    self.log ('Contact wallpaper: ' + _filename)
+                except:
+                    picid_pathf.items.append(self.protocolclass.PathIndexEntry())
             elif key in new_entry.getfields():
                 setattr (new_entry, key, pb_entry[key])
 
@@ -292,6 +261,12 @@ class Phone(parentphone):
         pb_numbers = self.protocolclass.pnfile()
         pb_numbers.readfrombuffer(pb_numberbuf, logtitle="Read phonebook numbers")
 
+        self.log("Reading Ringtone IDs")
+        ring_pathf=self._get_path_index(self.protocolclass.RTPathIndexFile)
+
+        self.log("Reading Picture IDs")
+        picid_pathf=self._get_path_index(self.protocolclass.WPPathIndexFile)
+
         numentries = 0
 
         pbook={}
@@ -302,7 +277,9 @@ class Phone(parentphone):
 
             try:
                 self.log("Parse entry "+`numentries`+" - " + pb_entry.name)
-                entry=self.extractphonebookentry(pb_entry, pb_numbers, speeds, result)
+                entry=self.extractphonebookentry(pb_entry, pb_numbers, speeds, result,
+                                                 os.path.basename(ring_pathf.items[numentries].pathname),
+                                                 os.path.basename(picid_pathf.items[numentries].pathname))
 
                 pbook[numentries]=entry
 
@@ -328,7 +305,7 @@ class Phone(parentphone):
         print "returning keys",result.keys()
         return pbook
 
-    def extractphonebookentry(self, entry, numbers, speeds, fundamentals):
+    def extractphonebookentry(self, entry, numbers, speeds, fundamentals, ring_name, picid_name):
         """Return a phonebook entry in BitPim format.  This is called from getphonebook."""
         res={}
         # serials
@@ -361,7 +338,10 @@ class Phone(parentphone):
         # wallpapers
         if entry.wallpaper!=self.protocolclass.NOWALLPAPER:
             try:
-                paper=fundamentals['wallpaper-index'][entry.wallpaper]['name']
+                if entry.wallpaper == 0x64:
+                    paper = picid_name
+                else:
+                    paper = fundamentals['wallpaper-index'][entry.wallpaper]['name']
                 res['wallpapers']=[ {'wallpaper': paper, 'use': 'call'} ]                
             except:
                 print "can't find wallpaper for index",entry.wallpaper
@@ -371,7 +351,11 @@ class Phone(parentphone):
         res['ringtones']=[]
         if entry.ringtone != self.protocolclass.NORINGTONE:
             try:
-                tone=fundamentals['ringtone-index'][entry.ringtone]['name']
+                if entry.ringtone == 0x64:
+                    tone = ring_name
+                else:
+                    tone=fundamentals['ringtone-index'][entry.ringtone]['name']
+                self.log('Tone is ' + tone)
                 res['ringtones'].append({'ringtone': tone, 'use': 'call'})
             except:
                 print "can't find ringtone for index",entry.ringtone

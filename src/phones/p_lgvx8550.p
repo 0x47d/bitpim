@@ -40,10 +40,9 @@ ice_file_name   = 'pim/pbice.dat'
 # /pim/pbentry.dat format
 PACKET pbfileentry:
     5   USTRING { 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False, 'default': '<PE>'} +entry_tag
-    4   UINT { 'default': 0x000707D7 } +entry_type # 0x000107BC appears to be for special entries (i.e. #BAL, #MIN, etc)
-    # entrygroup is the same as the entrygroup in the associated phone number. it is unclear what these values mean/do
-    *   LIST { 'length': 4 } +entrygroup:
-       2 UINT { 'default': 0 } value
+    # year, month, day, hour, min, sec
+    * LIST { 'length': 6 } +mod_date:
+       2 UINT { 'default': 0 } +date_entry
     6   STRING { 'terminator': None, 'default': '\xff\xff\xff\xff\xff\xff' } +unk0
     4   UINT entry_number1 # 1 based entry number -- might be just 2 bytes long
     2   UINT entry_number0 # 0 based entry number
@@ -66,10 +65,9 @@ PACKET pbfile:
 # /pim/pbnumber.dat format
 PACKET pnfileentry:
     5   USTRING { 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False, 'default': '<PN>'} +entry_tag # some entries don't have this??
-    4   UINT { 'default': 0x000707D7 } +entry_type # 0x000107BC appears to be for special entries such as #BAL and #MIN
-    # entrygroup is the same as the entrygroup in the associated phonebook entry
-    *   LIST { 'length': 4 } +entrygroup:
-        2 UINT value
+    # year, month, day, hour, min, sec
+    * LIST { 'length': 6 } +mod_date:
+       2 UINT { 'default': 0 } +date_entry
     6   STRING { 'default': '', 'raiseonunterminatedread': False } +unk0
     2   UINT pn_id # 0 based
     2   UINT pe_id # 0 based
