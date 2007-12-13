@@ -1,5 +1,10 @@
 #include "pagestart.h"
 
+   <h2><a name="1.0.4">Changes in 1.0.4</a></h2>
+    <ul>
+      <LI><P>New phone support: Samsung SCH-U740 (VZW) (Initial)
+    </ul>
+
    <h2><a name="1.0.3">Changes in 1.0.3</a></h2>
     <ul>
       <LI><P>Improvement: Monthly Calendar Print: print one month per page.
