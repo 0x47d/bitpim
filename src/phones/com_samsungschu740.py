@@ -14,7 +14,9 @@
 # BitPim Modules
 
 import common
+import com_brew
 import com_samsungscha950 as scha950
+import prototypes
 import p_samsungschu740 as p_schu740
 
 parentphone=scha950.Phone
@@ -77,6 +79,103 @@ class Phone(parentphone):
         "Calls all the constructors and sets initial modes"
         parentphone.__init__(self, logtarget, commport)
 
+    def _get_file_wallpaper_index(self, idx, result):
+        try:
+            _buf=prototypes.buffer(self.getfilecontents(self.protocolclass.PIC_INDEX_FILE_NAME))
+        except (com_brew.BrewNoSuchFileException,
+                com_brew.BrewBadPathnameException,
+                com_brew.BrewFileLockedException,
+                com_brew.BrewAccessDeniedException):
+            return idx
+        except:
+            if __debug__:
+                raise
+            return idx
+        _index_file=self.protocolclass.RPictureIndexFile()
+        _index_file.readfrombuffer(_buf)
+        for _entry in _index_file.items:
+            if _entry.pictype==self.protocolclass.PIC_TYPE_USERS:
+                if _entry.pathname.startswith('/ff/'):
+                    _file_name=_entry.pathname[4:]
+                else:
+                    _file_name=_entry.pathname
+                result[idx]={ 'name': common.basename(_entry.pathname),
+                              'filename': _file_name,
+                              'origin': 'images',
+                              }
+                idx+=1
+        return idx
+    def get_wallpaper_index(self):
+        _res={}
+        _idx=self._get_builtin_wallpaper_index(0, _res)
+        _idx=self._get_file_wallpaper_index(_idx, _res)
+        return _res
+
+    # Ringtone stuff
+    def saveringtones(self, fundamentals, merge):
+        """Save ringtones to the phone"""
+        self.log('Writing ringtones to the phone')
+        try:
+            _del_list, _new_list=self._get_del_new_list('ringtone-index',
+                                                        'ringtone',
+                                                        merge,
+                                                        fundamentals)
+            if __debug__:
+                self.log('Delete list: '+','.join(_del_list))
+                self.log('New list: '+','.join(_new_list))
+##            self._replace_files('ringtone-index', 'ringtone',
+##                                _new_list, fundamentals)
+##            self._del_files('ringtone-index',
+##                            _del_list, fundamentals)
+            self._add_files('ringtone-index', 'ringtone',
+                            _new_list, fundamentals)
+            self._update_media_index(self.protocolclass.WRingtoneIndexFile,
+                                     self.protocolclass.WRingtoneIndexEntry,
+                                     [self.protocolclass.RT_PATH],
+                                     self.protocolclass.RT_EXCLUDED_FILES,
+                                     self.protocolclass.RT_INDEX_FILE_NAME)
+            self._update_media_index(self.protocolclass.WSoundsIndexFile,
+                                     self.protocolclass.WSoundsIndexEntry,
+                                     [self.protocolclass.SND_PATH],
+                                     self.protocolclass.SND_EXCLUDED_FILES,
+                                     self.protocolclass.SND_INDEX_FILE_NAME)
+            fundamentals['rebootphone']=True
+        except:
+            if __debug__:
+                raise
+        return fundamentals
+
+    # Wallpaper stuff
+    def savewallpapers(self, fundamentals, merge):
+        # send wallpapers to the phone
+        """Save ringtones to the phone"""
+        self.log('Writing wallpapers to the phone')
+        try:
+            _del_list, _new_list=self._get_del_new_list('wallpaper-index',
+                                                        'wallpapers',
+                                                        merge,
+                                                        fundamentals)
+            if __debug__:
+                self.log('Delete list: '+','.join(_del_list))
+                self.log('New list: '+','.join(_new_list))
+##            self._replace_files('wallpaper-index', 'wallpapers',
+##                                _new_list, fundamentals)
+##            self._del_files('wallpaper-index',
+##                            _del_list, fundamentals)
+            self._add_files('wallpaper-index', 'wallpapers',
+                            _new_list, fundamentals)
+            self._update_media_index(self.protocolclass.WPictureIndexFile,
+                                     self.protocolclass.WPictureIndexEntry,
+                                     [self.protocolclass.PIC_PATH],
+                                     self.protocolclass.PIC_EXCLUDED_FILES,
+                                     self.protocolclass.PIC_INDEX_FILE_NAME)
+            fundamentals['rebootphone']=True
+        except:
+            if __debug__:
+                raise
+        return fundamentals
+
+
 
 parentprofile=scha950.Profile
 class Profile(parentprofile):
@@ -106,6 +205,15 @@ class Profile(parentprofile):
     imageorigins={}
     imageorigins.update(common.getkv(parentprofile.stockimageorigins, "images"))
 
+    # our targets are the same for all origins
+    imagetargets={}
+    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "wallpaper",
+                                      {'width': 220, 'height': 184, 'format': "JPEG"}))
+    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "pictureid",
+                                      {'width': 128, 'height': 96, 'format': "JPEG"}))
+    def GetTargetsForImageOrigin(self, origin):
+        return self.imagetargets
+
     def __init__(self):
         parentprofile.__init__(self)
 
@@ -117,7 +225,7 @@ class Profile(parentprofile):
         ('ringtone', 'read', None),   # all ringtone reading
         ('ringtone', 'write', 'MERGE'),
         ('wallpaper', 'read', None),  # all wallpaper reading
-        ('wallpaper', 'write', None),
+        ('wallpaper', 'write', 'MERGE'),
         ('memo', 'read', None),     # all memo list reading DJP
         ('memo', 'write', 'OVERWRITE'),  # all memo list writing DJP
         ('call_history', 'read', None),# all call history list reading

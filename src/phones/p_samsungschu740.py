@@ -15,12 +15,14 @@ SND_PATH='brew/mod/18067'
 SND_INDEX_FILE_NAME=SND_PATH+'/MsInfo.db'
 SND_EXCLUDED_FILES=('MsInfo.db', 'ExInfo.db')
 
-PIC_PATH='brew/mode/10888'
+PIC_PATH='brew/mod/10888'
 PIC_INDEX_FILE_NAME=PIC_PATH+'/Default Album.alb'
 PIC_EXCLUDED_FILES=('Default Album.alb',)
 PIC_TYPE_HEADER=0
 PIC_TYPE_BUILTIN=4
 PIC_TYPE_USERS=3
+
+PB_FLAG_NOTE=0x0200
 
 class WRingtoneIndexEntry(BaseProtogenClass):
     __fields=['name', 'path_prefix', 'pathname', 'eor']
@@ -783,7 +785,7 @@ class RSoundsIndexFile(BaseProtogenClass):
 
 
 class WPictureIndexEntry(BaseProtogenClass):
-    __fields=['pathname', 'pictype']
+    __fields=['path_prefix', 'pathname', 'path_name', 'pictype']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -811,12 +813,24 @@ class WPictureIndexEntry(BaseProtogenClass):
             self._complainaboutunusedargs(WPictureIndexEntry,kwargs)
         if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
         # Make all P fields that haven't already been constructed
+        try: self.__field_path_prefix
+        except:
+            self.__field_path_prefix=STRING(**{ 'default': '/ff/' })
+        try: self.__field_pathname
+        except:
+            self.__field_pathname=STRING(**{ 'terminator': None })
 
 
     def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        self.__field_pathname.writetobuffer(buf)
+        try: self.__field_path_name
+        except:
+            self.__field_path_name=STRING(**{'sizeinbytes': 258,  'terminator': 0,                 'default': self.path_prefix+self.pathname })
+        self.__field_path_name.writetobuffer(buf)
+        try: self.__field_pictype
+        except:
+            self.__field_pictype=UINT(**{'sizeinbytes': 2,  'default': PIC_TYPE_USERS })
         self.__field_pictype.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -826,12 +840,28 @@ class WPictureIndexEntry(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_pathname=STRING(**{'sizeinbytes': 258,  'terminator': 0,                 'raiseonunterminatedread': False })
-        self.__field_pathname.readfrombuffer(buf)
-        self.__field_pictype=UINT(**{'sizeinbytes': 2})
+        self.__field_path_name=STRING(**{'sizeinbytes': 258,  'terminator': 0,                 'default': self.path_prefix+self.pathname })
+        self.__field_path_name.readfrombuffer(buf)
+        self.__field_pictype=UINT(**{'sizeinbytes': 2,  'default': PIC_TYPE_USERS })
         self.__field_pictype.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
+
+    def __getfield_path_prefix(self):
+        try: self.__field_path_prefix
+        except:
+            self.__field_path_prefix=STRING(**{ 'default': '/ff/' })
+        return self.__field_path_prefix.getvalue()
+
+    def __setfield_path_prefix(self, value):
+        if isinstance(value,STRING):
+            self.__field_path_prefix=value
+        else:
+            self.__field_path_prefix=STRING(value,**{ 'default': '/ff/' })
+
+    def __delfield_path_prefix(self): del self.__field_path_prefix
+
+    path_prefix=property(__getfield_path_prefix, __setfield_path_prefix, __delfield_path_prefix, None)
 
     def __getfield_pathname(self):
         return self.__field_pathname.getvalue()
@@ -840,20 +870,39 @@ class WPictureIndexEntry(BaseProtogenClass):
         if isinstance(value,STRING):
             self.__field_pathname=value
         else:
-            self.__field_pathname=STRING(value,**{'sizeinbytes': 258,  'terminator': 0,                 'raiseonunterminatedread': False })
+            self.__field_pathname=STRING(value,**{ 'terminator': None })
 
     def __delfield_pathname(self): del self.__field_pathname
 
     pathname=property(__getfield_pathname, __setfield_pathname, __delfield_pathname, None)
 
+    def __getfield_path_name(self):
+        try: self.__field_path_name
+        except:
+            self.__field_path_name=STRING(**{'sizeinbytes': 258,  'terminator': 0,                 'default': self.path_prefix+self.pathname })
+        return self.__field_path_name.getvalue()
+
+    def __setfield_path_name(self, value):
+        if isinstance(value,STRING):
+            self.__field_path_name=value
+        else:
+            self.__field_path_name=STRING(value,**{'sizeinbytes': 258,  'terminator': 0,                 'default': self.path_prefix+self.pathname })
+
+    def __delfield_path_name(self): del self.__field_path_name
+
+    path_name=property(__getfield_path_name, __setfield_path_name, __delfield_path_name, None)
+
     def __getfield_pictype(self):
+        try: self.__field_pictype
+        except:
+            self.__field_pictype=UINT(**{'sizeinbytes': 2,  'default': PIC_TYPE_USERS })
         return self.__field_pictype.getvalue()
 
     def __setfield_pictype(self, value):
         if isinstance(value,UINT):
             self.__field_pictype=value
         else:
-            self.__field_pictype=UINT(value,**{'sizeinbytes': 2})
+            self.__field_pictype=UINT(value,**{'sizeinbytes': 2,  'default': PIC_TYPE_USERS })
 
     def __delfield_pictype(self): del self.__field_pictype
 
@@ -863,7 +912,9 @@ class WPictureIndexEntry(BaseProtogenClass):
         return True
 
     def containerelements(self):
+        yield ('path_prefix', self.__field_path_prefix, None)
         yield ('pathname', self.__field_pathname, None)
+        yield ('path_name', self.__field_path_name, None)
         yield ('pictype', self.__field_pictype, "0= invalid, 4=builtin, 3=users")
 
 
@@ -905,39 +956,39 @@ class WPictureIndexFile(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_header
         except:
-            self.__field_header=WPictureIndexEntry(**{ 'pathname': '0|/ff/brew/mod/10888/Default Album|\x0A',                           'pictype': PIC_TYPE_HEADER })
+            self.__field_header=WPictureIndexEntry(**{ 'pathname': '0|/ff/brew/mod/10888/Default Album|\x0A',                           'path_prefix': '',                           'pictype': PIC_TYPE_HEADER })
         self.__field_header.writetobuffer(buf)
         try: self.__field_preloaded1
         except:
-            self.__field_preloaded1=WPictureIndexEntry(**{ 'pathname': 'Preloaded1',                           'pictype': PIC_TYPE_BUILTIN })
+            self.__field_preloaded1=WPictureIndexEntry(**{ 'pathname': 'Preloaded1',                           'path_prefix': '',                           'pictype': PIC_TYPE_BUILTIN })
         self.__field_preloaded1.writetobuffer(buf)
         try: self.__field_preloaded2
         except:
-            self.__field_preloaded2=WPictureIndexEntry(**{ 'pathname': 'Preloaded2',                           'pictype': PIC_TYPE_BUILTIN })
+            self.__field_preloaded2=WPictureIndexEntry(**{ 'pathname': 'Preloaded2',                           'path_prefix': '',                           'pictype': PIC_TYPE_BUILTIN })
         self.__field_preloaded2.writetobuffer(buf)
         try: self.__field_preloaded3
         except:
-            self.__field_preloaded3=WPictureIndexEntry(**{ 'pathname': 'Preloaded3',                           'pictype': PIC_TYPE_BUILTIN })
+            self.__field_preloaded3=WPictureIndexEntry(**{ 'pathname': 'Preloaded3',                           'path_prefix': '',                           'pictype': PIC_TYPE_BUILTIN })
         self.__field_preloaded3.writetobuffer(buf)
         try: self.__field_preloaded4
         except:
-            self.__field_preloaded4=WPictureIndexEntry(**{ 'pathname': 'Preloaded4',                           'pictype': PIC_TYPE_BUILTIN })
+            self.__field_preloaded4=WPictureIndexEntry(**{ 'pathname': 'Preloaded4',                           'path_prefix': '',                           'pictype': PIC_TYPE_BUILTIN })
         self.__field_preloaded4.writetobuffer(buf)
         try: self.__field_preloaded5
         except:
-            self.__field_preloaded5=WPictureIndexEntry(**{ 'pathname': 'Preloaded5',                           'pictype': PIC_TYPE_BUILTIN })
+            self.__field_preloaded5=WPictureIndexEntry(**{ 'pathname': 'Preloaded5',                           'path_prefix': '',                           'pictype': PIC_TYPE_BUILTIN })
         self.__field_preloaded5.writetobuffer(buf)
         try: self.__field_preloaded6
         except:
-            self.__field_preloaded6=WPictureIndexEntry(**{ 'pathname': 'Preloaded6',                           'pictype': PIC_TYPE_BUILTIN })
+            self.__field_preloaded6=WPictureIndexEntry(**{ 'pathname': 'Preloaded6',                           'path_prefix': '',                           'pictype': PIC_TYPE_BUILTIN })
         self.__field_preloaded6.writetobuffer(buf)
         try: self.__field_preloaded7
         except:
-            self.__field_preloaded7=WPictureIndexEntry(**{ 'pathname': 'Preloaded7',                           'pictype': PIC_TYPE_BUILTIN })
+            self.__field_preloaded7=WPictureIndexEntry(**{ 'pathname': 'Preloaded7',                           'path_prefix': '',                           'pictype': PIC_TYPE_BUILTIN })
         self.__field_preloaded7.writetobuffer(buf)
         try: self.__field_preloaded8
         except:
-            self.__field_preloaded8=WPictureIndexEntry(**{ 'pathname': 'Preloaded8',                           'pictype': PIC_TYPE_BUILTIN })
+            self.__field_preloaded8=WPictureIndexEntry(**{ 'pathname': 'Preloaded8',                           'path_prefix': '',                           'pictype': PIC_TYPE_BUILTIN })
         self.__field_preloaded8.writetobuffer(buf)
         try: self.__field_items
         except:
@@ -951,23 +1002,23 @@ class WPictureIndexFile(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_header=WPictureIndexEntry(**{ 'pathname': '0|/ff/brew/mod/10888/Default Album|\x0A',                           'pictype': PIC_TYPE_HEADER })
+        self.__field_header=WPictureIndexEntry(**{ 'pathname': '0|/ff/brew/mod/10888/Default Album|\x0A',                           'path_prefix': '',                           'pictype': PIC_TYPE_HEADER })
         self.__field_header.readfrombuffer(buf)
-        self.__field_preloaded1=WPictureIndexEntry(**{ 'pathname': 'Preloaded1',                           'pictype': PIC_TYPE_BUILTIN })
+        self.__field_preloaded1=WPictureIndexEntry(**{ 'pathname': 'Preloaded1',                           'path_prefix': '',                           'pictype': PIC_TYPE_BUILTIN })
         self.__field_preloaded1.readfrombuffer(buf)
-        self.__field_preloaded2=WPictureIndexEntry(**{ 'pathname': 'Preloaded2',                           'pictype': PIC_TYPE_BUILTIN })
+        self.__field_preloaded2=WPictureIndexEntry(**{ 'pathname': 'Preloaded2',                           'path_prefix': '',                           'pictype': PIC_TYPE_BUILTIN })
         self.__field_preloaded2.readfrombuffer(buf)
-        self.__field_preloaded3=WPictureIndexEntry(**{ 'pathname': 'Preloaded3',                           'pictype': PIC_TYPE_BUILTIN })
+        self.__field_preloaded3=WPictureIndexEntry(**{ 'pathname': 'Preloaded3',                           'path_prefix': '',                           'pictype': PIC_TYPE_BUILTIN })
         self.__field_preloaded3.readfrombuffer(buf)
-        self.__field_preloaded4=WPictureIndexEntry(**{ 'pathname': 'Preloaded4',                           'pictype': PIC_TYPE_BUILTIN })
+        self.__field_preloaded4=WPictureIndexEntry(**{ 'pathname': 'Preloaded4',                           'path_prefix': '',                           'pictype': PIC_TYPE_BUILTIN })
         self.__field_preloaded4.readfrombuffer(buf)
-        self.__field_preloaded5=WPictureIndexEntry(**{ 'pathname': 'Preloaded5',                           'pictype': PIC_TYPE_BUILTIN })
+        self.__field_preloaded5=WPictureIndexEntry(**{ 'pathname': 'Preloaded5',                           'path_prefix': '',                           'pictype': PIC_TYPE_BUILTIN })
         self.__field_preloaded5.readfrombuffer(buf)
-        self.__field_preloaded6=WPictureIndexEntry(**{ 'pathname': 'Preloaded6',                           'pictype': PIC_TYPE_BUILTIN })
+        self.__field_preloaded6=WPictureIndexEntry(**{ 'pathname': 'Preloaded6',                           'path_prefix': '',                           'pictype': PIC_TYPE_BUILTIN })
         self.__field_preloaded6.readfrombuffer(buf)
-        self.__field_preloaded7=WPictureIndexEntry(**{ 'pathname': 'Preloaded7',                           'pictype': PIC_TYPE_BUILTIN })
+        self.__field_preloaded7=WPictureIndexEntry(**{ 'pathname': 'Preloaded7',                           'path_prefix': '',                           'pictype': PIC_TYPE_BUILTIN })
         self.__field_preloaded7.readfrombuffer(buf)
-        self.__field_preloaded8=WPictureIndexEntry(**{ 'pathname': 'Preloaded8',                           'pictype': PIC_TYPE_BUILTIN })
+        self.__field_preloaded8=WPictureIndexEntry(**{ 'pathname': 'Preloaded8',                           'path_prefix': '',                           'pictype': PIC_TYPE_BUILTIN })
         self.__field_preloaded8.readfrombuffer(buf)
         self.__field_items=LIST(**{ 'elementclass': WPictureIndexEntry })
         self.__field_items.readfrombuffer(buf)
@@ -977,14 +1028,14 @@ class WPictureIndexFile(BaseProtogenClass):
     def __getfield_header(self):
         try: self.__field_header
         except:
-            self.__field_header=WPictureIndexEntry(**{ 'pathname': '0|/ff/brew/mod/10888/Default Album|\x0A',                           'pictype': PIC_TYPE_HEADER })
+            self.__field_header=WPictureIndexEntry(**{ 'pathname': '0|/ff/brew/mod/10888/Default Album|\x0A',                           'path_prefix': '',                           'pictype': PIC_TYPE_HEADER })
         return self.__field_header.getvalue()
 
     def __setfield_header(self, value):
         if isinstance(value,WPictureIndexEntry):
             self.__field_header=value
         else:
-            self.__field_header=WPictureIndexEntry(value,**{ 'pathname': '0|/ff/brew/mod/10888/Default Album|\x0A',                           'pictype': PIC_TYPE_HEADER })
+            self.__field_header=WPictureIndexEntry(value,**{ 'pathname': '0|/ff/brew/mod/10888/Default Album|\x0A',                           'path_prefix': '',                           'pictype': PIC_TYPE_HEADER })
 
     def __delfield_header(self): del self.__field_header
 
@@ -993,14 +1044,14 @@ class WPictureIndexFile(BaseProtogenClass):
     def __getfield_preloaded1(self):
         try: self.__field_preloaded1
         except:
-            self.__field_preloaded1=WPictureIndexEntry(**{ 'pathname': 'Preloaded1',                           'pictype': PIC_TYPE_BUILTIN })
+            self.__field_preloaded1=WPictureIndexEntry(**{ 'pathname': 'Preloaded1',                           'path_prefix': '',                           'pictype': PIC_TYPE_BUILTIN })
         return self.__field_preloaded1.getvalue()
 
     def __setfield_preloaded1(self, value):
         if isinstance(value,WPictureIndexEntry):
             self.__field_preloaded1=value
         else:
-            self.__field_preloaded1=WPictureIndexEntry(value,**{ 'pathname': 'Preloaded1',                           'pictype': PIC_TYPE_BUILTIN })
+            self.__field_preloaded1=WPictureIndexEntry(value,**{ 'pathname': 'Preloaded1',                           'path_prefix': '',                           'pictype': PIC_TYPE_BUILTIN })
 
     def __delfield_preloaded1(self): del self.__field_preloaded1
 
@@ -1009,14 +1060,14 @@ class WPictureIndexFile(BaseProtogenClass):
     def __getfield_preloaded2(self):
         try: self.__field_preloaded2
         except:
-            self.__field_preloaded2=WPictureIndexEntry(**{ 'pathname': 'Preloaded2',                           'pictype': PIC_TYPE_BUILTIN })
+            self.__field_preloaded2=WPictureIndexEntry(**{ 'pathname': 'Preloaded2',                           'path_prefix': '',                           'pictype': PIC_TYPE_BUILTIN })
         return self.__field_preloaded2.getvalue()
 
     def __setfield_preloaded2(self, value):
         if isinstance(value,WPictureIndexEntry):
             self.__field_preloaded2=value
         else:
-            self.__field_preloaded2=WPictureIndexEntry(value,**{ 'pathname': 'Preloaded2',                           'pictype': PIC_TYPE_BUILTIN })
+            self.__field_preloaded2=WPictureIndexEntry(value,**{ 'pathname': 'Preloaded2',                           'path_prefix': '',                           'pictype': PIC_TYPE_BUILTIN })
 
     def __delfield_preloaded2(self): del self.__field_preloaded2
 
@@ -1025,14 +1076,14 @@ class WPictureIndexFile(BaseProtogenClass):
     def __getfield_preloaded3(self):
         try: self.__field_preloaded3
         except:
-            self.__field_preloaded3=WPictureIndexEntry(**{ 'pathname': 'Preloaded3',                           'pictype': PIC_TYPE_BUILTIN })
+            self.__field_preloaded3=WPictureIndexEntry(**{ 'pathname': 'Preloaded3',                           'path_prefix': '',                           'pictype': PIC_TYPE_BUILTIN })
         return self.__field_preloaded3.getvalue()
 
     def __setfield_preloaded3(self, value):
         if isinstance(value,WPictureIndexEntry):
             self.__field_preloaded3=value
         else:
-            self.__field_preloaded3=WPictureIndexEntry(value,**{ 'pathname': 'Preloaded3',                           'pictype': PIC_TYPE_BUILTIN })
+            self.__field_preloaded3=WPictureIndexEntry(value,**{ 'pathname': 'Preloaded3',                           'path_prefix': '',                           'pictype': PIC_TYPE_BUILTIN })
 
     def __delfield_preloaded3(self): del self.__field_preloaded3
 
@@ -1041,14 +1092,14 @@ class WPictureIndexFile(BaseProtogenClass):
     def __getfield_preloaded4(self):
         try: self.__field_preloaded4
         except:
-            self.__field_preloaded4=WPictureIndexEntry(**{ 'pathname': 'Preloaded4',                           'pictype': PIC_TYPE_BUILTIN })
+            self.__field_preloaded4=WPictureIndexEntry(**{ 'pathname': 'Preloaded4',                           'path_prefix': '',                           'pictype': PIC_TYPE_BUILTIN })
         return self.__field_preloaded4.getvalue()
 
     def __setfield_preloaded4(self, value):
         if isinstance(value,WPictureIndexEntry):
             self.__field_preloaded4=value
         else:
-            self.__field_preloaded4=WPictureIndexEntry(value,**{ 'pathname': 'Preloaded4',                           'pictype': PIC_TYPE_BUILTIN })
+            self.__field_preloaded4=WPictureIndexEntry(value,**{ 'pathname': 'Preloaded4',                           'path_prefix': '',                           'pictype': PIC_TYPE_BUILTIN })
 
     def __delfield_preloaded4(self): del self.__field_preloaded4
 
@@ -1057,14 +1108,14 @@ class WPictureIndexFile(BaseProtogenClass):
     def __getfield_preloaded5(self):
         try: self.__field_preloaded5
         except:
-            self.__field_preloaded5=WPictureIndexEntry(**{ 'pathname': 'Preloaded5',                           'pictype': PIC_TYPE_BUILTIN })
+            self.__field_preloaded5=WPictureIndexEntry(**{ 'pathname': 'Preloaded5',                           'path_prefix': '',                           'pictype': PIC_TYPE_BUILTIN })
         return self.__field_preloaded5.getvalue()
 
     def __setfield_preloaded5(self, value):
         if isinstance(value,WPictureIndexEntry):
             self.__field_preloaded5=value
         else:
-            self.__field_preloaded5=WPictureIndexEntry(value,**{ 'pathname': 'Preloaded5',                           'pictype': PIC_TYPE_BUILTIN })
+            self.__field_preloaded5=WPictureIndexEntry(value,**{ 'pathname': 'Preloaded5',                           'path_prefix': '',                           'pictype': PIC_TYPE_BUILTIN })
 
     def __delfield_preloaded5(self): del self.__field_preloaded5
 
@@ -1073,14 +1124,14 @@ class WPictureIndexFile(BaseProtogenClass):
     def __getfield_preloaded6(self):
         try: self.__field_preloaded6
         except:
-            self.__field_preloaded6=WPictureIndexEntry(**{ 'pathname': 'Preloaded6',                           'pictype': PIC_TYPE_BUILTIN })
+            self.__field_preloaded6=WPictureIndexEntry(**{ 'pathname': 'Preloaded6',                           'path_prefix': '',                           'pictype': PIC_TYPE_BUILTIN })
         return self.__field_preloaded6.getvalue()
 
     def __setfield_preloaded6(self, value):
         if isinstance(value,WPictureIndexEntry):
             self.__field_preloaded6=value
         else:
-            self.__field_preloaded6=WPictureIndexEntry(value,**{ 'pathname': 'Preloaded6',                           'pictype': PIC_TYPE_BUILTIN })
+            self.__field_preloaded6=WPictureIndexEntry(value,**{ 'pathname': 'Preloaded6',                           'path_prefix': '',                           'pictype': PIC_TYPE_BUILTIN })
 
     def __delfield_preloaded6(self): del self.__field_preloaded6
 
@@ -1089,14 +1140,14 @@ class WPictureIndexFile(BaseProtogenClass):
     def __getfield_preloaded7(self):
         try: self.__field_preloaded7
         except:
-            self.__field_preloaded7=WPictureIndexEntry(**{ 'pathname': 'Preloaded7',                           'pictype': PIC_TYPE_BUILTIN })
+            self.__field_preloaded7=WPictureIndexEntry(**{ 'pathname': 'Preloaded7',                           'path_prefix': '',                           'pictype': PIC_TYPE_BUILTIN })
         return self.__field_preloaded7.getvalue()
 
     def __setfield_preloaded7(self, value):
         if isinstance(value,WPictureIndexEntry):
             self.__field_preloaded7=value
         else:
-            self.__field_preloaded7=WPictureIndexEntry(value,**{ 'pathname': 'Preloaded7',                           'pictype': PIC_TYPE_BUILTIN })
+            self.__field_preloaded7=WPictureIndexEntry(value,**{ 'pathname': 'Preloaded7',                           'path_prefix': '',                           'pictype': PIC_TYPE_BUILTIN })
 
     def __delfield_preloaded7(self): del self.__field_preloaded7
 
@@ -1105,14 +1156,14 @@ class WPictureIndexFile(BaseProtogenClass):
     def __getfield_preloaded8(self):
         try: self.__field_preloaded8
         except:
-            self.__field_preloaded8=WPictureIndexEntry(**{ 'pathname': 'Preloaded8',                           'pictype': PIC_TYPE_BUILTIN })
+            self.__field_preloaded8=WPictureIndexEntry(**{ 'pathname': 'Preloaded8',                           'path_prefix': '',                           'pictype': PIC_TYPE_BUILTIN })
         return self.__field_preloaded8.getvalue()
 
     def __setfield_preloaded8(self, value):
         if isinstance(value,WPictureIndexEntry):
             self.__field_preloaded8=value
         else:
-            self.__field_preloaded8=WPictureIndexEntry(value,**{ 'pathname': 'Preloaded8',                           'pictype': PIC_TYPE_BUILTIN })
+            self.__field_preloaded8=WPictureIndexEntry(value,**{ 'pathname': 'Preloaded8',                           'path_prefix': '',                           'pictype': PIC_TYPE_BUILTIN })
 
     def __delfield_preloaded8(self): del self.__field_preloaded8
 
@@ -1315,6 +1366,742 @@ class RPictureIndexFile(BaseProtogenClass):
 
     def containerelements(self):
         yield ('items', self.__field_items, None)
+
+
+
+
+class NumberEntry(BaseProtogenClass):
+    __fields=['number', 'option', 'speeddial', 'ringtone']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(NumberEntry,self).__init__(**dict)
+        if self.__class__ is NumberEntry:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(NumberEntry,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(NumberEntry,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_number.writetobuffer(buf)
+        self.__field_option.writetobuffer(buf)
+        if self.option & PB_FLG_SPEEDDIAL:
+            self.__field_speeddial.writetobuffer(buf)
+        if self.option & PB_FLG_RINGTONE:
+            self.__field_ringtone.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_number=STRING(**{ 'terminator': None,               'pascal': True })
+        self.__field_number.readfrombuffer(buf)
+        self.__field_option=UINT(**{'sizeinbytes': 1})
+        self.__field_option.readfrombuffer(buf)
+        if self.option & PB_FLG_SPEEDDIAL:
+            self.__field_speeddial=UINT(**{'sizeinbytes': 2})
+            self.__field_speeddial.readfrombuffer(buf)
+        if self.option & PB_FLG_RINGTONE:
+            self.__field_ringtone=STRING(**{ 'terminator': None,                   'pascal': True })
+            self.__field_ringtone.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_number(self):
+        return self.__field_number.getvalue()
+
+    def __setfield_number(self, value):
+        if isinstance(value,STRING):
+            self.__field_number=value
+        else:
+            self.__field_number=STRING(value,**{ 'terminator': None,               'pascal': True })
+
+    def __delfield_number(self): del self.__field_number
+
+    number=property(__getfield_number, __setfield_number, __delfield_number, None)
+
+    def __getfield_option(self):
+        return self.__field_option.getvalue()
+
+    def __setfield_option(self, value):
+        if isinstance(value,UINT):
+            self.__field_option=value
+        else:
+            self.__field_option=UINT(value,**{'sizeinbytes': 1})
+
+    def __delfield_option(self): del self.__field_option
+
+    option=property(__getfield_option, __setfield_option, __delfield_option, None)
+
+    def __getfield_speeddial(self):
+        return self.__field_speeddial.getvalue()
+
+    def __setfield_speeddial(self, value):
+        if isinstance(value,UINT):
+            self.__field_speeddial=value
+        else:
+            self.__field_speeddial=UINT(value,**{'sizeinbytes': 2})
+
+    def __delfield_speeddial(self): del self.__field_speeddial
+
+    speeddial=property(__getfield_speeddial, __setfield_speeddial, __delfield_speeddial, None)
+
+    def __getfield_ringtone(self):
+        return self.__field_ringtone.getvalue()
+
+    def __setfield_ringtone(self, value):
+        if isinstance(value,STRING):
+            self.__field_ringtone=value
+        else:
+            self.__field_ringtone=STRING(value,**{ 'terminator': None,                   'pascal': True })
+
+    def __delfield_ringtone(self): del self.__field_ringtone
+
+    ringtone=property(__getfield_ringtone, __setfield_ringtone, __delfield_ringtone, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('number', self.__field_number, None)
+        yield ('option', self.__field_option, None)
+        if self.option & PB_FLG_SPEEDDIAL:
+            yield ('speeddial', self.__field_speeddial, None)
+        if self.option & PB_FLG_RINGTONE:
+            yield ('ringtone', self.__field_ringtone, None)
+
+
+
+
+class PBEntry(BaseProtogenClass):
+    __fields=['info', 'zero1', 'name', 'email', 'email2', 'home', 'work', 'cell', 'fax', 'cell2', 'note', 'datetime', 'group', 'wallpaper', 'wallpaper_range']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(PBEntry,self).__init__(**dict)
+        if self.__class__ is PBEntry:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(PBEntry,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(PBEntry,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_info.writetobuffer(buf)
+        try: self.__field_zero1
+        except:
+            self.__field_zero1=UINT(**{'sizeinbytes': 2,  'default': 0 })
+        self.__field_zero1.writetobuffer(buf)
+        if self.info & PB_FLG_NAME:
+            self.__field_name.writetobuffer(buf)
+        if self.info & PB_FLG_EMAIL:
+            self.__field_email.writetobuffer(buf)
+        if self.info & PB_FLG_EMAIL2:
+            self.__field_email2.writetobuffer(buf)
+        if self.info & PB_FLG_HOME:
+            self.__field_home.writetobuffer(buf)
+        if self.info & PB_FLG_WORK:
+            self.__field_work.writetobuffer(buf)
+        if self.info & PB_FLG_CELL:
+            self.__field_cell.writetobuffer(buf)
+        if self.info & PB_FLG_FAX:
+            self.__field_fax.writetobuffer(buf)
+        if self.info & PB_FLG_CELL2:
+            self.__field_cell2.writetobuffer(buf)
+        if sel.info & PB_FLAG_NOTE:
+            self.__field_note.writetobuffer(buf)
+        if self.info & PB_FLG_DATE:
+            self.__field_datetime.writetobuffer(buf)
+        if self.info & PB_FLG_GROUP:
+            self.__field_group.writetobuffer(buf)
+        if self.info & PB_FLG_WP:
+            self.__field_wallpaper.writetobuffer(buf)
+            self.__field_wallpaper_range.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_info=UINT(**{'sizeinbytes': 2})
+        self.__field_info.readfrombuffer(buf)
+        self.__field_zero1=UINT(**{'sizeinbytes': 2,  'default': 0 })
+        self.__field_zero1.readfrombuffer(buf)
+        if self.info & PB_FLG_NAME:
+            self.__field_name=USTRING(**{ 'terminator': None,                    'encoding': ENCODING,                    'pascal': True })
+            self.__field_name.readfrombuffer(buf)
+        if self.info & PB_FLG_EMAIL:
+            self.__field_email=USTRING(**{ 'terminator': None,                    'encoding': ENCODING,                    'pascal': True })
+            self.__field_email.readfrombuffer(buf)
+        if self.info & PB_FLG_EMAIL2:
+            self.__field_email2=USTRING(**{ 'terminator': None,                    'encoding': ENCODING,                   'pascal': True })
+            self.__field_email2.readfrombuffer(buf)
+        if self.info & PB_FLG_HOME:
+            self.__field_home=NumberEntry()
+            self.__field_home.readfrombuffer(buf)
+        if self.info & PB_FLG_WORK:
+            self.__field_work=NumberEntry()
+            self.__field_work.readfrombuffer(buf)
+        if self.info & PB_FLG_CELL:
+            self.__field_cell=NumberEntry()
+            self.__field_cell.readfrombuffer(buf)
+        if self.info & PB_FLG_FAX:
+            self.__field_fax=NumberEntry()
+            self.__field_fax.readfrombuffer(buf)
+        if self.info & PB_FLG_CELL2:
+            self.__field_cell2=NumberEntry()
+            self.__field_cell2.readfrombuffer(buf)
+        if sel.info & PB_FLAG_NOTE:
+            self.__field_note=STRING(**{ 'terminator': None,                   'pascal': True })
+            self.__field_note.readfrombuffer(buf)
+        if self.info & PB_FLG_DATE:
+            self.__field_datetime=DateTime(**{'sizeinbytes': 4})
+            self.__field_datetime.readfrombuffer(buf)
+        if self.info & PB_FLG_GROUP:
+            self.__field_group=UINT(**{'sizeinbytes': 1})
+            self.__field_group.readfrombuffer(buf)
+        if self.info & PB_FLG_WP:
+            self.__field_wallpaper=STRING(**{ 'terminator': None,                   'pascal': True })
+            self.__field_wallpaper.readfrombuffer(buf)
+            self.__field_wallpaper_range=UINT(**{'sizeinbytes': 4})
+            self.__field_wallpaper_range.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_info(self):
+        return self.__field_info.getvalue()
+
+    def __setfield_info(self, value):
+        if isinstance(value,UINT):
+            self.__field_info=value
+        else:
+            self.__field_info=UINT(value,**{'sizeinbytes': 2})
+
+    def __delfield_info(self): del self.__field_info
+
+    info=property(__getfield_info, __setfield_info, __delfield_info, None)
+
+    def __getfield_zero1(self):
+        try: self.__field_zero1
+        except:
+            self.__field_zero1=UINT(**{'sizeinbytes': 2,  'default': 0 })
+        return self.__field_zero1.getvalue()
+
+    def __setfield_zero1(self, value):
+        if isinstance(value,UINT):
+            self.__field_zero1=value
+        else:
+            self.__field_zero1=UINT(value,**{'sizeinbytes': 2,  'default': 0 })
+
+    def __delfield_zero1(self): del self.__field_zero1
+
+    zero1=property(__getfield_zero1, __setfield_zero1, __delfield_zero1, None)
+
+    def __getfield_name(self):
+        return self.__field_name.getvalue()
+
+    def __setfield_name(self, value):
+        if isinstance(value,USTRING):
+            self.__field_name=value
+        else:
+            self.__field_name=USTRING(value,**{ 'terminator': None,                    'encoding': ENCODING,                    'pascal': True })
+
+    def __delfield_name(self): del self.__field_name
+
+    name=property(__getfield_name, __setfield_name, __delfield_name, None)
+
+    def __getfield_email(self):
+        return self.__field_email.getvalue()
+
+    def __setfield_email(self, value):
+        if isinstance(value,USTRING):
+            self.__field_email=value
+        else:
+            self.__field_email=USTRING(value,**{ 'terminator': None,                    'encoding': ENCODING,                    'pascal': True })
+
+    def __delfield_email(self): del self.__field_email
+
+    email=property(__getfield_email, __setfield_email, __delfield_email, None)
+
+    def __getfield_email2(self):
+        return self.__field_email2.getvalue()
+
+    def __setfield_email2(self, value):
+        if isinstance(value,USTRING):
+            self.__field_email2=value
+        else:
+            self.__field_email2=USTRING(value,**{ 'terminator': None,                    'encoding': ENCODING,                   'pascal': True })
+
+    def __delfield_email2(self): del self.__field_email2
+
+    email2=property(__getfield_email2, __setfield_email2, __delfield_email2, None)
+
+    def __getfield_home(self):
+        return self.__field_home.getvalue()
+
+    def __setfield_home(self, value):
+        if isinstance(value,NumberEntry):
+            self.__field_home=value
+        else:
+            self.__field_home=NumberEntry(value,)
+
+    def __delfield_home(self): del self.__field_home
+
+    home=property(__getfield_home, __setfield_home, __delfield_home, None)
+
+    def __getfield_work(self):
+        return self.__field_work.getvalue()
+
+    def __setfield_work(self, value):
+        if isinstance(value,NumberEntry):
+            self.__field_work=value
+        else:
+            self.__field_work=NumberEntry(value,)
+
+    def __delfield_work(self): del self.__field_work
+
+    work=property(__getfield_work, __setfield_work, __delfield_work, None)
+
+    def __getfield_cell(self):
+        return self.__field_cell.getvalue()
+
+    def __setfield_cell(self, value):
+        if isinstance(value,NumberEntry):
+            self.__field_cell=value
+        else:
+            self.__field_cell=NumberEntry(value,)
+
+    def __delfield_cell(self): del self.__field_cell
+
+    cell=property(__getfield_cell, __setfield_cell, __delfield_cell, None)
+
+    def __getfield_fax(self):
+        return self.__field_fax.getvalue()
+
+    def __setfield_fax(self, value):
+        if isinstance(value,NumberEntry):
+            self.__field_fax=value
+        else:
+            self.__field_fax=NumberEntry(value,)
+
+    def __delfield_fax(self): del self.__field_fax
+
+    fax=property(__getfield_fax, __setfield_fax, __delfield_fax, None)
+
+    def __getfield_cell2(self):
+        return self.__field_cell2.getvalue()
+
+    def __setfield_cell2(self, value):
+        if isinstance(value,NumberEntry):
+            self.__field_cell2=value
+        else:
+            self.__field_cell2=NumberEntry(value,)
+
+    def __delfield_cell2(self): del self.__field_cell2
+
+    cell2=property(__getfield_cell2, __setfield_cell2, __delfield_cell2, None)
+
+    def __getfield_note(self):
+        return self.__field_note.getvalue()
+
+    def __setfield_note(self, value):
+        if isinstance(value,STRING):
+            self.__field_note=value
+        else:
+            self.__field_note=STRING(value,**{ 'terminator': None,                   'pascal': True })
+
+    def __delfield_note(self): del self.__field_note
+
+    note=property(__getfield_note, __setfield_note, __delfield_note, None)
+
+    def __getfield_datetime(self):
+        return self.__field_datetime.getvalue()
+
+    def __setfield_datetime(self, value):
+        if isinstance(value,DateTime):
+            self.__field_datetime=value
+        else:
+            self.__field_datetime=DateTime(value,**{'sizeinbytes': 4})
+
+    def __delfield_datetime(self): del self.__field_datetime
+
+    datetime=property(__getfield_datetime, __setfield_datetime, __delfield_datetime, None)
+
+    def __getfield_group(self):
+        return self.__field_group.getvalue()
+
+    def __setfield_group(self, value):
+        if isinstance(value,UINT):
+            self.__field_group=value
+        else:
+            self.__field_group=UINT(value,**{'sizeinbytes': 1})
+
+    def __delfield_group(self): del self.__field_group
+
+    group=property(__getfield_group, __setfield_group, __delfield_group, None)
+
+    def __getfield_wallpaper(self):
+        return self.__field_wallpaper.getvalue()
+
+    def __setfield_wallpaper(self, value):
+        if isinstance(value,STRING):
+            self.__field_wallpaper=value
+        else:
+            self.__field_wallpaper=STRING(value,**{ 'terminator': None,                   'pascal': True })
+
+    def __delfield_wallpaper(self): del self.__field_wallpaper
+
+    wallpaper=property(__getfield_wallpaper, __setfield_wallpaper, __delfield_wallpaper, None)
+
+    def __getfield_wallpaper_range(self):
+        return self.__field_wallpaper_range.getvalue()
+
+    def __setfield_wallpaper_range(self, value):
+        if isinstance(value,UINT):
+            self.__field_wallpaper_range=value
+        else:
+            self.__field_wallpaper_range=UINT(value,**{'sizeinbytes': 4})
+
+    def __delfield_wallpaper_range(self): del self.__field_wallpaper_range
+
+    wallpaper_range=property(__getfield_wallpaper_range, __setfield_wallpaper_range, __delfield_wallpaper_range, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('info', self.__field_info, None)
+        yield ('zero1', self.__field_zero1, None)
+        if self.info & PB_FLG_NAME:
+            yield ('name', self.__field_name, None)
+        if self.info & PB_FLG_EMAIL:
+            yield ('email', self.__field_email, None)
+        if self.info & PB_FLG_EMAIL2:
+            yield ('email2', self.__field_email2, None)
+        if self.info & PB_FLG_HOME:
+            yield ('home', self.__field_home, None)
+        if self.info & PB_FLG_WORK:
+            yield ('work', self.__field_work, None)
+        if self.info & PB_FLG_CELL:
+            yield ('cell', self.__field_cell, None)
+        if self.info & PB_FLG_FAX:
+            yield ('fax', self.__field_fax, None)
+        if self.info & PB_FLG_CELL2:
+            yield ('cell2', self.__field_cell2, None)
+        if sel.info & PB_FLAG_NOTE:
+            yield ('note', self.__field_note, None)
+        if self.info & PB_FLG_DATE:
+            yield ('datetime', self.__field_datetime, None)
+        if self.info & PB_FLG_GROUP:
+            yield ('group', self.__field_group, None)
+        if self.info & PB_FLG_WP:
+            yield ('wallpaper', self.__field_wallpaper, None)
+            yield ('wallpaper_range', self.__field_wallpaper_range, None)
+
+
+
+
+class LenEntry(BaseProtogenClass):
+    __fields=['itemlen']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(LenEntry,self).__init__(**dict)
+        if self.__class__ is LenEntry:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(LenEntry,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(LenEntry,kwargs)
+        if len(args):
+            dict2={'sizeinbytes': 2,  'default': 0 }
+            dict2.update(kwargs)
+            kwargs=dict2
+            self.__field_itemlen=UINT(*args,**dict2)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_itemlen
+        except:
+            self.__field_itemlen=UINT(**{'sizeinbytes': 2,  'default': 0 })
+        self.__field_itemlen.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_itemlen=UINT(**{'sizeinbytes': 2,  'default': 0 })
+        self.__field_itemlen.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_itemlen(self):
+        try: self.__field_itemlen
+        except:
+            self.__field_itemlen=UINT(**{'sizeinbytes': 2,  'default': 0 })
+        return self.__field_itemlen.getvalue()
+
+    def __setfield_itemlen(self, value):
+        if isinstance(value,UINT):
+            self.__field_itemlen=value
+        else:
+            self.__field_itemlen=UINT(value,**{'sizeinbytes': 2,  'default': 0 })
+
+    def __delfield_itemlen(self): del self.__field_itemlen
+
+    itemlen=property(__getfield_itemlen, __setfield_itemlen, __delfield_itemlen, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('itemlen', self.__field_itemlen, None)
+
+
+
+
+class PBFile(BaseProtogenClass):
+    __fields=['lens', 'items']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(PBFile,self).__init__(**dict)
+        if self.__class__ is PBFile:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(PBFile,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(PBFile,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_lens
+        except:
+            self.__field_lens=LIST(**{ 'elementclass': LenEntry,             'length': 8,             'createdefault': True })
+        self.__field_lens.writetobuffer(buf)
+        try: self.__field_items
+        except:
+            self.__field_items=LIST(**{ 'elementclass': PBEntry })
+        self.__field_items.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_lens=LIST(**{ 'elementclass': LenEntry,             'length': 8,             'createdefault': True })
+        self.__field_lens.readfrombuffer(buf)
+        self.__field_items=LIST(**{ 'elementclass': PBEntry })
+        self.__field_items.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_lens(self):
+        try: self.__field_lens
+        except:
+            self.__field_lens=LIST(**{ 'elementclass': LenEntry,             'length': 8,             'createdefault': True })
+        return self.__field_lens.getvalue()
+
+    def __setfield_lens(self, value):
+        if isinstance(value,LIST):
+            self.__field_lens=value
+        else:
+            self.__field_lens=LIST(value,**{ 'elementclass': LenEntry,             'length': 8,             'createdefault': True })
+
+    def __delfield_lens(self): del self.__field_lens
+
+    lens=property(__getfield_lens, __setfield_lens, __delfield_lens, None)
+
+    def __getfield_items(self):
+        try: self.__field_items
+        except:
+            self.__field_items=LIST(**{ 'elementclass': PBEntry })
+        return self.__field_items.getvalue()
+
+    def __setfield_items(self, value):
+        if isinstance(value,LIST):
+            self.__field_items=value
+        else:
+            self.__field_items=LIST(value,**{ 'elementclass': PBEntry })
+
+    def __delfield_items(self): del self.__field_items
+
+    items=property(__getfield_items, __setfield_items, __delfield_items, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('lens', self.__field_lens, None)
+        yield ('items', self.__field_items, None)
+
+
+
+
+class PBFileHeader(BaseProtogenClass):
+    __fields=['lens']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(PBFileHeader,self).__init__(**dict)
+        if self.__class__ is PBFileHeader:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(PBFileHeader,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(PBFileHeader,kwargs)
+        if len(args):
+            dict2={ 'elementclass': LenEntry,             'length': 8,             'createdefault': True }
+            dict2.update(kwargs)
+            kwargs=dict2
+            self.__field_lens=LIST(*args,**dict2)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_lens
+        except:
+            self.__field_lens=LIST(**{ 'elementclass': LenEntry,             'length': 8,             'createdefault': True })
+        self.__field_lens.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_lens=LIST(**{ 'elementclass': LenEntry,             'length': 8,             'createdefault': True })
+        self.__field_lens.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_lens(self):
+        try: self.__field_lens
+        except:
+            self.__field_lens=LIST(**{ 'elementclass': LenEntry,             'length': 8,             'createdefault': True })
+        return self.__field_lens.getvalue()
+
+    def __setfield_lens(self, value):
+        if isinstance(value,LIST):
+            self.__field_lens=value
+        else:
+            self.__field_lens=LIST(value,**{ 'elementclass': LenEntry,             'length': 8,             'createdefault': True })
+
+    def __delfield_lens(self): del self.__field_lens
+
+    lens=property(__getfield_lens, __setfield_lens, __delfield_lens, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('lens', self.__field_lens, None)
 
 
 
