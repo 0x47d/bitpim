@@ -11,6 +11,8 @@
 
 # System Modules
 
+import wx
+
 # BitPim Modules
 
 import common
@@ -78,6 +80,8 @@ class Phone(parentphone):
     def __init__(self, logtarget, commport):
         "Calls all the constructors and sets initial modes"
         parentphone.__init__(self, logtarget, commport)
+        global PBEntry
+        self.pbentryclass=PBEntry
 
     def _get_file_wallpaper_index(self, idx, result):
         try:
@@ -123,10 +127,6 @@ class Phone(parentphone):
             if __debug__:
                 self.log('Delete list: '+','.join(_del_list))
                 self.log('New list: '+','.join(_new_list))
-##            self._replace_files('ringtone-index', 'ringtone',
-##                                _new_list, fundamentals)
-##            self._del_files('ringtone-index',
-##                            _del_list, fundamentals)
             self._add_files('ringtone-index', 'ringtone',
                             _new_list, fundamentals)
             self._update_media_index(self.protocolclass.WRingtoneIndexFile,
@@ -158,10 +158,6 @@ class Phone(parentphone):
             if __debug__:
                 self.log('Delete list: '+','.join(_del_list))
                 self.log('New list: '+','.join(_new_list))
-##            self._replace_files('wallpaper-index', 'wallpapers',
-##                                _new_list, fundamentals)
-##            self._del_files('wallpaper-index',
-##                            _del_list, fundamentals)
             self._add_files('wallpaper-index', 'wallpapers',
                             _new_list, fundamentals)
             self._update_media_index(self.protocolclass.WPictureIndexFile,
@@ -175,8 +171,92 @@ class Phone(parentphone):
                 raise
         return fundamentals
 
+    # Phonebook stuff
+    def _rescale_and_cache(self, wp, filename, idx,
+                           fundamentals):
+        # rescale the wp and add it to the cache dir
+        try:
+            _data=self.getfilecontents(filename, True)
+            _tmpname=common.gettempfilename('tmp')
+            file(_tmpname, 'wb').write(_data)
+            _img=wx.Image(_tmpname)
+            if not _img.Ok():
+                self.log('Failed to understand image: '+filename)
+                return
+            _img.Rescale(128, 96)
+            _img.SaveFile(_tmpname, wx.BITMAP_TYPE_JPEG)
+            _newfilename='%(prefix)s/%(index)d.jpg'%\
+                          { 'prefix': self.protocolclass.PB_WP_CACHE_PATH,
+                            'index': idx }
+            _data=file(_tmpname, 'rb').read()
+            self.writefile(_newfilename, _data)
+            return _newfilename
+        except:
+            if __debug__:
+                self.log('Failed to add cache image: '+wp)
+                raise
+
+    def _add_wp_cache(self, wp, idx, fundamentals):
+        # check to see if it already exists
+        _wp_range=fundamentals.get('wallpaper-range', {})
+        # add this wallpaper into the cache dir
+        _wp_index=fundamentals.get('wallpaper-index', {})
+        # look for the file name
+        _filename=self._get_wp_filename(wp, _wp_index)
+        if not _filename:
+            # couldn't find the filename
+            return
+        # copy the image file, rescale, and put it in the cache dir
+        _newfilename=self._rescale_and_cache(wp, _filename, idx, fundamentals)
+        if _newfilename:
+            # rescale successful, update the dict
+            _wp_range[wp]='/ff/'+_newfilename
+            _wp_range[wp]='/ff/%(filename)s|%(wpname)s'%\
+                           { 'filename': _newfilename,
+                             'wpname': common.stripext(wp),
+                             }
+            fundamentals['wallpaper-range']=_wp_range
 
 
+# PBEntry class-----------------------------------------------------------------
+parentpbentry=scha950.PBEntry
+class PBEntry(parentpbentry):
+
+    def _build_memo(self, memo):
+        if memo:
+            self.pb.note=memo
+
+    def _build(self, entry):
+        parentpbentry._build(self, entry)
+        self._build_memo(entry.get('memos', [{}])[0].get('memo', None))
+
+    def _extract_wallpaper(self, entry, p_class):
+        if not self.pb.info&p_class.PB_FLG_WP:
+            return
+        _idx=self.pb.wallpaper.rfind('|')+1
+        # really ugly hack here !!!
+        _wp=self.pb.wallpaper[_idx:]
+        if _wp.startswith('Preloaded'):
+            # builtin wallpaper
+            _wp='Wallpaper '+_wp[-1]
+        else:
+            # assume that the name has extension .jpg
+            _wp+='.jpg'
+        
+        entry['wallpapers']=[{ 'wallpaper': _wp,
+                               'use': 'call' }]
+
+    def _extract_memo(self, entry, p_class):
+        # extract the note portion from the phone into BitPim dict
+        if self.pb.info&p_class.PB_FLAG_NOTE:
+            entry['memos']=[{ 'memo': self.pb.note }]
+
+    def getvalue(self):
+        _entry=parentpbentry.getvalue(self)
+        self._extract_memo(_entry, self.phone.protocolclass)
+        return _entry
+
+# Profile class-----------------------------------------------------------------
 parentprofile=scha950.Profile
 class Profile(parentprofile):
     serialsname=Phone.serialsname
@@ -231,3 +311,57 @@ class Profile(parentprofile):
         ('call_history', 'read', None),# all call history list reading
         ('sms', 'read', None),     # all SMS list reading DJP
         )
+
+    field_color_data={
+        'phonebook': {
+            'name': {
+                'first': 1, 'middle': 1, 'last': 1, 'full': 1,
+                'nickname': 0, 'details': 1 },
+            'number': {
+                'type': 5, 'speeddial': 5, 'number': 5,
+                'details': 5,
+                'ringtone': False, 'wallpaper': False },
+            'email': 2,
+            'email_details': {
+                'emailspeeddial': False, 'emailringtone': False,
+                'emailwallpaper': False },
+            'address': {
+                'type': 0, 'company': 0, 'street': 0, 'street2': 0,
+                'city': 0, 'state': 0, 'postalcode': 0, 'country': 0,
+                'details': 0 },
+            'url': 0,
+            'memo': 1,
+            'category': 1,
+            'wallpaper': 1,
+            'ringtone': 1,
+            'storage': 0,
+            },
+        'calendar': {
+            'description': True, 'location': True, 'allday': False,
+            'start': True, 'end': True, 'priority': False,
+            'alarm': True, 'vibrate': True,
+            'repeat': True,
+            'memo': False,
+            'category': False,
+            'wallpaper': False,
+            'ringtone': True,
+            },
+        'memo': {
+            'subject': False,
+            'date': False,
+            'secret': False,
+            'category': False,
+            'memo': True,
+            },
+        'todo': {
+            'summary': False,
+            'status': False,
+            'due_date': False,
+            'percent_complete': False,
+            'completion_date': False,
+            'private': False,
+            'priority': False,
+            'category': False,
+            'memo': False,
+            },
+        }

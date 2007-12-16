@@ -32,7 +32,7 @@ PIC_TYPE_BUILTIN=4
 PIC_TYPE_USERS=3
 
 PB_FLAG_NOTE=0x0200
-
+PB_MAX_NOTE_LEN=64
 %}
 
 # Ringtone stuff
@@ -148,7 +148,7 @@ PACKET PBEntry:
         * NumberEntry fax
     if self.info & PB_FLG_CELL2:
         * NumberEntry cell2
-    if sel.info & PB_FLAG_NOTE:
+    if self.info & PB_FLAG_NOTE:
         * STRING { 'terminator': None,
                    'pascal': True } note
     if self.info & PB_FLG_DATE:
@@ -173,3 +173,61 @@ PACKET PBFileHeader:
     * LIST { 'elementclass': LenEntry,
              'length': 8,
              'createdefault': True } +lens
+
+PACKET ss_number_entry:
+    * STRING { 'terminator': 0,
+               'default': '',
+               'maxsizeinbytes': PB_MAX_NUMBER_LEN,
+               'raiseontruncate': False } +number
+    2 UINT { 'default': 0 } +speeddial
+    1 UINT { 'default': 0 } +primary
+    8 STRING { 'pad': 0,
+               'default': '' } +zero
+    * STRING { 'terminator': 0,
+               'default': '' } +ringtone
+
+PACKET ss_pb_entry:
+    * USTRING { 'terminator': 0,
+                'maxsizeinbytes': PB_MAX_NAME_LEN,
+                'encoding': ENCODING,
+                'raiseontruncate': False } name
+    * USTRING { 'terminator': 0,
+                'encoding': ENCODING,
+                'default': '',
+                'maxsizeinbytes': PB_MAX_EMAIL_LEN,
+                'raiseontruncate': False } +email
+    * USTRING { 'terminator': 0,
+                'encoding': ENCODING,
+                'default': '',
+                'maxsizeinbytes': PB_MAX_EMAIL_LEN,
+                'raiseontruncate': False } +email2
+    2 UINT { 'default': 0 } +zero1
+    * USTRING { 'terminator': 0,
+                'encoding': ENCODING,
+                'maxsizeinbytes': PB_MAX_NOTE_LEN,
+                'raiseontruncate': False,
+                'default': '' } +note
+    1 UINT { 'default': 0 } +zero5
+    * STRING { 'terminator': 0,
+               'default': '' } +wallpaper
+    4 UINT { 'default': 0 } +wallpaper_range
+    1 UINT { 'default': 0 } +zero2
+    * ss_number_entry +home
+    * ss_number_entry +work
+    * ss_number_entry +cell
+    * ss_number_entry +dummy
+    * ss_number_entry +fax
+    * ss_number_entry +cell2
+    4 UINT { 'default': 0 } +zero3
+    1 UINT { 'default': 0 } +group
+    2 UINT { 'default': 0 } +zero4
+
+PACKET ss_pb_write_req:
+    * ss_cmd_hdr { 'command': SS_CMD_PB_WRITE } +hdr
+    1 UINT { 'default': 0 } +zero
+    * ss_pb_entry entry
+
+PACKET ss_pb_write_resp:
+    * ss_cmd_hdr hdr
+    1 UINT zero
+    2 UINT index

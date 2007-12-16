@@ -84,6 +84,7 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         "Calls all the constructors and sets initial modes"
         com_phone.Phone.__init__(self, logtarget, commport)
 	com_brew.BrewProtocol.__init__(self)
+	self.pbentryclass=PBEntry
 	# born to be in BREW mode!
         self.mode=self.MODEBREW
 
@@ -733,7 +734,7 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
                 if _len.itemlen:
                     _entry=self.protocolclass.PBEntry()
                     _entry.readfrombuffer(_buf)
-                    _pbentry=PBEntry(self, _entry, fundamentals).getvalue()
+                    _pbentry=self.pbentryclass(self, _entry, fundamentals).getvalue()
                     res[len(res)]=_pbentry
         except:
             self.log('Failed to read file: %s'%filename)
@@ -763,7 +764,8 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         for _,_entry in wp_index.items():
             if _entry.get('name', None)==wp:
                 return _entry.get('filename', None)
-    def _rescale_and_cache(self, wp, filename,
+
+    def _rescale_and_cache(self, wp, filename, idx,
                            fundamentals):
         # rescale the wp and add it to the cache dir
         try:
@@ -785,7 +787,7 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
                 self.log('Failed to add cache image: '+wp)
                 raise
 
-    def _add_wp_cache(self, wp, fundamentals):
+    def _add_wp_cache(self, wp, idx, fundamentals):
         # check to see if it already exists
         _wp_range=fundamentals.get('wallpaper-range', {})
         if _wp_range.has_key(wp):
@@ -799,7 +801,7 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
             # couldn't find the filename
             return
         # copy the image file, rescale, and put it in the cache dir
-        _newfilename=self._rescale_and_cache(wp, _filename, fundamentals)
+        _newfilename=self._rescale_and_cache(wp, _filename, idx, fundamentals)
         if _newfilename:
             # rescale successful, update the dict
             _wp_range[wp]='/ff/'+_newfilename
@@ -825,16 +827,16 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
             return fundamentals
         _req=self.protocolclass.ss_pb_write_req()
         _total_cnt=len(_pb_list)
-        _cnt=0
+        _cnt=1
         for _name,_key in _pb_list:
             try:
                 _entry=_pb_dict[_key]
                 # set up all the picture ID (wallpaper) images
                 _wp=_entry.get('wallpapers', [{}])[0].get('wallpaper', None)
                 if _wp:
-                    self._add_wp_cache(_wp, fundamentals)
+                    self._add_wp_cache(_wp, _cnt, fundamentals)
                 # setting up a new contact to send over
-                _pbentry=PBEntry(self, _entry, fundamentals)
+                _pbentry=self.pbentryclass(self, _entry, fundamentals)
                 _req.entry=_pbentry.pb
                 _cnt+=1
                 self.progress(_cnt, _total_cnt,
