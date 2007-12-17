@@ -175,6 +175,11 @@ BEGIN_TOC
         TOCITEM_1(Cables,phone-samsungscha950-cables.htm)
         TOCITEM_1(Notes,phone-samsungscha950-notes.htm)
         ENDTOC_1
+    TOCITEM_0(Samsung SCH-U740,phone-samsungschu740.htm)
+        TOC_1
+        TOCITEM_1(Cables,phone-samsungschu740-cables.htm)
+        TOCITEM_1(Notes,phone-samsungschu740-notes.htm)
+        ENDTOC_1
     TOCITEM_0(Samsung SPH-M300,phone-samsungsphm300.htm)
         TOC_1
         TOCITEM_1(Cables,phone-samsungsphm300-cables.htm)
