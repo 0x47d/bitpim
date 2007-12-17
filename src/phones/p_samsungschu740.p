@@ -33,6 +33,14 @@ PIC_TYPE_USERS=3
 
 PB_FLAG_NOTE=0x0200
 PB_MAX_NOTE_LEN=64
+
+CL_MAX_ENTRIES=90
+CL_TYPE_INCOMING=2
+CL_TYPE_OUTGOING=1
+CL_TYPE_MISSED=3
+CL_TYPE_DELETED=5
+CL_VALID_TYPE=frozenset((CL_TYPE_INCOMING, CL_TYPE_OUTGOING, CL_TYPE_MISSED))
+
 %}
 
 # Ringtone stuff
@@ -346,3 +354,32 @@ PACKET sms_body:
 ##        4 DateTime1 delivered_datetime
 ##        96 UNKNOWN dunno10
 ##    4 UINT locked
+
+# Call History
+PACKET cl_list:
+    2 UINT index
+
+PACKET cl_index_file:
+    * LIST { 'length': CL_MAX_ENTRIES,
+             'elementclass': cl_list } incoming
+    * LIST { 'length': CL_MAX_ENTRIES,
+             'elementclass': cl_list } outgoing
+    * LIST { 'length': CL_MAX_ENTRIES,
+             'elementclass': cl_list } missed
+    992 UNKNOWN dunno1
+    4 UINT incoming_count
+    4 UINT outgoing_count
+    4 UINT missed_count
+
+PACKET cl_file:
+    1 UINT cl_type
+    51 STRING { 'terminator': 0 } number
+    4 DateTime1 datetime
+    4 UNKNOWN dunno1
+    4 UINT duration
+    %{
+    def _valid(self):
+        global CL_VALID_TYPE
+        return bool(self.cl_type in CL_VALID_TYPE and self.number)
+    valid=property(fget=_valid)
+    %}

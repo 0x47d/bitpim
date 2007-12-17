@@ -95,7 +95,7 @@ CL_TYPE_INCOMING=1
 CL_TYPE_OUTGOING=2
 CL_TYPE_MISSED=3
 CL_TYPE_DELETED=5
-CL_VALID_TYPE=(CL_TYPE_INCOMING, CL_TYPE_OUTGOING, CL_TYPE_MISSED)
+CL_VALID_TYPE=frozenset((CL_TYPE_INCOMING, CL_TYPE_OUTGOING, CL_TYPE_MISSED))
 
 # SMS stuff
 SMS_PATH='nvm/sms_wp_os'
@@ -508,6 +508,12 @@ PACKET cl_file:
     4 DateTime1 datetime
     4 UNKNOWN dunno1
     4 UINT duration
+    %{
+    def _valid(self):
+        global CL_VALID_TYPE
+        return bool(self.cl_type in CL_VALID_TYPE and self.number)
+    valid=property(fget=_valid)
+    %}
 
 # SMS Stuff
 PACKET pBOOL:

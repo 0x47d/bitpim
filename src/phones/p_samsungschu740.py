@@ -24,6 +24,14 @@ PIC_TYPE_USERS=3
 
 PB_FLAG_NOTE=0x0200
 PB_MAX_NOTE_LEN=64
+
+CL_MAX_ENTRIES=90
+CL_TYPE_INCOMING=2
+CL_TYPE_OUTGOING=1
+CL_TYPE_MISSED=3
+CL_TYPE_DELETED=5
+CL_VALID_TYPE=frozenset((CL_TYPE_INCOMING, CL_TYPE_OUTGOING, CL_TYPE_MISSED))
+
 class WRingtoneIndexEntry(BaseProtogenClass):
     __fields=['name', 'path_prefix', 'pathname', 'eor']
 
@@ -4397,6 +4405,395 @@ class sms_body(BaseProtogenClass):
         if self.has_40bytes:
             yield ('dunno9', self.__field_dunno9, None)
         yield ('msg_stat', self.__field_msg_stat, None)
+
+
+
+
+class cl_list(BaseProtogenClass):
+    __fields=['index']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(cl_list,self).__init__(**dict)
+        if self.__class__ is cl_list:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(cl_list,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(cl_list,kwargs)
+        if len(args):
+            dict2={'sizeinbytes': 2}
+            dict2.update(kwargs)
+            kwargs=dict2
+            self.__field_index=UINT(*args,**dict2)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_index.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_index=UINT(**{'sizeinbytes': 2})
+        self.__field_index.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_index(self):
+        return self.__field_index.getvalue()
+
+    def __setfield_index(self, value):
+        if isinstance(value,UINT):
+            self.__field_index=value
+        else:
+            self.__field_index=UINT(value,**{'sizeinbytes': 2})
+
+    def __delfield_index(self): del self.__field_index
+
+    index=property(__getfield_index, __setfield_index, __delfield_index, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('index', self.__field_index, None)
+
+
+
+
+class cl_index_file(BaseProtogenClass):
+    __fields=['incoming', 'outgoing', 'missed', 'dunno1', 'incoming_count', 'outgoing_count', 'missed_count']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(cl_index_file,self).__init__(**dict)
+        if self.__class__ is cl_index_file:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(cl_index_file,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(cl_index_file,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_incoming.writetobuffer(buf)
+        self.__field_outgoing.writetobuffer(buf)
+        self.__field_missed.writetobuffer(buf)
+        self.__field_dunno1.writetobuffer(buf)
+        self.__field_incoming_count.writetobuffer(buf)
+        self.__field_outgoing_count.writetobuffer(buf)
+        self.__field_missed_count.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_incoming=LIST(**{ 'length': CL_MAX_ENTRIES,             'elementclass': cl_list })
+        self.__field_incoming.readfrombuffer(buf)
+        self.__field_outgoing=LIST(**{ 'length': CL_MAX_ENTRIES,             'elementclass': cl_list })
+        self.__field_outgoing.readfrombuffer(buf)
+        self.__field_missed=LIST(**{ 'length': CL_MAX_ENTRIES,             'elementclass': cl_list })
+        self.__field_missed.readfrombuffer(buf)
+        self.__field_dunno1=UNKNOWN(**{'sizeinbytes': 992})
+        self.__field_dunno1.readfrombuffer(buf)
+        self.__field_incoming_count=UINT(**{'sizeinbytes': 4})
+        self.__field_incoming_count.readfrombuffer(buf)
+        self.__field_outgoing_count=UINT(**{'sizeinbytes': 4})
+        self.__field_outgoing_count.readfrombuffer(buf)
+        self.__field_missed_count=UINT(**{'sizeinbytes': 4})
+        self.__field_missed_count.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_incoming(self):
+        return self.__field_incoming.getvalue()
+
+    def __setfield_incoming(self, value):
+        if isinstance(value,LIST):
+            self.__field_incoming=value
+        else:
+            self.__field_incoming=LIST(value,**{ 'length': CL_MAX_ENTRIES,             'elementclass': cl_list })
+
+    def __delfield_incoming(self): del self.__field_incoming
+
+    incoming=property(__getfield_incoming, __setfield_incoming, __delfield_incoming, None)
+
+    def __getfield_outgoing(self):
+        return self.__field_outgoing.getvalue()
+
+    def __setfield_outgoing(self, value):
+        if isinstance(value,LIST):
+            self.__field_outgoing=value
+        else:
+            self.__field_outgoing=LIST(value,**{ 'length': CL_MAX_ENTRIES,             'elementclass': cl_list })
+
+    def __delfield_outgoing(self): del self.__field_outgoing
+
+    outgoing=property(__getfield_outgoing, __setfield_outgoing, __delfield_outgoing, None)
+
+    def __getfield_missed(self):
+        return self.__field_missed.getvalue()
+
+    def __setfield_missed(self, value):
+        if isinstance(value,LIST):
+            self.__field_missed=value
+        else:
+            self.__field_missed=LIST(value,**{ 'length': CL_MAX_ENTRIES,             'elementclass': cl_list })
+
+    def __delfield_missed(self): del self.__field_missed
+
+    missed=property(__getfield_missed, __setfield_missed, __delfield_missed, None)
+
+    def __getfield_dunno1(self):
+        return self.__field_dunno1.getvalue()
+
+    def __setfield_dunno1(self, value):
+        if isinstance(value,UNKNOWN):
+            self.__field_dunno1=value
+        else:
+            self.__field_dunno1=UNKNOWN(value,**{'sizeinbytes': 992})
+
+    def __delfield_dunno1(self): del self.__field_dunno1
+
+    dunno1=property(__getfield_dunno1, __setfield_dunno1, __delfield_dunno1, None)
+
+    def __getfield_incoming_count(self):
+        return self.__field_incoming_count.getvalue()
+
+    def __setfield_incoming_count(self, value):
+        if isinstance(value,UINT):
+            self.__field_incoming_count=value
+        else:
+            self.__field_incoming_count=UINT(value,**{'sizeinbytes': 4})
+
+    def __delfield_incoming_count(self): del self.__field_incoming_count
+
+    incoming_count=property(__getfield_incoming_count, __setfield_incoming_count, __delfield_incoming_count, None)
+
+    def __getfield_outgoing_count(self):
+        return self.__field_outgoing_count.getvalue()
+
+    def __setfield_outgoing_count(self, value):
+        if isinstance(value,UINT):
+            self.__field_outgoing_count=value
+        else:
+            self.__field_outgoing_count=UINT(value,**{'sizeinbytes': 4})
+
+    def __delfield_outgoing_count(self): del self.__field_outgoing_count
+
+    outgoing_count=property(__getfield_outgoing_count, __setfield_outgoing_count, __delfield_outgoing_count, None)
+
+    def __getfield_missed_count(self):
+        return self.__field_missed_count.getvalue()
+
+    def __setfield_missed_count(self, value):
+        if isinstance(value,UINT):
+            self.__field_missed_count=value
+        else:
+            self.__field_missed_count=UINT(value,**{'sizeinbytes': 4})
+
+    def __delfield_missed_count(self): del self.__field_missed_count
+
+    missed_count=property(__getfield_missed_count, __setfield_missed_count, __delfield_missed_count, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('incoming', self.__field_incoming, None)
+        yield ('outgoing', self.__field_outgoing, None)
+        yield ('missed', self.__field_missed, None)
+        yield ('dunno1', self.__field_dunno1, None)
+        yield ('incoming_count', self.__field_incoming_count, None)
+        yield ('outgoing_count', self.__field_outgoing_count, None)
+        yield ('missed_count', self.__field_missed_count, None)
+
+
+
+
+class cl_file(BaseProtogenClass):
+    __fields=['cl_type', 'number', 'datetime', 'dunno1', 'duration']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(cl_file,self).__init__(**dict)
+        if self.__class__ is cl_file:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(cl_file,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(cl_file,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_cl_type.writetobuffer(buf)
+        self.__field_number.writetobuffer(buf)
+        self.__field_datetime.writetobuffer(buf)
+        self.__field_dunno1.writetobuffer(buf)
+        self.__field_duration.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_cl_type=UINT(**{'sizeinbytes': 1})
+        self.__field_cl_type.readfrombuffer(buf)
+        self.__field_number=STRING(**{'sizeinbytes': 51,  'terminator': 0 })
+        self.__field_number.readfrombuffer(buf)
+        self.__field_datetime=DateTime1(**{'sizeinbytes': 4})
+        self.__field_datetime.readfrombuffer(buf)
+        self.__field_dunno1=UNKNOWN(**{'sizeinbytes': 4})
+        self.__field_dunno1.readfrombuffer(buf)
+        self.__field_duration=UINT(**{'sizeinbytes': 4})
+        self.__field_duration.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_cl_type(self):
+        return self.__field_cl_type.getvalue()
+
+    def __setfield_cl_type(self, value):
+        if isinstance(value,UINT):
+            self.__field_cl_type=value
+        else:
+            self.__field_cl_type=UINT(value,**{'sizeinbytes': 1})
+
+    def __delfield_cl_type(self): del self.__field_cl_type
+
+    cl_type=property(__getfield_cl_type, __setfield_cl_type, __delfield_cl_type, None)
+
+    def __getfield_number(self):
+        return self.__field_number.getvalue()
+
+    def __setfield_number(self, value):
+        if isinstance(value,STRING):
+            self.__field_number=value
+        else:
+            self.__field_number=STRING(value,**{'sizeinbytes': 51,  'terminator': 0 })
+
+    def __delfield_number(self): del self.__field_number
+
+    number=property(__getfield_number, __setfield_number, __delfield_number, None)
+
+    def __getfield_datetime(self):
+        return self.__field_datetime.getvalue()
+
+    def __setfield_datetime(self, value):
+        if isinstance(value,DateTime1):
+            self.__field_datetime=value
+        else:
+            self.__field_datetime=DateTime1(value,**{'sizeinbytes': 4})
+
+    def __delfield_datetime(self): del self.__field_datetime
+
+    datetime=property(__getfield_datetime, __setfield_datetime, __delfield_datetime, None)
+
+    def __getfield_dunno1(self):
+        return self.__field_dunno1.getvalue()
+
+    def __setfield_dunno1(self, value):
+        if isinstance(value,UNKNOWN):
+            self.__field_dunno1=value
+        else:
+            self.__field_dunno1=UNKNOWN(value,**{'sizeinbytes': 4})
+
+    def __delfield_dunno1(self): del self.__field_dunno1
+
+    dunno1=property(__getfield_dunno1, __setfield_dunno1, __delfield_dunno1, None)
+
+    def __getfield_duration(self):
+        return self.__field_duration.getvalue()
+
+    def __setfield_duration(self, value):
+        if isinstance(value,UINT):
+            self.__field_duration=value
+        else:
+            self.__field_duration=UINT(value,**{'sizeinbytes': 4})
+
+    def __delfield_duration(self): del self.__field_duration
+
+    duration=property(__getfield_duration, __setfield_duration, __delfield_duration, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('cl_type', self.__field_cl_type, None)
+        yield ('number', self.__field_number, None)
+        yield ('datetime', self.__field_datetime, None)
+        yield ('dunno1', self.__field_dunno1, None)
+        yield ('duration', self.__field_duration, None)
+
+    def _valid(self):
+        global CL_VALID_TYPE
+        return bool(self.cl_type in CL_VALID_TYPE and self.number)
+    valid=property(fget=_valid)
 
 
 

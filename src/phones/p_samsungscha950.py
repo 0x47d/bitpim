@@ -86,7 +86,7 @@ CL_TYPE_INCOMING=1
 CL_TYPE_OUTGOING=2
 CL_TYPE_MISSED=3
 CL_TYPE_DELETED=5
-CL_VALID_TYPE=(CL_TYPE_INCOMING, CL_TYPE_OUTGOING, CL_TYPE_MISSED)
+CL_VALID_TYPE=frozenset((CL_TYPE_INCOMING, CL_TYPE_OUTGOING, CL_TYPE_MISSED))
 
 # SMS stuff
 SMS_PATH='nvm/sms_wp_os'
@@ -7370,6 +7370,11 @@ class cl_file(BaseProtogenClass):
         yield ('datetime', self.__field_datetime, None)
         yield ('dunno1', self.__field_dunno1, None)
         yield ('duration', self.__field_duration, None)
+
+    def _valid(self):
+        global CL_VALID_TYPE
+        return bool(self.cl_type in CL_VALID_TYPE and self.number)
+    valid=property(fget=_valid)
 
 
 

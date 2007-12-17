@@ -10,21 +10,23 @@
 """Communicate with the Samsung SCH-U740 Phone"""
 
 # System Modules
-
+import re
 import wx
 
 # BitPim Modules
 
+import call_history
 import common
 import com_brew
 import com_samsungscha950 as scha950
+import helpids
 import prototypes
 import p_samsungschu740 as p_schu740
 
 parentphone=scha950.Phone
 class Phone(parentphone):
     desc='SCH-U740'
-    helpid=None
+    helpid=helpids.ID_PHONE_SAMSUNGSCHU740
     protocolclass=p_schu740
     serialsname='schu740'
 
@@ -57,14 +59,14 @@ class Phone(parentphone):
 ##        'Sound No Ring': 'range_sound_preloaded_el_no_rings',
 ##        }
     builtin_wallpapers={
-        'Wallpaper 1': 'range_f_wallpaper_preloaded_el_01',
-        'Wallpaper 2': 'range_f_wallpaper_preloaded_el_02',
-        'Wallpaper 3': 'range_f_wallpaper_preloaded_el_03',
-        'Wallpaper 4': 'range_f_wallpaper_preloaded_el_04',
-        'Wallpaper 5': 'range_f_wallpaper_preloaded_el_05',
-        'Wallpaper 6': 'range_f_wallpaper_preloaded_el_06',
-        'Wallpaper 7': 'range_f_wallpaper_preloaded_el_07',
-        'Wallpaper 8': 'range_f_wallpaper_preloaded_el_08',
+        'Preloaded1': 'range_f_wallpaper_preloaded_el_01',
+        'Preloaded2': 'range_f_wallpaper_preloaded_el_02',
+        'Preloaded3': 'range_f_wallpaper_preloaded_el_03',
+        'Preloaded4': 'range_f_wallpaper_preloaded_el_04',
+        'Preloaded5': 'range_f_wallpaper_preloaded_el_05',
+        'Preloaded6': 'range_f_wallpaper_preloaded_el_06',
+        'Preloaded7': 'range_f_wallpaper_preloaded_el_07',
+        'Preloaded8': 'range_f_wallpaper_preloaded_el_08',
         }
     builtin_groups={
         1: 'Business',
@@ -217,7 +219,6 @@ class Phone(parentphone):
                              }
             fundamentals['wallpaper-range']=_wp_range
 
-
 # PBEntry class-----------------------------------------------------------------
 parentpbentry=scha950.PBEntry
 class PBEntry(parentpbentry):
@@ -236,10 +237,7 @@ class PBEntry(parentpbentry):
         _idx=self.pb.wallpaper.rfind('|')+1
         # really ugly hack here !!!
         _wp=self.pb.wallpaper[_idx:]
-        if _wp.startswith('Preloaded'):
-            # builtin wallpaper
-            _wp='Wallpaper '+_wp[-1]
-        else:
+        if not _wp.startswith('Preloaded'):
             # assume that the name has extension .jpg
             _wp+='.jpg'
         
@@ -290,6 +288,8 @@ class Profile(parentprofile):
     imagetargets.update(common.getkv(parentprofile.stockimagetargets, "wallpaper",
                                       {'width': 220, 'height': 184, 'format': "JPEG"}))
     imagetargets.update(common.getkv(parentprofile.stockimagetargets, "pictureid",
+                                      {'width': 128, 'height': 96, 'format': "JPEG"}))
+    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "outsidelcd",
                                       {'width': 128, 'height': 96, 'format': "JPEG"}))
     def GetTargetsForImageOrigin(self, origin):
         return self.imagetargets

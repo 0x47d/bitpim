@@ -876,8 +876,7 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
                 _buf=prototypes.buffer(self.getfilecontents(
                     '%s%02d'%(self.protocolclass.CL_PREFIX, _idx)))
                 _req.readfrombuffer(_buf, 'Reading Call Log File')
-                if _req.cl_type in self.protocolclass.CL_VALID_TYPE and \
-                   _req.number:
+                if _req.valid:
                     _entry=call_history.CallHistoryEntry()
                     _entry.folder=folder
                     _entry.number=_req.number
@@ -1139,7 +1138,7 @@ class CalendarEntry(object):
             return None
         _rep=bpcalendar.RepeatEntry(_rep_type)
         if _rep_type==_rep.daily:
-            _rep.inteval=1
+            _rep.interval=1
         elif _rep_type==_rep.weekly:
             _rep.interval=1
         elif _rep_type==_rep.monthly:
