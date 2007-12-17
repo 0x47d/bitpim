@@ -145,7 +145,7 @@ class Phone(parentphone):
                 raise
         return fundamentals
 
-    # Wallpaper stuff
+    # Wallpaper stuff-----------------------------------------------------------
     def savewallpapers(self, fundamentals, merge):
         # send wallpapers to the phone
         """Save ringtones to the phone"""
@@ -171,7 +171,7 @@ class Phone(parentphone):
                 raise
         return fundamentals
 
-    # Phonebook stuff
+    # Phonebook stuff-----------------------------------------------------------
     def _rescale_and_cache(self, wp, filename, idx,
                            fundamentals):
         # rescale the wp and add it to the cache dir

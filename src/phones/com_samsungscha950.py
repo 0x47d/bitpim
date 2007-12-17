@@ -978,13 +978,13 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
 
     def getsms(self, fundamentals):
         res={}
-        try:
-            for _filename in self.listfiles(self.protocolclass.SMS_PATH):
+        for _filename in self.listfiles(self.protocolclass.SMS_PATH):
+            try:
                 self._read_sms(_filename, res, fundamentals)
-        except:
-            self.log('Failed to read SMS File '+_filename)
-            if __debug__:
-                raise
+            except:
+                self.log('Failed to read SMS File '+_filename)
+                if __debug__:
+                    raise
         fundamentals['sms']=res
         fundamentals['canned_msg']=[]
         return fundamentals
