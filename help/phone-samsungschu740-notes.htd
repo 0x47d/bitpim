@@ -44,6 +44,13 @@
 <li><p>BitPim will neither retrieve nor send wallpapers from/to the microSD card.
 </UL>
 
+<H3>Video</H3>
+<UL>
+<LI><P>BitPim can retrieve video files from the phone.  It does not retrieve video files stored on the microSD card.
+<LI><P>The format of the video files is 3GPP2 (".3g2"), which can be played by, among other media players, QuickTime.
+<LI><P>BitPim will neither delete nor send video files to the phone.
+</UL>
+
 <H3>Memo/Notepad</H3>
 <UL>
 <li><p>BitPim supports up to 30 notepad items.
@@ -52,7 +59,8 @@
 
 <H3>SMS</H3>
 <UL>
-<LI>BitPim can only retrieve text messages.
+<LI><P>BitPim can only retrieve text messages.
+<LI><P>BitPim will neither deleter nor send/restore messages to the phone.
 </UL>
 
 #include "pageend.h"

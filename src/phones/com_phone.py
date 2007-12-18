@@ -195,7 +195,7 @@ class Profile(object):
     excluded_ringtone_origins=()
 
     # wallpaper origins that are not available for the contact assignment
-    excluded_wallpaper_origins=('video')
+    excluded_wallpaper_origins=('video',)
 
     # fill in your own image origins using these
     stockimageorigins={

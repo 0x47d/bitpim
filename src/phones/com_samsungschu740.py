@@ -85,9 +85,10 @@ class Phone(parentphone):
         global PBEntry
         self.pbentryclass=PBEntry
 
-    def _get_file_wallpaper_index(self, idx, result):
+    def _get_file_wallpaper_index(self, idx, result,
+                                  indexfilename, origin):
         try:
-            _buf=prototypes.buffer(self.getfilecontents(self.protocolclass.PIC_INDEX_FILE_NAME))
+            _buf=prototypes.buffer(self.getfilecontents(indexfilename))
         except (com_brew.BrewNoSuchFileException,
                 com_brew.BrewBadPathnameException,
                 com_brew.BrewFileLockedException,
@@ -107,14 +108,19 @@ class Phone(parentphone):
                     _file_name=_entry.pathname
                 result[idx]={ 'name': common.basename(_entry.pathname),
                               'filename': _file_name,
-                              'origin': 'images',
+                              'origin': origin,
                               }
                 idx+=1
         return idx
     def get_wallpaper_index(self):
         _res={}
         _idx=self._get_builtin_wallpaper_index(0, _res)
-        _idx=self._get_file_wallpaper_index(_idx, _res)
+        _idx=self._get_file_wallpaper_index(_idx, _res,
+                                            self.protocolclass.PIC_INDEX_FILE_NAME,
+                                            'images')
+        _idx=self._get_file_wallpaper_index(_idx, _res,
+                                            self.protocolclass.VIDEO_INDEX_FILE_NAME,
+                                            'video')
         return _res
 
     # Ringtone stuff
@@ -156,7 +162,8 @@ class Phone(parentphone):
             _del_list, _new_list=self._get_del_new_list('wallpaper-index',
                                                         'wallpapers',
                                                         merge,
-                                                        fundamentals)
+                                                        fundamentals,
+                                                        ('video',))
             if __debug__:
                 self.log('Delete list: '+','.join(_del_list))
                 self.log('New list: '+','.join(_new_list))
@@ -282,6 +289,9 @@ class Profile(parentprofile):
 
     imageorigins={}
     imageorigins.update(common.getkv(parentprofile.stockimageorigins, "images"))
+    imageorigins.update(common.getkv(parentprofile.stockimageorigins, "video"))
+    # wallpaper origins that are not available for the contact assignment
+    excluded_wallpaper_origins=('video',)
 
     # our targets are the same for all origins
     imagetargets={}
