@@ -19,6 +19,7 @@ BEGIN_TOC
     TOCITEM_0(What do those colors of the color-coded field names mean?,faq-colorcodedfields.htm)
     TOCITEM_0(What are the differences between the Replace All and Add option when saving ringtones/wallpapers to the phone?,faq-mediaoptions.htm)
     TOCITEM_0(Why does BitPim show media files on SD Card as having 0-byte size?,faq-sdcard.htm)
+    TOCITEM_0(Why did BitPim fail to detect my phone?,faq-faildetection.htm)
     ENDTOC_0
 END_TOC
 <!-- CONTENTS END -->
