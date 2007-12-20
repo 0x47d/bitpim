@@ -283,7 +283,7 @@ class Phone(com_etsi.Phone):
             for _retry_cnt in range(2):
                 try:
                     self.progress(_end_idx, _total_entries,
-                                  'Reading conatct entry %d to %d'%(_start_idx, _end_idx))
+                                  'Reading contact entry %d to %d'%(_start_idx, _end_idx))
                     _res=self.sendATcommand(_req, self.protocolclass.read_pb_resp)
                     for _entry in _res:
                         self._build_pb_entry(_entry, pb_book, result)

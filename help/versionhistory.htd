@@ -4,6 +4,7 @@
     <ul>
       <LI><P>New phone support: <B>Samsung SCH-U740 (VZW)</B> (Initial)
       <LI><P>Maintenance: Upgrade to wxPython 2.8.7.1
+      <LI><P>New phone support: <B>Motorola K1m</B> (Initial)
     </ul>
 
    <h2><a name="1.0.3">Changes in 1.0.3</a></h2>
