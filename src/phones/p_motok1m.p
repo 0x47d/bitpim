@@ -19,5 +19,18 @@ from p_motov710 import *
 
 PB_TOTAL_ENTRIES=1000
 PB_RANGE=xrange(1,PB_TOTAL_ENTRIES+1)
+# System files in the WP subdir that are not wallpapers/images
+WP_EXCLUDED_FILES=frozenset(['..dir.dat', 'amthumb.db',
+                             'customer_closing.gif',
+                             'customer_opening.gif'])
+
+RT_PATH='motorola/shared/ringtone'
+SND_PATH='motorola/shared/audio'
+OBEX_Filename_Prefix='motorola/shared/'
+OBEX_Filename_Prefix_Len=len(OBEX_Filename_Prefix)
+def OBEXName(filename):
+    if filename.startswith(OBEX_Filename_Prefix):
+        return filename[OBEX_Filename_Prefix_Len:]
+    raise ValueError
 
 %}

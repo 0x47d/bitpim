@@ -430,12 +430,14 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         return res
 
     def get_detect_data(self, res):
-        self.modemmoderequest()
-        res['manufacturer']=self.comm.sendatcommand('+GMI')[0]
-        res['model']=self.comm.sendatcommand('+GMM')[0]
-        res['firmware_version']=self.comm.sendatcommand('+GMR')[0]
-        res['esn']=self.comm.sendatcommand('+GSN')[0][2:] # strip off the 0x
-        return
+        try:
+            self.modemmoderequest()
+            res['manufacturer']=self.comm.sendatcommand('+GMI')[0]
+            res['model']=self.comm.sendatcommand('+GMM')[0]
+            res['firmware_version']=self.comm.sendatcommand('+GMR')[0]
+            res['esn']=self.comm.sendatcommand('+GSN')[0][2:] # strip off the 0x
+        except commport.CommTimeout:
+            pass
 
     @classmethod
     def detectphone(_, coms, likely_ports, res, _module, _log):

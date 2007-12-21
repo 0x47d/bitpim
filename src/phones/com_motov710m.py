@@ -99,13 +99,16 @@ class Phone(parentphone):
         del fundamentals['audio']
         return fundamentals
 
-    def _get_del_new_list(self, index_key, media_key, merge, fundamentals):
+    def _get_del_new_list(self, index_key, media_key, merge, fundamentals,
+                          origins):
         """Return a list of media being deleted and being added"""
         _index=fundamentals.get(index_key, {})
         _media=fundamentals.get(media_key, {})
-        _index_file_list=[_entry['name'] for _,_entry in _index.items() \
-                          if _entry.has_key('filename')]
-        _bp_file_list=[_entry['name'] for _,_entry in _media.items()]
+        _index_file_list=[_entry['name'] for _entry in _index.values() \
+                          if _entry.has_key('filename') and \
+                          _entry.get('origin', None) in origins ]
+        _bp_file_list=[_entry['name'] for _entry in _media.values() \
+                       if _entry.get('origin', None) in origins ]
         if merge:
             # just add the new files, don't delete anything
             _del_list=[]
@@ -177,7 +180,8 @@ class Phone(parentphone):
             _del_list, _new_list=self._get_del_new_list('ringtone-index',
                                                         'ringtone',
                                                         merge,
-                                                        fundamentals)
+                                                        fundamentals,
+                                                        frozenset(['ringers']))
             # replace files, need to be in BREW mode
             self._replace_files('ringtone-index', 'ringtone',
                                 _new_list, fundamentals)
@@ -197,14 +201,15 @@ class Phone(parentphone):
 
     def savewallpapers(self, fundamentals, merge):
         """Save wallpapers to the phone"""
-        self.log('Writing ringtones to the phone')
+        self.log('Writing wallpapers to the phone')
         self.setmode(self.MODEPHONEBOOK)
         self.setmode(self.MODEBREW)
         try:
             _del_list, _new_list=self._get_del_new_list('wallpaper-index',
                                                         'wallpapers',
                                                         merge,
-                                                        fundamentals)
+                                                        fundamentals,
+                                                        frozenset(['images']))
             # replace files, need to be in BREW mode
             self._replace_files('wallpaper-index', 'wallpapers',
                                 _new_list, fundamentals)

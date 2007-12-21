@@ -129,10 +129,12 @@ class Phone(com_moto_cdma.Phone):
         _files=self.listfiles(self.protocolclass.WP_PATH).keys()
         _files.sort()
         _wp_path_len=len(self.protocolclass.WP_PATH)+1
-        for _index,_name in enumerate(_files):
-            res[_index]={ 'name': common.basename(_name),
-                          'filename': _name,
-                          'origin': 'images' }
+        for _index,_filename in enumerate(_files):
+            _name=common.basename(_filename)
+            if _name not in self.protocolclass.WP_EXCLUDED_FILES:
+                res[_index]={ 'name': _name,
+                              'filename': _filename,
+                              'origin': 'images' }
         return res
 
     # phonebook stuff-----------------------------------------------------------
@@ -191,9 +193,9 @@ class Phone(com_moto_cdma.Phone):
         """
         # extract the number, email, or mailing list
         _num_type=entry.number_type
-        if _num_type<self.protocolclass.NUMBER_TYPE_EMAIL:
+        if _num_type in self.protocolclass.NUMBER_TYPE:
             self._populate_pb_number(pb_entry, entry, fundamentals)
-        elif _num_type==self.protocolclass.NUMBER_TYPE_EMAIL:
+        elif _num_type in self.protocolclass.EMAIL_TYPE:
             self._populate_pb_email(pb_entry, entry, fundamentals)
         # this is a mail list, which is not currently supported
 ##        else:
@@ -303,6 +305,7 @@ class Phone(com_moto_cdma.Phone):
     def _write_pb_entry_numbers(self, entry, req, fundamentals):
         """Write all the numbers to the phone"""
         req.local_type=self.protocolclass.LOCAL_TYPE_LOCAL
+        _cell1=False
         for _entry in entry.get('numbers', []):
             req.index=_entry['speeddial']
             if req.index>self.protocolclass.PB_TOTAL_ENTRIES:
@@ -311,6 +314,12 @@ class Phone(com_moto_cdma.Phone):
             req.number=_entry['number']
             req.number_type=self.protocolclass.NUMBER_TYPE_CODE.get(
                 _entry['type'], self.protocolclass.NUMBER_TYPE_WORK)
+            if req.number_type==self.protocolclass.NUMBER_TYPE_MOBILE:
+                if _cell1:
+                    # this is cell2
+                    req.number_type=self.protocolclass.NUMBER_TYPE_MOBILE2
+                else:
+                    _cell1=True
             self._set_pb_entry_misc(req, _entry, fundamentals)
             self._del_pb_entry(req.index)
             self.sendATcommand(req, None)
@@ -319,11 +328,17 @@ class Phone(com_moto_cdma.Phone):
         """Write all emails to the phone"""
         req.number_type=self.protocolclass.NUMBER_TYPE_EMAIL
         req.local_type=self.protocolclass.LOCAL_TYPE_UNKNOWN
+        _email1=False
         for _entry in entry.get('emails', []):
             req.index=_entry['speeddial']
             if req.index>self.protocolclass.PB_TOTAL_ENTRIES:
                 continue
             req.number=_entry['email']
+            if _email1:
+                # this is email2
+                req.number_type=self.protocolclass.NUMBER_TYPE_EMAIL2
+            else:
+                _email1=True
             self._set_pb_entry_misc(req, _entry, fundamentals)
             self._del_pb_entry(req.index)
             self.sendATcommand(req, None)

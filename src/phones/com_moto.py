@@ -448,7 +448,7 @@ class Phone(com_etsi.Phone):
                                                  retry=True)
                     self._process_sms_result(_res, _sms, fundamentals)
                 except commport.ATError:
-                    pass
+                    self.log('Failed to read SMS Item %d'%_sms_item.index)
         except:
             if __debug__:
                 self.setmode(self.MODEMODEM)

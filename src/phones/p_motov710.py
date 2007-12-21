@@ -21,6 +21,7 @@ RT_INDEX_FILE='/MyToneDB.db'
 RT_PATH='motorola/shared/audio'
 
 WP_PATH='motorola/shared/picture'
+WP_EXCLUDED_FILES=frozenset([])
 
 # Calendar const
 CAL_TOTAL_ENTRIES=500
