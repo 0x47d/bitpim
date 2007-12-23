@@ -34,7 +34,7 @@ PIC_TYPE_USERS=3
 VIDEO_PATH='brew/mod/10890'
 VIDEO_INDEX_FILE_NAME=VIDEO_PATH+'/Default Album.alb'
 
-PB_FLAG_NOTE=0x0200
+PB_FLG_NOTE=0x0200
 PB_MAX_NOTE_LEN=64
 
 CL_MAX_ENTRIES=90
@@ -136,7 +136,7 @@ PACKET NumberEntry:
 
 PACKET PBEntry:
     2 UINT info
-    2 UINT { 'default': 0 } +zero1
+    2 UINT info2
     if self.info & PB_FLG_NAME:
         * USTRING { 'terminator': None,
                     'encoding': ENCODING,
@@ -159,7 +159,7 @@ PACKET PBEntry:
         * NumberEntry fax
     if self.info & PB_FLG_CELL2:
         * NumberEntry cell2
-    if self.info & PB_FLAG_NOTE:
+    if self.info & PB_FLG_NOTE:
         * STRING { 'terminator': None,
                    'pascal': True } note
     if self.info & PB_FLG_DATE:

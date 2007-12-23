@@ -253,7 +253,7 @@ class PBEntry(parentpbentry):
 
     def _extract_memo(self, entry, p_class):
         # extract the note portion from the phone into BitPim dict
-        if self.pb.info&p_class.PB_FLAG_NOTE:
+        if self.pb.info&p_class.PB_FLG_NOTE:
             entry['memos']=[{ 'memo': self.pb.note }]
 
     def getvalue(self):

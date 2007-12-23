@@ -1526,7 +1526,7 @@ class LIST(BaseProtogenClass):
         if self._length is not None and self._raiseonbadlength and len(self._thelist)!=self._length:
             raise ValueLengthException(len(self), self._length)
 
-class buffer:
+class buffer(object):
     "This is used for reading and writing byte data"
     def __init__(self, data=None):
         "Call with data to read from it, or with None to write to it"
@@ -1540,6 +1540,12 @@ class buffer:
     def getcurrentoffset(self):
         "Returns distance into data we are"
         return self._offset
+    def setcurrentoffset(self, ofs):
+        "Set the current offset"
+        if ofs>len(self._data):
+            raise IndexError('Trying to set offset beyond end of %d byte buffer'%len(self._data))
+        self._offset=ofs
+    offset=property(fget=getcurrentoffset, fset=setcurrentoffset)
 
     def peeknextbyte(self, howmuch=0):
         "Returns value of next byte, but doesn't advance position"

@@ -25,7 +25,7 @@ PIC_TYPE_USERS=3
 VIDEO_PATH='brew/mod/10890'
 VIDEO_INDEX_FILE_NAME=VIDEO_PATH+'/Default Album.alb'
 
-PB_FLAG_NOTE=0x0200
+PB_FLG_NOTE=0x0200
 PB_MAX_NOTE_LEN=64
 
 CL_MAX_ENTRIES=90
@@ -1509,7 +1509,7 @@ class NumberEntry(BaseProtogenClass):
 
 
 class PBEntry(BaseProtogenClass):
-    __fields=['info', 'zero1', 'name', 'email', 'email2', 'home', 'work', 'cell', 'fax', 'cell2', 'note', 'datetime', 'group', 'wallpaper', 'wallpaper_range']
+    __fields=['info', 'info2', 'name', 'email', 'email2', 'home', 'work', 'cell', 'fax', 'cell2', 'note', 'datetime', 'group', 'wallpaper', 'wallpaper_range']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -1543,10 +1543,7 @@ class PBEntry(BaseProtogenClass):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_info.writetobuffer(buf)
-        try: self.__field_zero1
-        except:
-            self.__field_zero1=UINT(**{'sizeinbytes': 2,  'default': 0 })
-        self.__field_zero1.writetobuffer(buf)
+        self.__field_info2.writetobuffer(buf)
         if self.info & PB_FLG_NAME:
             self.__field_name.writetobuffer(buf)
         if self.info & PB_FLG_EMAIL:
@@ -1563,7 +1560,7 @@ class PBEntry(BaseProtogenClass):
             self.__field_fax.writetobuffer(buf)
         if self.info & PB_FLG_CELL2:
             self.__field_cell2.writetobuffer(buf)
-        if self.info & PB_FLAG_NOTE:
+        if self.info & PB_FLG_NOTE:
             self.__field_note.writetobuffer(buf)
         if self.info & PB_FLG_DATE:
             self.__field_datetime.writetobuffer(buf)
@@ -1582,8 +1579,8 @@ class PBEntry(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_info=UINT(**{'sizeinbytes': 2})
         self.__field_info.readfrombuffer(buf)
-        self.__field_zero1=UINT(**{'sizeinbytes': 2,  'default': 0 })
-        self.__field_zero1.readfrombuffer(buf)
+        self.__field_info2=UINT(**{'sizeinbytes': 2})
+        self.__field_info2.readfrombuffer(buf)
         if self.info & PB_FLG_NAME:
             self.__field_name=USTRING(**{ 'terminator': None,                    'encoding': ENCODING,                    'pascal': True })
             self.__field_name.readfrombuffer(buf)
@@ -1608,7 +1605,7 @@ class PBEntry(BaseProtogenClass):
         if self.info & PB_FLG_CELL2:
             self.__field_cell2=NumberEntry()
             self.__field_cell2.readfrombuffer(buf)
-        if self.info & PB_FLAG_NOTE:
+        if self.info & PB_FLG_NOTE:
             self.__field_note=STRING(**{ 'terminator': None,                   'pascal': True })
             self.__field_note.readfrombuffer(buf)
         if self.info & PB_FLG_DATE:
@@ -1638,21 +1635,18 @@ class PBEntry(BaseProtogenClass):
 
     info=property(__getfield_info, __setfield_info, __delfield_info, None)
 
-    def __getfield_zero1(self):
-        try: self.__field_zero1
-        except:
-            self.__field_zero1=UINT(**{'sizeinbytes': 2,  'default': 0 })
-        return self.__field_zero1.getvalue()
+    def __getfield_info2(self):
+        return self.__field_info2.getvalue()
 
-    def __setfield_zero1(self, value):
+    def __setfield_info2(self, value):
         if isinstance(value,UINT):
-            self.__field_zero1=value
+            self.__field_info2=value
         else:
-            self.__field_zero1=UINT(value,**{'sizeinbytes': 2,  'default': 0 })
+            self.__field_info2=UINT(value,**{'sizeinbytes': 2})
 
-    def __delfield_zero1(self): del self.__field_zero1
+    def __delfield_info2(self): del self.__field_info2
 
-    zero1=property(__getfield_zero1, __setfield_zero1, __delfield_zero1, None)
+    info2=property(__getfield_info2, __setfield_info2, __delfield_info2, None)
 
     def __getfield_name(self):
         return self.__field_name.getvalue()
@@ -1828,7 +1822,7 @@ class PBEntry(BaseProtogenClass):
 
     def containerelements(self):
         yield ('info', self.__field_info, None)
-        yield ('zero1', self.__field_zero1, None)
+        yield ('info2', self.__field_info2, None)
         if self.info & PB_FLG_NAME:
             yield ('name', self.__field_name, None)
         if self.info & PB_FLG_EMAIL:
@@ -1845,7 +1839,7 @@ class PBEntry(BaseProtogenClass):
             yield ('fax', self.__field_fax, None)
         if self.info & PB_FLG_CELL2:
             yield ('cell2', self.__field_cell2, None)
-        if self.info & PB_FLAG_NOTE:
+        if self.info & PB_FLG_NOTE:
             yield ('note', self.__field_note, None)
         if self.info & PB_FLG_DATE:
             yield ('datetime', self.__field_datetime, None)
