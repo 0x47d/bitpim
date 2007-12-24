@@ -508,6 +508,11 @@ if __debug__:
                                       'brand': b_sanyo,
                                       'helpid': helpids.ID_PHONE_SANYOOTHERS,
                                       },
+                        'SCP-7050': { 'module': 'com_sanyo7050',
+                                      'carrier': [c_sprint],
+                                      'brand': b_sanyo,
+                                      'helpid': helpids.ID_PHONE_SANYOOTHERS,
+                                      },
                         })
 
 # update the module path
