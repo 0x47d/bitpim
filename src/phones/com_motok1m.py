@@ -19,7 +19,7 @@ import helpids
 parentphone=com_motov710m.Phone
 class Phone(parentphone):
     desc='Moto-K1m'
-    helpid=None
+    helpid=helpids.ID_PHONE_MOTOK1M
     serialsname='motok1m'
     protocolclass=p_motok1m
 

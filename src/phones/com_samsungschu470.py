@@ -12,11 +12,12 @@
 import common
 import com_samsungschu740 as u740
 import p_samsungschu470 as p_u470
+import helpids
 
 parentphone=u740.Phone
 class Phone(parentphone):
     desc='SCH-U470'
-    helpid=None
+    helpid=helpids.ID_PHONE_SAMSUNGSCHU470
     protocolclass=p_u470
     serialsname='schu470'
 

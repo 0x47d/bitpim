@@ -229,6 +229,10 @@ BEGIN_TOC
             TOC_2
             TOCITEM_2(Notes,phone-motoe815m-notes.htm)
             ENDTOC_2
+        TOCITEM_1(Motorola K1m,phone-motok1m.htm)
+            TOC_2
+            TOCITEM_2(Notes,phone-motok1m-notes.htm)
+            ENDTOC_2
         TOCITEM_1(Motorola V3c,phone-motov3c.htm)
             TOC_2
             TOCITEM_2(Notes,phone-motov3c-notes.htm)
@@ -256,6 +260,10 @@ BEGIN_TOC
             TOC_2
             TOCITEM_2(Cables,phone-samsungscha950-cables.htm)
             TOCITEM_2(Notes,phone-samsungscha950-notes.htm)
+            ENDTOC_2
+        TOCITEM_1(Samsung SCH-U470,phone-samsungschu470.htm)
+            TOC_2
+            TOCITEM_2(Notes,phone-samsungschu470-notes.htm)
             ENDTOC_2
         TOCITEM_1(Samsung SCH-U740,phone-samsungschu740.htm)
             TOC_2
