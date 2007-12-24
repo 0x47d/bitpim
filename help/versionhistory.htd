@@ -6,6 +6,7 @@
       <LI><P>Maintenance: Upgrade to wxPython 2.8.7.1
       <LI><P>New phone support: <B>Motorola K1m</B> (Initial)
       <LI><P>New phone support: <B>Samsung SCH-U470 (Juke)</B> (Initial)
+      <LI><P>Bug fix: <B>LG-AX8600</B> max number of phone entries.
     </ul>
 
    <h2><a name="1.0.3">Changes in 1.0.3</a></h2>
