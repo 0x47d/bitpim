@@ -210,6 +210,12 @@ def getallencodingsmodules():
 lazyimportmodules=['email.iterators']
 if sys.platform=='darwin':
     lazyimportmodules.append('Carbon.CF')
+elif sys.platform=='linux2':
+    try:
+        import _md5
+        lazyimportmodules.append('_md5')
+    except ImportError:
+        pass
 
 def getcxfreezeoptions(defaults):
     global lazyimportmodules
