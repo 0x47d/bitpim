@@ -65,13 +65,14 @@ class DateTime1(DateTime):
         if self._ismostderived(DateTime1):
             self._update(args, kwargs)
 
+    _time_delta=315532800.0
     def getvalue(self):
         """Unpack 32 bit value into date/time
         @rtype: tuple
         @return: (year, month, day, hour, minute, second)
         """
         val=prototypes.UINTlsb.getvalue(self)
-        return time.gmtime(val+self._time_delta+DateTime._daylight)[:6]
+        return time.gmtime(val+self._time_delta)[:6]
 
 class ExpiringTime(prototypes.UINTlsb):
     # Implement a weird expiring time used by Samsung calendar events

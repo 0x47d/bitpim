@@ -19,6 +19,8 @@ from p_samsungschu740 import *
 PB_FLG2_RINGTONE=0x0001
 PB_FLG2_WP=0x0002
 
+CL_MAX_ENTRIES=90
+
 %}
 
 # Phonebook stuff
@@ -214,3 +216,31 @@ PACKET NotePadEntry:
     4 DateTime { 'default': self.modified } +modified2
     8 UNKNOWN { 'pad': 0 } +zero5
 
+# Call History
+PACKET cl_list:
+    2 UINT index
+
+PACKET cl_index_file:
+    * LIST { 'length': CL_MAX_ENTRIES,
+             'elementclass': cl_list } incoming
+    * LIST { 'length': CL_MAX_ENTRIES,
+             'elementclass': cl_list } outgoing
+    * LIST { 'length': CL_MAX_ENTRIES,
+             'elementclass': cl_list } missed
+    1352 UNKNOWN dunno1
+    4 UINT incoming_count
+    4 UINT outgoing_count
+    4 UINT missed_count
+
+PACKET cl_file:
+    1 UINT cl_type
+    51 STRING { 'terminator': 0 } number
+    4 DateTime1 datetime
+    4 UNKNOWN dunno1
+    4 UINT duration
+    %{
+    def _valid(self):
+        global CL_VALID_TYPE
+        return bool(self.cl_type in CL_VALID_TYPE and self.number)
+    valid=property(fget=_valid)
+    %}
