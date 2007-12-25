@@ -212,8 +212,9 @@ if sys.platform=='darwin':
     lazyimportmodules.append('Carbon.CF')
 elif sys.platform=='linux2':
     try:
-        import _md5
+        import _md5, _sha
         lazyimportmodules.append('_md5')
+        lazyimportmodules.append('_sha')
     except ImportError:
         pass
 
