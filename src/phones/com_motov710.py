@@ -263,7 +263,11 @@ class Phone(com_moto_cdma.Phone):
 
     def _get_ringtone_code(self, entry, fundamentals):
         """Return the ringtone code of this entry"""
-        _ringtone_name=entry.get('ringtone', None)
+        # check the global ringtone setting first
+        _ringtone_name=fundamentals.get('phoneringtone', None)
+        if not _ringtone_name:
+            _ringtone_name=entry.get('ringtone', None)
+        # and then individual number ringtone
         if not _ringtone_name:
             return 255
         for _key,_entry in fundamentals.get('ringtone-index', {}).items():
@@ -273,7 +277,11 @@ class Phone(com_moto_cdma.Phone):
 
     def _get_wallpaper_name(self, entry, fundamentals):
         """Return the full path name for the wallpaper"""
-        _wp_name=entry.get('wallpaper', None)
+        # Check for global wallpaper setting first
+        _wp_name=fundamentals.get('phonewallpaper', None)
+        # then check for individual number ringtone
+        if not _wp_name:
+            _wp_name=entry.get('wallpaper', None)
         if not _wp_name:
             return ''
         return '/a/'+self.protocolclass.WP_PATH+'/'+_wp_name
@@ -362,13 +370,16 @@ class Phone(com_moto_cdma.Phone):
         _req.name=nameparser.getfullname(entry['names'][0])
         _req.group=self._get_group_code(entry, fundamentals)
         fundamentals['primary']=False
+        fundamentals['phonewallpaper']=entry.get('wallpapers', [{}])[0].get('wallpaper', None)
+        fundamentals['phoneringtone']=entry.get('ringtones', [{}])[0].get('ringtone', None)
         # first, write out the numbers
         self._write_pb_entry_numbers(entry, _req, fundamentals)
         # then email
         self._write_pb_entry_emails(entry, _req, fundamentals)
         # and mail list
         # self._write_pb_entry_maillist(entry, _req, fundamentals)
-        del fundamentals['primary']
+        del fundamentals['primary'], fundamentals['phonewallpaper'],
+        fundamentals['phoneringtone']
 
     def _write_pb_entries(self, fundamentals):
         """Write out the phonebook to the phone"""
@@ -748,8 +759,8 @@ class Profile(parentprofile):
             'url': 0,
             'memo': 0,
             'category': 1,
-            'wallpaper': 0,
-            'ringtone': 0,
+            'wallpaper': 1,
+            'ringtone': 1,
             'storage': 0,
             },
         'calendar': {

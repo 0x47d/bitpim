@@ -154,7 +154,7 @@ class Profile(parentprofile):
             'url': 0,
             'memo': 0,
             'category': 1,
-            'wallpaper': 0,
-            'ringtone': 0,
+            'wallpaper': 1,
+            'ringtone': 1,
             'storage': 0,
             }})
