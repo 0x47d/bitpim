@@ -84,7 +84,7 @@ class Phone(com_sanyo8300.Phone):
         try:
             _req=self.protocolclass.sanyofirmwarerequest()
             _resp=self.sendbrewcommand(_req, self.protocolclass.sanyofirmwareresponse)
-            if _resp.phonemodel[:len(self.my_model)]==self.my_model:
+            if _resp.phonemodel[:len(self.detected_model)]==self.detected_model:
                 # yup, this's it!
                 res['model']=self.my_model
                 res['manufacturer']=self.my_manufacturer
@@ -105,6 +105,11 @@ class Phone(com_sanyo8300.Phone):
                             'firmware_version': None, 'esn': None,
                             'firmwareresponse': None }
             try:
+                if res[port]['mode_brew']==False or \
+                        res[port]['model']:
+                    # either phone is not in BREW, or a model has already
+                    # been found, not much we can do now
+                    continue
                 p=_module.Phone(_log, commport.CommConnection(_log, port, timeout=1))
                 if res[port]['mode_brew'] is None:
                     res[port]['mode_brew']=p.is_mode_brew()
@@ -117,7 +122,8 @@ class Phone(com_sanyo8300.Phone):
                 if __debug__:
                     raise
 
-    my_model='SCP-3100/US'
+    my_model='SCP3100'
+    detected_model='SCP-3100/US'
     my_manufacturer='SANYO'
 
 parentprofile=com_sanyo8300.Profile

@@ -75,7 +75,8 @@ class Phone(com_sanyo6600.Phone):
 #    def read_groups(self):
 #        g={}
 
-    my_model='SCP-7050/US'
+    my_model='SCP7050'
+    detected_model='SCP-7050/US'
     my_manufacturer='SANYO'
 
 parentprofile=com_sanyo6600.Profile

@@ -471,7 +471,8 @@ class Phone(com_sanyo3100.Phone):
         self.progress(1,1, "Phonebook write completed")
         data['rebootphone']=1
 
-    my_model='SCP-6600/US'
+    my_model='SCP6600'
+    detected_model='SCP-6600/US'
     my_manufacturer='SANYO'
 
 parentprofile=com_sanyo3100.Profile

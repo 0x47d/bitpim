@@ -67,7 +67,8 @@ class Phone(com_sanyo3100.Phone):
         self.numbertypetab=numbertypetab
 
     # Phone Detection-----------------------------------------------------------
-    my_model='SCP-3200/US'
+    my_model='SCP3200'
+    detected_model='SCP-3200/US'
     my_manufacturer='SANYO'
 
 parentprofile=com_sanyo3100.Profile
