@@ -65,7 +65,6 @@ class DateTime1(DateTime):
         if self._ismostderived(DateTime1):
             self._update(args, kwargs)
 
-    _time_delta=315532800.0
     def getvalue(self):
         """Unpack 32 bit value into date/time
         @rtype: tuple
@@ -73,6 +72,16 @@ class DateTime1(DateTime):
         """
         val=prototypes.UINTlsb.getvalue(self)
         return time.gmtime(val+self._time_delta)[:6]
+
+class DateTime2(DateTime1):
+    # similar to DateTime, with different time delta
+    _time_delta=315532800.0
+    def __init__(self, *args, **kwargs):
+        super(DateTime2, self).__init__(*args, **kwargs)
+        kwargs.update({ 'sizeinbytes': 4 })
+        if self._ismostderived(DateTime2):
+            self._update(args, kwargs)
+
 
 class ExpiringTime(prototypes.UINTlsb):
     # Implement a weird expiring time used by Samsung calendar events

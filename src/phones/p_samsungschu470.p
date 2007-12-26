@@ -235,7 +235,7 @@ PACKET cl_index_file:
 PACKET cl_file:
     1 UINT cl_type
     51 STRING { 'terminator': 0 } number
-    4 DateTime1 datetime
+    4 DateTime2 datetime
     4 UNKNOWN dunno1
     4 UINT duration
     %{
@@ -244,3 +244,118 @@ PACKET cl_file:
         return bool(self.cl_type in CL_VALID_TYPE and self.number)
     valid=property(fget=_valid)
     %}
+
+# SMS Stuff
+PACKET pBOOL:
+    P BOOL value
+
+PACKET sms_header:
+    2 UINT index
+    1 UINT msg_len
+    1 UINT callback_len
+    1 UINT bitmap1
+    1 UINT bitmap2
+    6 UNKNOWN dunno1
+    2 UINT body_len
+    2 UINT file_type
+    1 UINT msg_type
+    1 UINT enhance_delivery
+    * pBOOL { 'value': self.file_type==SMS_TXT_TYPE and self.msg_type in SMS_VALID_TYPE } is_txt_msg
+    * pBOOL { 'value': self.msg_type==SMS_TYPE_IN } in_msg
+    * pBOOL { 'value': self.msg_type==SMS_TYPE_SENT } sent_msg
+    * pBOOL { 'value': self.msg_type==SMS_TYPE_DRAFT } draft_msg
+    if self.is_txt_msg.value:
+        * sms_body {
+            'msg_len': self.msg_len,
+            'has_callback': self.bitmap2 & SMS_FLG2_CALLBACK,
+            'has_priority': self.bitmap2 & SMS_FLG2_PRIORITY,
+            'has_1byte': self.bitmap2 & SMS_FLG2_SOMETHING,
+            'has_1byte2': self.bitmap2 & SMS_FLG2_MSG,
+            'has_40bytes': self.bitmap1 & SMS_FLG1_HAS40 } body
+
+PACKET sms_msg_stat_list:
+    1 UINT status
+PACKET sms_datetime_list:
+    4 DateTime2 datetime
+    4 UNKNOWN dunno
+PACKET sms_delivered_datetime:
+    * LIST { 'elementclass': sms_datetime_list,
+             'length': 10 } datetime
+    20 UNKNOWN dunno
+PACKET sms_body:
+    P UINT msg_len
+    P BOOL { 'default': True } +has_callback
+    P BOOL { 'default': False } +has_priority
+    P BOOL { 'default': False } +has_1byte
+    P BOOL { 'default': True } +has_1byte2
+    P BOOL { 'default': False } +has_40bytes
+    54 UNKNOWN dunno1
+    * USTRING { 'sizeinbytes': self.msg_len,
+                'encoding': ENCODING,
+                'terminator': None } msg
+    if self.has_callback:
+        3 UNKNOWN dunno2
+        1 UINT callback_len
+        * STRING { 'sizeinbytes': self.callback_len,
+                   'terminator': None } callback
+    if self.has_priority:
+        1 UINT priority
+    if self.has_1byte:
+        1 UNKNOWN dunno3
+    40 UNKNOWN dunno4
+    4 DateTime1 datetime
+    17 UNKNOWN dunno5
+    1 UINT addr_len0
+    1 UINT addr_len1
+    1 UINT addr_len2
+    1 UINT addr_len3
+    1 UINT addr_len4
+    1 UINT addr_len5
+    1 UINT addr_len6
+    1 UINT addr_len7
+    1 UINT addr_len8
+    1 UINT addr_len9
+    if self.addr_len0:
+        * STRING { 'sizeinbytes': self.addr_len0,
+                   'terminator': None } addr0
+    if self.addr_len1:
+        * STRING { 'sizeinbytes': self.addr_len1,
+                   'terminator': None } addr1
+    if self.addr_len2:
+        * STRING { 'sizeinbytes': self.addr_len2,
+                   'terminator': None } addr2
+    if self.addr_len3:
+        * STRING { 'sizeinbytes': self.addr_len3,
+                   'terminator': None } addr3
+    if self.addr_len4:
+        * STRING { 'sizeinbytes': self.addr_len4,
+                   'terminator': None } addr4
+    if self.addr_len5:
+        * STRING { 'sizeinbytes': self.addr_len5,
+                   'terminator': None } addr5
+    if self.addr_len6:
+        * STRING { 'sizeinbytes': self.addr_len6,
+                   'terminator': None } addr6
+    if self.addr_len7:
+        * STRING { 'sizeinbytes': self.addr_len7,
+                   'terminator': None } addr7
+    if self.addr_len8:
+        * STRING { 'sizeinbytes': self.addr_len8,
+                   'terminator': None } addr8
+    if self.addr_len9:
+        * STRING { 'sizeinbytes': self.addr_len9,
+                   'terminator': None } addr9
+    if not self.has_1byte and self.has_1byte2:
+        1 UNKNOWN dunno6
+    if self.has_1byte2:
+        1 UNKNOWN dunno7
+    81 UNKNOWN dunno8
+    if self.has_40bytes:
+        40 UNKNOWN dunno9
+    * LIST { 'elementclass': sms_msg_stat_list,
+             'length': 10 } msg_stat
+    # too hard to do it here.  Will be handled by the phone code
+##    if self.msg_stat[0].status==SMS_STATUS_DELIVERED:
+##        4 DateTime1 delivered_datetime
+##        96 UNKNOWN dunno10
+##    4 UINT locked
