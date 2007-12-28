@@ -16,6 +16,7 @@ import commport
 import com_brew
 import com_phone
 import com_samsung_packet
+import fileinfo
 import helpids
 import prototypes
 import p_brew
