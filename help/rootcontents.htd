@@ -241,6 +241,11 @@ BEGIN_TOC
             TOC_2
             TOCITEM_2(Notes,phone-motov3cm-notes.htm)
             ENDTOC_2
+        TOCITEM_1(Motorola V3m,phone-motov3m.htm)
+            TOC_2
+            TOCITEM_2(Notes,phone-motov3m-notes.htm)
+            TOCITEM_2(Howtos,phone-motov3m-howtos.htm)
+            ENDTOC_2
         TOCITEM_1(Motorola V710,phone-motov710.htm)
             TOC_2
             TOCITEM_2(Cables,phone-motov710-cables.htm)

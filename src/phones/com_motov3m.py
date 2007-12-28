@@ -19,7 +19,7 @@ import prototypes
 parentphone=v710.Phone
 class Phone(parentphone):
     desc='Moto-V3m'
-    helpid=None
+    helpid=helpids.ID_PHONE_MOTOV3M
     protocolclass=p_motov3m
     serialsname='motov3m'
     builtinringtones=(
