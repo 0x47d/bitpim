@@ -115,7 +115,6 @@ class Phone(com_moto_cdma.Phone):
             self.protocolclass.RT_INDEX_FILE))
         _idx_file=self.protocolclass.ringtone_index_file()
         _idx_file.readfrombuffer(_buf, logtitle='Read ringtone index file')
-        _path_len=len(self.protocolclass.RT_PATH)+1
         for _entry in _idx_file.items:
             _filename=self.decode_utf16(_entry.name)
             res[_entry.index]={ 'name': common.basename(_filename),
@@ -718,10 +717,7 @@ class Profile(parentprofile):
         ('ringtone', 'write', 'OVERWRITE'),
         ('wallpaper', 'read', None),  # all wallpaper reading
         ('wallpaper', 'write', 'OVERWRITE'),
-##        ('memo', 'read', None),     # all memo list reading DJP
-##        ('memo', 'write', 'OVERWRITE'),  # all memo list writing DJP
         ('sms', 'read', None),     # all SMS list reading DJP
-##        ('call_history', 'read', None),
         )
 
     def convertphonebooktophone(self, helper, data):

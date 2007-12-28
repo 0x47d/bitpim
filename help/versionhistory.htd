@@ -11,6 +11,7 @@
       <LI><P>Bug fix: Linux RPM Build.
       <LI><P>Bug fix: Phone detection for recent Sanyo phones
       <LI><P>Bug fix: <B>Samsung SPH-M300</B>: ringtone conversion.
+      <LI><P>New phone support: <B>Motorola V3m (VZW)</B> (Initial)
     </ul>
 
    <h2><a name="1.0.3">Changes in 1.0.3</a></h2>
