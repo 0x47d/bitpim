@@ -3257,3 +3257,125 @@ class groupupdaterequest(BaseProtogenClass):
 
 
 
+class sanyoreset(BaseProtogenClass):
+    __fields=['preamble', 'command', 'packettype']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(sanyoreset,self).__init__(**dict)
+        if self.__class__ is sanyoreset:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(sanyoreset,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(sanyoreset,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_preamble
+        except:
+            self.__field_preamble=sanyofaheader(**{'faset': 0x37})
+        self.__field_preamble.writetobuffer(buf)
+        try: self.__field_command
+        except:
+            self.__field_command=UINT(**{'sizeinbytes': 1, 'constant': 0})
+        self.__field_command.writetobuffer(buf)
+        try: self.__field_packettype
+        except:
+            self.__field_packettype=UINT(**{'sizeinbytes': 1, 'constant': 0})
+        self.__field_packettype.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_preamble=sanyofaheader(**{'faset': 0x37})
+        self.__field_preamble.readfrombuffer(buf)
+        self.__field_command=UINT(**{'sizeinbytes': 1, 'constant': 0})
+        self.__field_command.readfrombuffer(buf)
+        self.__field_packettype=UINT(**{'sizeinbytes': 1, 'constant': 0})
+        self.__field_packettype.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_preamble(self):
+        try: self.__field_preamble
+        except:
+            self.__field_preamble=sanyofaheader(**{'faset': 0x37})
+        return self.__field_preamble.getvalue()
+
+    def __setfield_preamble(self, value):
+        if isinstance(value,sanyofaheader):
+            self.__field_preamble=value
+        else:
+            self.__field_preamble=sanyofaheader(value,**{'faset': 0x37})
+
+    def __delfield_preamble(self): del self.__field_preamble
+
+    preamble=property(__getfield_preamble, __setfield_preamble, __delfield_preamble, None)
+
+    def __getfield_command(self):
+        try: self.__field_command
+        except:
+            self.__field_command=UINT(**{'sizeinbytes': 1, 'constant': 0})
+        return self.__field_command.getvalue()
+
+    def __setfield_command(self, value):
+        if isinstance(value,UINT):
+            self.__field_command=value
+        else:
+            self.__field_command=UINT(value,**{'sizeinbytes': 1, 'constant': 0})
+
+    def __delfield_command(self): del self.__field_command
+
+    command=property(__getfield_command, __setfield_command, __delfield_command, None)
+
+    def __getfield_packettype(self):
+        try: self.__field_packettype
+        except:
+            self.__field_packettype=UINT(**{'sizeinbytes': 1, 'constant': 0})
+        return self.__field_packettype.getvalue()
+
+    def __setfield_packettype(self, value):
+        if isinstance(value,UINT):
+            self.__field_packettype=value
+        else:
+            self.__field_packettype=UINT(value,**{'sizeinbytes': 1, 'constant': 0})
+
+    def __delfield_packettype(self): del self.__field_packettype
+
+    packettype=property(__getfield_packettype, __setfield_packettype, __delfield_packettype, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('preamble', self.__field_preamble, None)
+        yield ('command', self.__field_command, None)
+        yield ('packettype', self.__field_packettype, None)
+
+
+
+

@@ -72,9 +72,20 @@ class Phone(com_sanyo6600.Phone):
         self.mode=self.MODENONE
         self.numbertypetab=numbertypetab
 
-#    def read_groups(self):
-#        g={}
+    def getfundamentals(self, results):
+        """Gets information fundamental to interopating with the phone and UI."""
+        req=self.protocolclass.sanyoreset()
+        res=self.sendpbcommand(req, p_brew.testing0cresponse)
 
+        results['uniqueserial']=sha.new(self.get_esn()).hexdigest()
+        self.getmediaindices(results)
+
+        results['groups']=self.read_groups()
+
+        self.log("Fundamentals retrieved")
+
+        return results
+        
     my_model='SCP7050'
     detected_model='SCP-7050/US'
     my_manufacturer='SANYO'

@@ -202,6 +202,9 @@ PACKET groupupdaterequest:
     * groupentry entry
     * UNKNOWN pad
 
-
+PACKET sanyoreset:
+    * sanyofaheader {'faset': 0x37} +preamble
+    1 UINT {'constant': 0} +command
+    1 UINT {'constant': 0} +packettype
 
 
