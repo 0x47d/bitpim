@@ -81,8 +81,6 @@ class Phone(com_sanyo3100.Phone):
 
     def getfundamentals(self, results):
         """Gets information fundamental to interopating with the phone and UI."""
-        req=self.protocolclass.esnrequest()
-        res=self.sendpbcommand(req, self.protocolclass.esnresponse)
         results['uniqueserial']=sha.new(self.get_esn()).hexdigest()
         self.getmediaindices(results)
 
