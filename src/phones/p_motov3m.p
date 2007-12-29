@@ -44,4 +44,11 @@ def valid_rt_filename(filename):
             return False
     return True
 
+OBEX_Filename_Prefix='motorola/shared/'
+OBEX_Filename_Prefix_Len=len(OBEX_Filename_Prefix)
+def OBEXName(filename):
+    if filename.startswith(OBEX_Filename_Prefix):
+        return filename[OBEX_Filename_Prefix_Len:]
+    raise ValueError
+
 %}
