@@ -35,7 +35,6 @@ class Phone(parentphone):
         res={}
         _files=self.listfiles(self.protocolclass.WP_PATH).keys()
         _files.sort()
-        _wp_path_len=len(self.protocolclass.WP_PATH)+1
         for _index,_filename in enumerate(_files):
             _name=common.basename(_filename)
             if self.protocolclass.valid_wp_filename(_name):

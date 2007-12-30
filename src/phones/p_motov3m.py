@@ -17,7 +17,7 @@ BOOL=BOOLlsb
 PB_TOTAL_ENTRIES=1000
 PB_RANGE=xrange(1,PB_TOTAL_ENTRIES+1)
 
-_WP_EXCLUSION=frozenset(['*.ran', 'customer_opening.gif',
+_WP_EXCLUSION=frozenset(['*.ran*', 'customer_opening.gif',
                          'customer_closing.gif'])
 _RT_EXCLUSION=frozenset(['*.mp_'])
 
