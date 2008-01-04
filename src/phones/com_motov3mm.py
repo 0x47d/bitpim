@@ -8,6 +8,7 @@
 ### $Id$
 
 """Communicate with Motorola phones using AT commands"""
+import time
 
 import common
 import com_motov710m as v710m
@@ -39,7 +40,6 @@ class Phone(parentphone):
         res={}
         _files=self.listfiles(self.protocolclass.WP_PATH).keys()
         _files.sort()
-        _wp_path_len=len(self.protocolclass.WP_PATH)+1
         for _index,_filename in enumerate(_files):
             _name=common.basename(_filename)
             if self.protocolclass.valid_wp_filename(_name):
@@ -97,7 +97,6 @@ class Phone(parentphone):
                                                         merge,
                                                         fundamentals,
                                                         frozenset(['ringers']))
-            print '_new_list',_new_list
             # delete files, need to be in OBEX mode
             self.setmode(self.MODEOBEX)
             self._del_files('ringtone-index', 'audio',

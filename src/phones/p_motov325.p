@@ -26,4 +26,6 @@ BOOL=BOOLlsb
 PB_TOTAL_ENTRIES=500
 PB_RANGE=xrange(1,PB_TOTAL_ENTRIES+1)
 
+MOTO_SHARED_PATH='motorola/shared'
+
 %}

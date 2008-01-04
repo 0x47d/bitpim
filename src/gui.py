@@ -1957,7 +1957,10 @@ class WorkerThread(WorkerThreadFramework):
                 delay=results['reboot_delay']
             self.phonerebootrequest(delay)
             self.clearcomm()
-            
+        elif results.get('clearcomm', False):
+            # some model (eg Moto) needs to clear comm after certain mode
+            self.clearcomm()
+
     def writecalendar(self, data, merge):
         if __debug__: self.checkthread()
         self.setupcomm()

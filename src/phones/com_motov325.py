@@ -11,6 +11,7 @@
 
 import time
 
+import common
 import com_motov3m as v3m
 import helpids
 import p_motov325
@@ -50,3 +51,13 @@ class Profile(parentprofile):
     phone_model='V325 '
     common_model_name='V325'
     generic_phone_model='Motorola V325 Phone'
+
+    # our targets are the same for all origins
+    imagetargets={}
+    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "wallpaper",
+                                      {'width': 176, 'height': 184, 'format': "JPEG"}))
+    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "pictureid",
+                                      {'width': 96, 'height': 72, 'format': "JPEG"}))
+    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "fullscreen",
+                                      {'width': 176, 'height': 220, 'format': "JPEG"}))
+
