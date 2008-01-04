@@ -170,7 +170,7 @@ class Phone(parentphone):
         new_entry.pe_id = pe_id
         new_entry.phone_number = phone_number
         new_entry.type = number_type
-        new_entry.unk0 = pbpn_id
+        new_entry.pn_order = pbpn_id
 
         return new_entry
 

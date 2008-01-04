@@ -71,7 +71,7 @@ PACKET pnfileentry:
     6   STRING { 'default': '', 'raiseonunterminatedread': False } +unk0
     2   UINT pn_id # 0 based
     2   UINT pe_id # 0 based
-    1   UINT { 'default': 0 } +unk1
+    1   UINT pn_order "0-based order of this phone within this contact"
     25  LGHEXPN phone_number
     2   UINT type
     3   UINT { 'default': 0 } +unk2

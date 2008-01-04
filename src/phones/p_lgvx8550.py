@@ -772,7 +772,7 @@ class pbfile(BaseProtogenClass):
 
 
 class pnfileentry(BaseProtogenClass):
-    __fields=['entry_tag', 'mod_date', 'unk0', 'pn_id', 'pe_id', 'unk1', 'phone_number', 'type', 'unk2', 'exit_tag']
+    __fields=['entry_tag', 'mod_date', 'unk0', 'pn_id', 'pe_id', 'pn_order', 'phone_number', 'type', 'unk2', 'exit_tag']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -819,10 +819,7 @@ class pnfileentry(BaseProtogenClass):
         self.__field_unk0.writetobuffer(buf)
         self.__field_pn_id.writetobuffer(buf)
         self.__field_pe_id.writetobuffer(buf)
-        try: self.__field_unk1
-        except:
-            self.__field_unk1=UINT(**{'sizeinbytes': 1,  'default': 0 })
-        self.__field_unk1.writetobuffer(buf)
+        self.__field_pn_order.writetobuffer(buf)
         self.__field_phone_number.writetobuffer(buf)
         self.__field_type.writetobuffer(buf)
         try: self.__field_unk2
@@ -851,8 +848,8 @@ class pnfileentry(BaseProtogenClass):
         self.__field_pn_id.readfrombuffer(buf)
         self.__field_pe_id=UINT(**{'sizeinbytes': 2})
         self.__field_pe_id.readfrombuffer(buf)
-        self.__field_unk1=UINT(**{'sizeinbytes': 1,  'default': 0 })
-        self.__field_unk1.readfrombuffer(buf)
+        self.__field_pn_order=UINT(**{'sizeinbytes': 1})
+        self.__field_pn_order.readfrombuffer(buf)
         self.__field_phone_number=LGHEXPN(**{'sizeinbytes': 25})
         self.__field_phone_number.readfrombuffer(buf)
         self.__field_type=UINT(**{'sizeinbytes': 2})
@@ -938,21 +935,18 @@ class pnfileentry(BaseProtogenClass):
 
     pe_id=property(__getfield_pe_id, __setfield_pe_id, __delfield_pe_id, None)
 
-    def __getfield_unk1(self):
-        try: self.__field_unk1
-        except:
-            self.__field_unk1=UINT(**{'sizeinbytes': 1,  'default': 0 })
-        return self.__field_unk1.getvalue()
+    def __getfield_pn_order(self):
+        return self.__field_pn_order.getvalue()
 
-    def __setfield_unk1(self, value):
+    def __setfield_pn_order(self, value):
         if isinstance(value,UINT):
-            self.__field_unk1=value
+            self.__field_pn_order=value
         else:
-            self.__field_unk1=UINT(value,**{'sizeinbytes': 1,  'default': 0 })
+            self.__field_pn_order=UINT(value,**{'sizeinbytes': 1})
 
-    def __delfield_unk1(self): del self.__field_unk1
+    def __delfield_pn_order(self): del self.__field_pn_order
 
-    unk1=property(__getfield_unk1, __setfield_unk1, __delfield_unk1, None)
+    pn_order=property(__getfield_pn_order, __setfield_pn_order, __delfield_pn_order, "0-based order of this phone within this contact")
 
     def __getfield_phone_number(self):
         return self.__field_phone_number.getvalue()
@@ -1021,7 +1015,7 @@ class pnfileentry(BaseProtogenClass):
         yield ('unk0', self.__field_unk0, None)
         yield ('pn_id', self.__field_pn_id, None)
         yield ('pe_id', self.__field_pe_id, None)
-        yield ('unk1', self.__field_unk1, None)
+        yield ('pn_order', self.__field_pn_order, "0-based order of this phone within this contact")
         yield ('phone_number', self.__field_phone_number, None)
         yield ('type', self.__field_type, None)
         yield ('unk2', self.__field_unk2, None)
