@@ -104,6 +104,8 @@ class Profile(parentprofile):
     imagetargets={}
     imagetargets.update(common.getkv(parentprofile.stockimagetargets, "fullscreen",
                                       {'width': 240, 'height': 320, 'format': "JPEG"}))
+    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "wallpaper",
+                                      {'width': 240, 'height': 496, 'format': "JPEG"}))
     imagetargets.update(common.getkv(parentprofile.stockimagetargets, "pictureid",
                                       {'width': 120, 'height': 100, 'format': "JPEG"}))
 
