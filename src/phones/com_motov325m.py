@@ -172,8 +172,9 @@ class Profile(parentprofile):
         ('calendar', 'read', None),   # all calendar reading
         ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
         ('ringtone', 'read', None),   # all ringtone reading
+        ('ringtone', 'read', 'EXCLUSIVE'),   # all ringtone reading
+        ('ringtone', 'write', 'EXCLUSIVE'),
         ('ringtone', 'write', None),
-        ('ringtone', 'write', 'OVERWRITE'),
         ('wallpaper', 'read', None),  # all wallpaper reading
         ('wallpaper', 'write', 'OVERWRITE'),
         ('sms', 'read', None),

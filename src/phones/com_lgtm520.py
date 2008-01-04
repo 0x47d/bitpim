@@ -577,12 +577,6 @@ class Profile(com_phone.Profile):
         ('ringtone', 'write', 'OVERWRITE'),
         )
 
-    def SyncQuery(self, source, action, type):
-        if (source, action, type) in self._supportedsyncs or \
-           (source, action, None) in self._supportedsyncs:
-            return True
-        return False
-
     def convertphonebooktophone(self, helper, data):
 	"Converts the data to what will be used by the phone"
 

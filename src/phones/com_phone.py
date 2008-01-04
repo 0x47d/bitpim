@@ -180,11 +180,13 @@ class Profile(object):
     _supportedsyncs=(
         )
 
-    def SyncQuery(self, source, action, type):
-        if (source, action, type) in self._supportedsyncs or \
-           (source, action, None) in self._supportedsyncs:
-            return True
-        return False
+    def SyncQuery(self, source, action, actiontype):
+        if actiontype=='EXCLUSIVE':
+            # Check for exclusive, shoud not be masked by None
+            return (source, action, actiontype) in self._supportedsyncs
+        else:
+            return (source, action, actiontype) in self._supportedsyncs or \
+                   (source, action, None) in self._supportedsyncs
 
     # fill in the list of ringtone/sound origins on your phone
     ringtoneorigins=()

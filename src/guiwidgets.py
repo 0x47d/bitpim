@@ -191,6 +191,10 @@ class GetPhoneDialog(wx.Dialog):
     # type of action ("pretty name", "name used to query profile")
     types= ( ("Add", MERGE),
              ("Replace All", OVERWRITE))
+    typename={ MERGE: 'MERGE',
+               OVERWRITE: 'OVERWRITE',
+               NOTREQUESTED: 'NOTREQUESTED',
+               }
 
     HELPID=helpids.ID_GET_PHONE_DATA
 
@@ -205,14 +209,15 @@ class GetPhoneDialog(wx.Dialog):
         for pretty,_ in self.types:
             gs.Add(wx.StaticText(self, -1, pretty), 0, wx.ALIGN_CENTRE)
 
-
-        self.cb=[]
-        self.rb=[]
-
+        self._widgets={}
         for desc, source in self.sources:
-            self.cb.append(wx.CheckBox(self, wx.NewId(), desc))
-            wx.EVT_CHECKBOX(self, self.cb[-1].GetId(), self.DoOkStatus)
-            gs.Add(self.cb[-1], 0, wx.EXPAND)
+            _cb=wx.CheckBox(self, wx.NewId(), desc)
+            _cb.exclusive=False
+            wx.EVT_CHECKBOX(self, _cb.GetId(), self.DoOkStatus)
+            gs.Add(_cb, 0, wx.EXPAND)
+            self._widgets[source]={ 'cb': _cb,
+                                    'rb': {},
+                                    }
             first=True
             for tdesc,tval in self.types:
                 if first:
@@ -220,17 +225,19 @@ class GetPhoneDialog(wx.Dialog):
                     first=0
                 else:
                     style=0
-                self.rb.append( wx.RadioButton(self, -1, "", style=style) )
+                _rb=wx.RadioButton(self, -1, "", style=style)
                 if not self._dowesupport(source, self.actions[0][1], tval):
-                    self.rb[-1].Enable(False)
-                    self.rb[-1].SetValue(False)
-                gs.Add(self.rb[-1], 0, wx.ALIGN_CENTRE)
+                    _rb.Enable(False)
+                    _rb.SetValue(False)
+                gs.Add(_rb, 0, wx.ALIGN_CENTRE)
+                self._widgets[source]['rb'][tval]=_rb
 
         bs=wx.BoxSizer(wx.VERTICAL)
         bs.Add(gs, 0, wx.EXPAND|wx.ALL, 10)
         bs.Add(wx.StaticLine(self, -1), 0, wx.EXPAND|wx.TOP|wx.BOTTOM, 7)
         
         but=self.CreateButtonSizer(wx.OK|wx.CANCEL|wx.HELP)
+        self._btn_ok=self.FindWindowById(wx.ID_OK)
         bs.Add(but, 0, wx.EXPAND|wx.ALL, 10)
         
         self.SetSizer(bs)
@@ -239,18 +246,16 @@ class GetPhoneDialog(wx.Dialog):
 
         wx.EVT_BUTTON(self, wx.ID_HELP, self.OnHelp)
 
-    def _setting(self, type):
-        for index in range(len(self.sources)):
-            if self.sources[index][1]==type:
-                if not self.cb[index].GetValue():
-                    print type,"not requested"
-                    return self.NOTREQUESTED
-                for i in range(len(self.types)):
-                    if self.rb[index*len(self.types)+i].GetValue():
-                        print type,self.types[i][1]
-                        return self.types[i][1]
-                assert False, "No selection for "+type
-        assert False, "No such type "+type
+    def _setting(self, sourcetype):
+        _w=self._widgets[sourcetype]
+        if not _w['cb'].GetValue():
+            # Not selected
+            return self.NOTREQUESTED
+        for _typeval,_rb in _w['rb'].items():
+            if _rb.GetValue():
+                return _typeval
+        # should not get here
+        raise ValueError
 
     def GetPhoneBookSetting(self):
         return self._setting("phonebook")
@@ -299,56 +304,64 @@ class GetPhoneDialog(wx.Dialog):
         return True
 
     def UpdateWithProfile(self, profile):
-        for cs in range(len(self.sources)):
-            source=self.sources[cs][1]
-            # we disable the checkbox
-            self.cb[cs].Enable(False)
+        assert len(self.types)==2
+        _action=self.actions[0][1]
+        for source,_w in self._widgets.items():
+            _cb=_w['cb']
+            _cb.Enable(False)
             # are any radio buttons enabled
-            count=0
-            for i in range(len(self.types)):
-                assert len(self.types)==2
-                if self.types[i][1]==self.MERGE:
-                    type="MERGE"
-                elif self.types[i][1]==self.OVERWRITE:
-                    type="OVERWRITE"
+            _rb_on=False
+            for _type,_rb in _w['rb'].items():
+                if self._dowesupport(source, _action, _type) and \
+                   profile.SyncQuery(source, _action, self.typename[_type]):
+                    _cb.Enable(True)
+                    _cb.exclusive=profile.SyncQuery(source, _action, 'EXCLUSIVE')
+                    _rb.Enable(True)
+                    _rb_on|=bool(_rb.GetValue())
                 else:
-                    assert False
-                    continue
-                if self._dowesupport(source, self.actions[0][1], self.types[i][1]) and \
-                       profile.SyncQuery(source, self.actions[0][1], type):
-                    self.cb[cs].Enable(True)
-                    self.rb[cs*len(self.types)+i].Enable(True)
-                    if self.rb[cs*len(self.types)+i].GetValue():
-                        count+=1
-                else:
-                    self.rb[cs*len(self.types)+i].Enable(False)
-                    self.rb[cs*len(self.types)+i].SetValue(False)
-            if not self.cb[cs].IsEnabled():
-                # ensure checkbox is unchecked if not enabled
-                self.cb[cs].SetValue(False)
+                    _rb.SetValue(False)
+                    _rb.Enable(False)
+            if _cb.IsEnabled():
+                # make sure at least one radio button is set
+                if not _rb_on:
+                    for _rb in _w['rb'].values():
+                        if _rb.IsEnabled():
+                            _rb.SetValue(True)
+                            break
             else:
-                # ensure one radio button is checked
-                if count!=1:
-                    done=False
-                    for i in range(len(self.types)):
-                        index=cs*len(self.types)+i
-                        if self.rb[index].IsEnabled():
-                            self.rb[index].SetValue(not done)
-                            done=False
-                            
+                # uncheck of not enabled
+                _cb.SetValue(False)
+
     def ShowModal(self):
         # we ensure the OK button is in the correct state
         self.DoOkStatus()
         return wx.Dialog.ShowModal(self)
 
+    def _check_for_exclusive(self, w):
+        if w.exclusive:
+            # this one is exclusive, turn off all others
+            for _w in self._widgets.values():
+                if _w['cb'] is not w:
+                    _w['cb'].SetValue(False)
+        else:
+            # this one is not exclusive, turn off all exclusive ones
+            for _w in self._widgets.values():
+                if _w['cb'] is not w and \
+                   _w['cb'].exclusive:
+                    _w['cb'].SetValue(False)
+
     def DoOkStatus(self, evt=None):
         # ensure the OK button is in the right state
-        enable=False
-        for i in self.cb:
-            if i.GetValue():
-                enable=True
-                break
-        self.FindWindowById(wx.ID_OK).Enable(enable)
+        if evt and evt.IsChecked():
+            enable=True
+            self._check_for_exclusive(evt.GetEventObject())
+        else:
+            enable=False
+            for _w in self._widgets.values():
+                if _w['cb'].GetValue():
+                    enable=True
+                    break
+        self._btn_ok.Enable(enable)
         if evt is not None:
             evt.Skip()
 
