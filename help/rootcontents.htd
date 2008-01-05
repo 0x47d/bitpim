@@ -238,6 +238,10 @@ BEGIN_TOC
             TOCITEM_2(Notes,phone-motov325-notes.htm)
             TOCITEM_2(Howtos,phone-motov325-howtos.htm)
             ENDTOC_2
+        TOCITEM_1(Motorola V325M,phone-motov325m.htm)
+            TOC_2
+            TOCITEM_2(Notes,phone-motov325m-notes.htm)
+            ENDTOC_2
         TOCITEM_1(Motorola V3c,phone-motov3c.htm)
             TOC_2
             TOCITEM_2(Notes,phone-motov3c-notes.htm)
