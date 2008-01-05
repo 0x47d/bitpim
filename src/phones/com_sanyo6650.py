@@ -72,7 +72,8 @@ class Phone(com_sanyo6600.Phone):
         self.mode=self.MODENONE
         self.numbertypetab=numbertypetab
 
-    my_model='SCP-6650/US'
+    my_model='SCP6650'
+    detected_model='SCP-6650/US'
     my_manufacturer='SANYO'
 
 parentprofile=com_sanyo6600.Profile
