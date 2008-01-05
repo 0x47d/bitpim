@@ -21,7 +21,7 @@ parentphone=v3mm.Phone
 class Phone(parentphone):
     """ Talk to a Motorola V3mM phone"""
     desc='Moto-V325M'
-    helpid=None
+    helpid=helpids.ID_PHONE_MOTOV325M
     protocolclass=p_motov325
     serialsname='motov325m'
     MODEOBEX='modeobex'
