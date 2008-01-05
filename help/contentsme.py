@@ -17,6 +17,12 @@ class HHCParser(HTMLParser.HTMLParser):
     def handle_endtag(self, tag):
         getattr(self, "handle_end_"+tag)()
 
+    def handle_end_body(self):
+        pass
+
+    def handle_end_html(self):
+        pass
+
     def handle_start_html(self, attrs):
         pass
 
