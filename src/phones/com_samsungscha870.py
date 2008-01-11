@@ -14,6 +14,7 @@
 
 # BitPim modules
 import common
+import helpids
 import com_samsungscha950 as com_a950
 import p_samsungscha950 as p_a950
 import p_samsungscha870 as p_a870
@@ -22,7 +23,7 @@ import prototypes
 parentphone=com_a950.Phone
 class Phone(parentphone):
     desc='SCH-A870'
-    helpid=None
+    helpid=helpids.ID_PHONE_SAMSUNGSCHA870
     protocolclass=p_a870
     serialsname='scha870'
 

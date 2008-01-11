@@ -269,6 +269,10 @@ BEGIN_TOC
             TOC_2
             TOCITEM_2(Notes,phone-motov710m-notes.htm)
             ENDTOC_2
+        TOCITEM_1(Samsung SCH-A870,phone-samsungscha870.htm)
+            TOC_2
+            TOCITEM_2(Notes,phone-samsungscha870-notes.htm)
+            ENDTOC_2
         TOCITEM_1(Samsung SCH-A930,phone-samsungscha930.htm)
             TOC_2
             TOCITEM_2(Cables,phone-samsungscha930-cables.htm)

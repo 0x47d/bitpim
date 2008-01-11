@@ -1,0 +1,8 @@
+#include "pagestart.h"
+<H3>Firmware Version</H3>
+<UL>
+<li><p>The firmware version of the phone that was used for development & test, is <B>V.A870.ZG26</B>
+<li><p>The hardware version is <B>V.A870.04</B>
+</UL>
+
+#include "pageend.h"

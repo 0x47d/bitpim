@@ -511,7 +511,7 @@ if __debug__:
                         'SCH-A870': { 'module': 'com_samsungscha870',
                                       'brand': b_samsung,
                                       'carrier': [c_vzw],
-                                      'helpid': None,
+                                      'helpid': helpids.ID_PHONE_SAMSUNGSCHA870,
                                       },
                         'SPH-A790': { 'module': 'com_samsungspha790',
                                       'brand': b_samsung,
