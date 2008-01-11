@@ -92,12 +92,14 @@ class Phone(parentphone):
         # without this sleep, the switch will always come back with ERROR
         self.log('Waiting for the phone to switch back to mode modem')
         time.sleep(2)
+        self.setmode(self.MODEPHONEBOOK)
         return parentphone.getwallpapers(self, fundamentals)
 
     def getringtones(self, fundamentals):
         """Retrieve ringtones data"""
         self.log('Waiting for the phone to switch to MODEM')
         time.sleep(2)
+        self.setmode(self.MODEPHONEBOOK)
         self.log('Reading ringtones')
         _res={}
         _rt_index=fundamentals.get('ringtone-index', {})

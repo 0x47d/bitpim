@@ -16,6 +16,7 @@ from prototypes import *
 from prototypes_samsung import *
 from p_brew import *
 from p_samsungscha950 import *
+from common import basename
 
 # We use LSB for all integer like fields
 UINT=UINTlsb
@@ -32,29 +33,54 @@ CAL_REMINDER_ONCE=0
 CAL_REMINDER_2MIN=1
 CAL_REMINDER_15MIN=2
 
+GROUP_INDEX_FILE_NAME='pb/group_name.dat'
+
 # Call log/history
 CL_MAX_ENTRIES=90
 
 PB_FLG_CRINGTONE=0X4000
 
+PIC_INDEX_HDR='0|/brew/16452/mp|\x0A'
 
 %}
 
-PACKET WRingtoneIndexEntry:
-    * STRING { 'terminator': None,
-               'default': '/ff/' } +path_prefix
-    * STRING { 'terminator': None } pathname
-    * STRING { 'terminator': None,
-               'default': '|0|2\x0A' } +eor
-PACKET WRingtoneIndexFile:
-    * LIST { 'elementclass': WRingtoneIndexEntry } +items
+PACKET PictureIndexEntry:
+    P STRING { 'default': '' } +filename
+    64 STRING { 'terminator': 0,
+                'default': self._name() } +name
+    58 STRING { 'terminator': 0,
+                'default': self._pathname() } +pathname
+    2 UINT { 'default': 0x0300 } +dunno1
+    4 UINT filesize
+    %{
+    def _name(self):
+        return '%(base)s.%(ext)s' % {
+            'base': common.stripext(self.filename)[:10],
+            'ext': common.getext(self.filename) }
+    def _pathname(self):
+        global PIC_PATH
+        return '/%(path)s/%(filename)s'%{
+            'path': PIC_PATH,
+            'filename': self.filename }
+    %}
 
-PACKET RRingtoneIndexEntry:
-    * STRING { 'terminator': 0x7C } pathname
-    * STRING { 'terminator': 0x0A } misc
-PACKET RRingtoneIndexFile:
-    * LIST { 'elementclass': RRingtoneIndexEntry } +items
+PACKET PictureIndexFile:
+    128 STRING { 'terminator': 0,
+                 'default': PIC_INDEX_HDR } +header
+    * LIST { 'elementclass': PictureIndexEntry } +items
 
+# Phonebook Group stuff---------------------------------------------------------
+PACKET GroupEntry:
+    65 USTRING { 'encoding': ENCODING,
+                 'terminator': 0 } name
+    3 UINT index
+    4 UINT numofmembers
+    4 UNKNOWN dunno1
+    
+PACKET GroupIndexFile:
+    * LIST { 'elementclass': GroupEntry } +items
+
+# Calendar stuff----------------------------------------------------------------
 PACKET CalIndexEntry:
     2 UINT { 'default': 0 } +index
 PACKET CalIndexFile:
@@ -105,7 +131,7 @@ PACKET CalEntry:
                'terminator': None } ringtone
     2 UNKNOWN { 'pad': 0 } +zero7
 
-# Call History
+# Call History------------------------------------------------------------------
 PACKET cl_list:
     2 UINT index
 
@@ -127,6 +153,17 @@ PACKET cl_file:
     4 DateTime1 datetime
     4 UNKNOWN dunno1
     4 UINT duration
+
+# Phonebook stuff--------------------------------------------------------------
+PACKET NumberEntry:
+    * STRING { 'terminator': None,
+               'pascal': True } number
+    1 UINT option
+    if self.option & PB_FLG_SPEEDDIAL:
+        2 UINT speeddial
+    if self.option & PB_FLG_RINGTONE:
+        * STRING { 'terminator': None,
+                   'pascal': True } ringtone
 
 PACKET PBEntry:
     2 UINT info
@@ -164,4 +201,57 @@ PACKET PBEntry:
         * STRING { 'terminator': None,
                    'pascal': True } wallpaper
         4 UINT wallpaper_range
+
+PACKET ss_number_entry:
+    * STRING { 'terminator': 0,
+               'default': '',
+               'maxsizeinbytes': PB_MAX_NUMBER_LEN,
+               'raiseontruncate': False } +number
+    2 UINT { 'default': 0 } +speeddial
+    1 UINT { 'default': 0 } +primary
+    8 STRING { 'pad': 0,
+               'default': '' } +zero
+    * STRING { 'terminator': 0,
+               'default': '' } +ringtone
+
+PACKET ss_pb_entry:
+    * USTRING { 'terminator': 0,
+                'maxsizeinbytes': PB_MAX_NAME_LEN,
+                'encoding': ENCODING,
+                'raiseontruncate': False } name
+    * USTRING { 'terminator': 0,
+                'encoding': ENCODING,
+                'default': '',
+                'maxsizeinbytes': PB_MAX_EMAIL_LEN,
+                'raiseontruncate': False } +email
+    * USTRING { 'terminator': 0,
+                'encoding': ENCODING,
+                'default': '',
+                'maxsizeinbytes': PB_MAX_EMAIL_LEN,
+                'raiseontruncate': False } +email2
+    3 UINT { 'default': 0 } +zero1
+    * STRING { 'terminator': 0,
+               'default': '' } +ringtone
+    * STRING { 'terminator': 0,
+               'default': '' } +wallpaper
+    1 UINT { 'default': 0 } +zero2
+    * ss_number_entry +home
+    * ss_number_entry +work
+    * ss_number_entry +cell
+    * ss_number_entry +dummy
+    * ss_number_entry +fax
+    * ss_number_entry +cell2
+    4 UINT { 'default': 0 } +zero3
+    1 UINT { 'default': 0 } +group
+    2 UINT { 'default': 0 } +zero4
+    
+PACKET ss_pb_write_req:
+    * ss_cmd_hdr { 'command': SS_CMD_PB_WRITE } +hdr
+    1 UINT { 'default': 0 } +zero
+    * ss_pb_entry entry
+
+PACKET ss_pb_write_resp:
+    * ss_cmd_hdr hdr
+    1 UINT zero
+    2 UINT index
 

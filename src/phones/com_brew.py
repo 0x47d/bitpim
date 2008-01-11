@@ -838,11 +838,12 @@ class RealBrewProtocol:
             raise
         return res
 
-class RealBrewProtocol2:
+class RealBrewProtocol2(RealBrewProtocol):
     """Talk to a phone using the 'brew' protocol
     This class uses the new filesystem commands which are supported
     by newer qualcomm chipsets used in phones like the LG vx8100
     """
+
     def exists(self, name):
         try:
             self.statfile(name)
