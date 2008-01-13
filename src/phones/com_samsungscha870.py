@@ -47,17 +47,25 @@ class Phone(parentphone):
         'Bell 3': 'range_tones_preloaded_el_04',
         'Beep Once': 'range_tones_preloaded_el_11',
         'No Ring': ringtone_noring_range,
+        'Default': None,
         }
     builtin_sounds={
-        'Birthday': 'range_sound_preloaded_el_birthday',
         'Clapping': 'range_sound_preloaded_el_clapping',
-        'Crowd Roar': 'range_sound_preloaded_el_crowed_roar',
-        'Rainforest': 'range_sound_preloaded_el_rainforest',
+        'Crowd': 'range_sound_preloaded_el_crowed_roar',
+        'Happy Birthday': 'range_sound_preloaded_el_birthday',
+        'Rain Forest': 'range_sound_preloaded_el_rainforest',
         'Train': 'range_sound_preloaded_el_train',
         # same as ringtones ??
         }
     builtin_wallpapers={
+        'No Picture': None,
         }
+
+    def __init__(self, logtarget, commport):
+        "Calls all the constructors and sets initial modes"
+        parentphone.__init__(self, logtarget, commport)
+        global PBEntry
+        self.pbentryclass=PBEntry
 
     def getfilecontents(self, filename, use_cache=False):
         if filename and filename[0]!='/':
@@ -71,7 +79,7 @@ class Phone(parentphone):
         _index_file.readfrombuffer(_buf)
         for _entry in _index_file.items:
             if _entry.name:
-                _res[_entry.index]={ 'name': _entry.name }
+                _res[_entry.index-1]={ 'name': _entry.name }
         return _res
 
     def _get_dir_index(self, idx, result, pathname, origin, excludenames=()):
@@ -98,12 +106,32 @@ class Phone(parentphone):
                                  self.protocolclass.SND_EXCLUDED_FILES)
         return _res
 
+    def _get_file_wallpaper_index(self, idx, result):
+        try:
+            _buf=prototypes.buffer(self.getfilecontents(self.protocolclass.PIC_INDEX_FILE_NAME))
+        except (com_brew.BrewNoSuchFileException,
+                com_brew.BrewBadPathnameException,
+                com_brew.BrewFileLockedException,
+                com_brew.BrewAccessDeniedException):
+            return idx
+        except:
+            if __debug__:
+                raise
+            return idx
+        _index_file=self.protocolclass.PictureIndexFile()
+        _index_file.readfrombuffer(_buf)
+        for _entry in _index_file.items:
+            result[idx]={ 'name': _entry.name,
+                          'filename': _entry.pathname,
+                          'origin': 'images',
+                          }
+            idx+=1
+        return idx
+
     def get_wallpaper_index(self):
         _res={}
-        _idx=self._get_dir_index(0, _res,
-                                 self.protocolclass.PIC_PATH,
-                                 'images',
-                                 self.protocolclass.PIC_EXCLUDED_FILES)
+        _idx=self._get_builtin_wallpaper_index(0, _res)
+        _idx=self._get_file_wallpaper_index(_idx, _res)
         return _res
 
     def _get_del_new_list(self, index_key, media_key, merge, fundamentals,
@@ -231,6 +259,83 @@ class Phone(parentphone):
                 raise
         return fundamentals
 
+    def _read_ringtone_range(self, fundamentals):
+        pass
+    def _add_wp_cache(self, wp, idx, fundamentals):
+        # check to see if it already exists
+        pass
+
+# PBEntry class-----------------------------------------------------------------
+parentpbentry=com_a950.PBEntry
+class PBEntry(parentpbentry):
+
+    # Building a phonebook rec from a bp phone dict-----------------------------
+    def _build_number(self, number, ringtone, primary):
+        # build a number rec
+        _num_type=self._pb_type_dict.get(number['type'], None)
+        if not _num_type:
+            # we don's support this type
+            return
+        # check for cell2
+        if _num_type=='cell' and self.pb.cell.number:
+            _num_type='cell2'
+        # build a number entry
+        _entry=self.phone.protocolclass.ss_number_entry()
+        _entry.number=number['number']
+        _sd=number.get('speeddial', None)
+        if _sd is not None:
+            _entry.speeddial=_sd
+        if primary:
+            _entry.primary=1
+        # add it to the contact
+        setattr(self.pb, _num_type, _entry)
+
+    def _build_wallpaper(self, wallpaper):
+        # set the wallpaper if specified
+        if not wallpaper:
+            return
+        for _rt in self.fundamentals.get('wallpaper-index', {}).values():
+            if _rt.get('name', None)==wallpaper and \
+               _rt.get('filename', None):
+                self.pb.wallpaper='%(name)s|%(pathname)s'% {
+                    'name': _rt['name'],
+                    'pathname': _rt['filename'] }
+                break
+
+    def _build_ringtone(self, ringtone):
+        # set the ringtone if specified
+        if not ringtone:
+            self.pb.ringtone='Default'
+            return
+        for _wp in self.fundamentals.get('ringtone-index', {}).values():
+            if _wp.get('name', None)==ringtone:
+                if _wp.get('filename', None):
+                    self.pb.ringtone=_wp['filename'] if _wp['filename'][0]=='/' \
+                                      else '/'+_wp['filename']
+                elif _wp.get('origin', None)=='builtin':
+                    self.pb.ringtone=_wp['name']
+                break
+        
+    def _build(self, entry):
+        # Build a phone dict base on the phone data
+        super(PBEntry, self)._build(entry)
+        self._build_ringtone(entry.get('ringtones', [{}])[0].get('ringtone', None))
+
+    # Extracting data from the phone--------------------------------------------
+    def _extract_wallpaper(self, entry, p_class):
+        if self.pb.info&p_class.PB_FLG_WP and \
+           self.pb.wallpaper:
+            entry['wallpapers']=[{ 'wallpaper': self.pb.wallpaper.partition('|')[0],
+                                   'use': 'call' }]
+    def _extract_ringtone(self, entry, p_class):
+        if self.pb.info&p_class.PB_FLG_CRINGTONE and \
+           self.pb.ringtone:
+            entry['ringtones']=[{ 'ringtone': common.basename(self.pb.ringtone),
+                                  'use': 'call' }]
+    def getvalue(self):
+        _entry=super(PBEntry, self).getvalue()
+        self._extract_ringtone(_entry, self.phone.protocolclass)
+        return _entry
 
 #-------------------------------------------------------------------------------
 parentprofile=com_a950.Profile
@@ -274,7 +379,7 @@ class Profile(parentprofile):
 
     _supportedsyncs=(
         ('phonebook', 'read', None),  # all phonebook reading
-        #('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
+        ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
         #('calendar', 'read', None),   # all calendar reading
         #('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
         ('ringtone', 'read', None),   # all ringtone reading
