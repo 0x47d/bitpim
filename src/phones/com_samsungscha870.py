@@ -13,6 +13,7 @@
 # System Models
 
 # BitPim modules
+import bpcalendar
 import common
 import helpids
 import com_samsungscha950 as com_a950
@@ -35,26 +36,26 @@ class Phone(parentphone):
     ringtone_noring_range='range_tones_preloaded_el_15'
     ringtone_default_range='range_tones_preloaded_el_01'
     builtin_ringtones={
-        'VZW Default Tone': ringtone_default_range,
-        'Melody 1': 'range_tones_preloaded_el_05',
-        'Melody 2': 'range_tones_preloaded_el_06',
-        'Melody 3': 'range_tones_preloaded_el_07',
-        'Melody 4': 'range_tones_preloaded_el_08',
-        'Melody 5': 'range_tones_preloaded_el_09',
-        'Melody 6': 'range_tones_preloaded_el_10',
-        'Bell 1': 'range_tones_preloaded_el_02',
-        'Bell 2': 'range_tones_preloaded_el_03',
-        'Bell 3': 'range_tones_preloaded_el_04',
-        'Beep Once': 'range_tones_preloaded_el_11',
-        'No Ring': ringtone_noring_range,
+        'VZW Default Tone': 0x52,
+        'Melody 1': 0x56,
+        'Melody 2': 0x57,
+        'Melody 3': 0x58,
+        'Melody 4': 0x59,
+        'Melody 5': 0x5A,
+        'Melody 6': 0x5B,
+        'Bell 1': 0x53,
+        'Bell 2': 0x54,
+        'Bell 3': 0x55,
+        'Beep Once': 0x93,
+        'No Ring': 0xC2,
         'Default': None,
         }
     builtin_sounds={
-        'Clapping': 'range_sound_preloaded_el_clapping',
-        'Crowd': 'range_sound_preloaded_el_crowed_roar',
-        'Happy Birthday': 'range_sound_preloaded_el_birthday',
-        'Rain Forest': 'range_sound_preloaded_el_rainforest',
-        'Train': 'range_sound_preloaded_el_train',
+        'Clapping': 0x5C,
+        'Crowd': 0x5D,
+        'Happy Birthday': 0x5E,
+        'Rain Forest': 0x5F,
+        'Train': 0x60,
         # same as ringtones ??
         }
     builtin_wallpapers={
@@ -64,8 +65,9 @@ class Phone(parentphone):
     def __init__(self, logtarget, commport):
         "Calls all the constructors and sets initial modes"
         parentphone.__init__(self, logtarget, commport)
-        global PBEntry
+        global PBEntry, CalendarEntry
         self.pbentryclass=PBEntry
+        self.calendarclass=CalendarEntry
 
     def getfilecontents(self, filename, use_cache=False):
         if filename and filename[0]!='/':
@@ -337,6 +339,54 @@ class PBEntry(parentpbentry):
         self._extract_ringtone(_entry, self.phone.protocolclass)
         return _entry
 
+# CalendarEntry class-----------------------------------------------------------
+calendarentryparent=com_a950.CalendarEntry
+class CalendarEntry(calendarentryparent):
+    """Transient class to handle calendar data being sent to, retrieved from
+    the phone.
+    """
+    # Extracting routine--------------------------------------------------------
+    def _extract_ringtone(self):
+        # extract the builtin ringtone value, if possible
+        for _rt_name, _rt_code in self.phone.builtin_ringtones.items():
+            if _rt_code==self.cal.ringtoneindex:
+                return _rt_name
+        for _rt_name, _rt_code in self.phone.builtin_sounds.items():
+            if _rt_code==self.cal.ringtoneindex:
+                return _rt_name
+
+    def getvalue(self):
+        # return a BitPim calendar entry equivalence
+        _entry=bpcalendar.CalendarEntry()
+        _entry.desc_loc=self.cal.title
+        _entry.start=self.cal.start
+        _entry.end=self._extract_end()
+        _entry.alarm=self._extract_alarm()
+        _entry.ringtone=self._extract_ringtone()
+        _entry.vibrate=self.cal.alert==self.ALERT_VIBRATE
+        return _entry
+
+    # building routines---------------------------------------------------------
+    def _build_ringtone(self, entry):
+        _rt_name=entry.ringtone
+        if self.phone.builtin_ringtones.get(_rt_name, None):
+            return self.phone.builtin_ringtones[_rt_name]
+        elif self.phone.builtin_sounds.get(_rt_name, None):
+            return self.phone.builtin_sounds[_rt_name]
+        else:
+            return 0
+
+    def _build(self, entry):
+        # populate this object with data from BitPim
+        self.cal.titlelen=len(entry.desc_loc)
+        self.cal.title=entry.desc_loc
+        self.cal.start=entry.start
+        self.cal.exptime=entry.end[3:5]
+        self.cal.alarm=self._build_alarm(entry)
+        self.cal.alert=self._build_alert(entry)
+        self.cal.duration=self._build_duration(entry)
+        self.cal.ringtoneindex=self._build_ringtone(entry)
+
 #-------------------------------------------------------------------------------
 parentprofile=com_a950.Profile
 class Profile(parentprofile):
@@ -380,14 +430,14 @@ class Profile(parentprofile):
     _supportedsyncs=(
         ('phonebook', 'read', None),  # all phonebook reading
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
-        #('calendar', 'read', None),   # all calendar reading
-        #('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
+        ('calendar', 'read', None),   # all calendar reading
+        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
         ('ringtone', 'read', None),   # all ringtone reading
         ('ringtone', 'write', 'MERGE'),
         ('wallpaper', 'read', None),  # all wallpaper reading
         ('wallpaper', 'write', 'MERGE'),
-        #('memo', 'read', None),     # all memo list reading DJP
-        #('memo', 'write', 'OVERWRITE'),  # all memo list writing DJP
+        ('memo', 'read', None),     # all memo list reading DJP
+        ('memo', 'write', 'OVERWRITE'),  # all memo list writing DJP
         #('call_history', 'read', None),# all call history list reading
         #('sms', 'read', None),     # all SMS list reading DJP
         )

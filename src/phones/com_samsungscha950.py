@@ -85,6 +85,7 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         com_phone.Phone.__init__(self, logtarget, commport)
 	com_brew.BrewProtocol.__init__(self)
 	self.pbentryclass=PBEntry
+	self.calendarclass=CalendarEntry
 	# born to be in BREW mode!
         self.mode=self.MODEBREW
 
@@ -502,7 +503,7 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
             _cal_file_name='%s%04d'%(self.protocolclass.CAL_FILE_NAME_PREFIX,
                                      _cal_index.events[_cnt].index)
             _buf=prototypes.buffer(self.getfilecontents(_cal_file_name))
-            _bpcal=CalendarEntry(self, _buf, fundamentals).getvalue()
+            _bpcal=self.calendarclass(self, _buf, fundamentals).getvalue()
             _res[_bpcal.id]=_bpcal
         fundamentals['calendar']=_res
         return fundamentals
@@ -529,7 +530,7 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
                 # enough events already!
                 break
             try:
-                _cal_entry=CalendarEntry(self, _entry, fundamentals)
+                _cal_entry=self.calendarclass(self, _entry, fundamentals)
                 _buf=prototypes.buffer()
                 _cal_entry.writetobuffer(_buf)
                 _cal_file_name='%s%04d'%(self.protocolclass.CAL_FILE_NAME_PREFIX,

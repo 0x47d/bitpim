@@ -28,10 +28,10 @@ CAL_INDEX_FILE_NAME=CAL_PATH+'/usr_tsk'
 CAL_FILE_NAME_PREFIX=CAL_PATH+'/usr_tsk_'
 CAL_MAX_EVENTS=100
 
-CAL_REMINDER_OFF=3
-CAL_REMINDER_ONCE=0
-CAL_REMINDER_2MIN=1
-CAL_REMINDER_15MIN=2
+CAL_REMINDER_OFF=0
+CAL_REMINDER_ONCE=1
+CAL_REMINDER_2MIN=2
+CAL_REMINDER_15MIN=3
 
 GROUP_INDEX_FILE_NAME='pb/group_name.dat'
 
@@ -83,6 +83,7 @@ PACKET GroupIndexFile:
 # Calendar stuff----------------------------------------------------------------
 PACKET CalIndexEntry:
     2 UINT { 'default': 0 } +index
+
 PACKET CalIndexFile:
     2 UINT next_index
     12 UNKNOWN { 'pad': 0 } +zero1
@@ -108,28 +109,29 @@ PACKET CalEntry:
                 'encoding': ENCODING,
                 'terminator': None } title
     4 DateTime start
-    4 UNKNOWN { 'pad': 0 } +zero1
     4 DateTime { 'default': self.start } +start2
-    4 UNKNOWN { 'pad': 0 } +zero2
     4 ExpiringTime exptime
-    4 UNKNOWN { 'pad': 0 } +zero3
     1 UINT { 'default': 1 } +one
-    1 UINT repeat
+    1 UINT { 'default': 0 } +zero1
+    1 UINT alert
     1 UINT { 'default': 3 } +three
     1 UINT alarm
-    1 UINT alert
     1 UINT { 'default': CAL_REMINDER_ONCE } +reminder
+    1 UINT ringtoneindex
     5 UNKNOWN { 'pad': 0 } +zero4
     4 UINT duration
-    1 UINT timezone
-    4 DateTime creationtime
-    4 UNKNOWN { 'pad': 0 } +zero5
-    4 DateTime modifiedtime
-    4 UNKNOWN { 'pad': 0 } +zero6
-    2 UINT ringtonelen
-    * STRING { 'sizeinbytes': self.ringtonelen,
-               'terminator': None } ringtone
-    2 UNKNOWN { 'pad': 0 } +zero7
+    7 UNKNOWN { 'pad': 0 } +zero5
+
+PACKET NotePadEntry:
+    2 UINT textlen
+    * USTRING { 'terminator': None,
+                'encoding': ENCODING,
+                'sizeinbytes': self.textlen } text
+    4 DateTime creation
+    4 DateTime { 'default': self.creation } +creation2
+    7 UNKNOWN { 'pad': 0 } +zero2
+    1 UINT { 'default': 5 } +five
+    19 UNKNOWN { 'pad': 0 } +zero3
 
 # Call History------------------------------------------------------------------
 PACKET cl_list:
