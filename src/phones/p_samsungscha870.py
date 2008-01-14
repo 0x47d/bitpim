@@ -1656,7 +1656,7 @@ class cl_index_file(BaseProtogenClass):
 
 
 class cl_file(BaseProtogenClass):
-    __fields=['cl_type', 'number', 'datetime', 'dunno1', 'duration']
+    __fields=['cl_type', 'number', 'datetime', 'duration']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -1692,7 +1692,6 @@ class cl_file(BaseProtogenClass):
         self.__field_cl_type.writetobuffer(buf)
         self.__field_number.writetobuffer(buf)
         self.__field_datetime.writetobuffer(buf)
-        self.__field_dunno1.writetobuffer(buf)
         self.__field_duration.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -1704,12 +1703,10 @@ class cl_file(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_cl_type=UINT(**{'sizeinbytes': 1})
         self.__field_cl_type.readfrombuffer(buf)
-        self.__field_number=STRING(**{'sizeinbytes': 51,  'terminator': 0 })
+        self.__field_number=STRING(**{'sizeinbytes': 35,  'terminator': 0 })
         self.__field_number.readfrombuffer(buf)
         self.__field_datetime=DateTime1(**{'sizeinbytes': 4})
         self.__field_datetime.readfrombuffer(buf)
-        self.__field_dunno1=UNKNOWN(**{'sizeinbytes': 4})
-        self.__field_dunno1.readfrombuffer(buf)
         self.__field_duration=UINT(**{'sizeinbytes': 4})
         self.__field_duration.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -1735,7 +1732,7 @@ class cl_file(BaseProtogenClass):
         if isinstance(value,STRING):
             self.__field_number=value
         else:
-            self.__field_number=STRING(value,**{'sizeinbytes': 51,  'terminator': 0 })
+            self.__field_number=STRING(value,**{'sizeinbytes': 35,  'terminator': 0 })
 
     def __delfield_number(self): del self.__field_number
 
@@ -1753,19 +1750,6 @@ class cl_file(BaseProtogenClass):
     def __delfield_datetime(self): del self.__field_datetime
 
     datetime=property(__getfield_datetime, __setfield_datetime, __delfield_datetime, None)
-
-    def __getfield_dunno1(self):
-        return self.__field_dunno1.getvalue()
-
-    def __setfield_dunno1(self, value):
-        if isinstance(value,UNKNOWN):
-            self.__field_dunno1=value
-        else:
-            self.__field_dunno1=UNKNOWN(value,**{'sizeinbytes': 4})
-
-    def __delfield_dunno1(self): del self.__field_dunno1
-
-    dunno1=property(__getfield_dunno1, __setfield_dunno1, __delfield_dunno1, None)
 
     def __getfield_duration(self):
         return self.__field_duration.getvalue()
@@ -1787,8 +1771,12 @@ class cl_file(BaseProtogenClass):
         yield ('cl_type', self.__field_cl_type, None)
         yield ('number', self.__field_number, None)
         yield ('datetime', self.__field_datetime, None)
-        yield ('dunno1', self.__field_dunno1, None)
         yield ('duration', self.__field_duration, None)
+
+    def _valid(self):
+        global CL_VALID_TYPE
+        return bool(self.cl_type in CL_VALID_TYPE and self.number)
+    valid=property(fget=_valid)
 
 
 

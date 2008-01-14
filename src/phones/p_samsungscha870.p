@@ -151,10 +151,15 @@ PACKET cl_index_file:
 
 PACKET cl_file:
     1 UINT cl_type
-    51 STRING { 'terminator': 0 } number
+    35 STRING { 'terminator': 0 } number
     4 DateTime1 datetime
-    4 UNKNOWN dunno1
     4 UINT duration
+    %{
+    def _valid(self):
+        global CL_VALID_TYPE
+        return bool(self.cl_type in CL_VALID_TYPE and self.number)
+    valid=property(fget=_valid)
+    %}
 
 # Phonebook stuff--------------------------------------------------------------
 PACKET NumberEntry:
