@@ -439,5 +439,5 @@ class Profile(parentprofile):
         ('memo', 'read', None),     # all memo list reading DJP
         ('memo', 'write', 'OVERWRITE'),  # all memo list writing DJP
         ('call_history', 'read', None),# all call history list reading
-        #('sms', 'read', None),     # all SMS list reading DJP
+        ('sms', 'read', None),     # all SMS list reading DJP
         )
