@@ -4,6 +4,7 @@
     <ul>
       <LI><P>New phone support: <B>Samsung SCH-A870 (VZW)</B>
       <LI><P>Improvement: Call History duration display (patch submitted by ???)
+      <LI><P>Maintenance: Upgrade to SQLite 3.5.4.
     </ul>
 
    <h2><a name="1.0.4">Changes in 1.0.4</a></h2>
