@@ -64,6 +64,18 @@ class CallHistoryDataobject(database.basedataobject):
 callhistoryobjectfactory=database.dataobjectfactory(CallHistoryDataobject)
 
 #-------------------------------------------------------------------------------
+def GetDurationStr(duration):
+    """convert duration int into an h:mm:ss formatted string"""
+    if duration is None:
+        return ''
+    else:
+        sec=duration%60
+        min=duration/60
+        hr=min/60
+        min=min%60
+    return "%d:%02d:%02d" % (hr, min, sec)
+
+#-------------------------------------------------------------------------------
 class CallHistoryEntry(object):
     Folder_Incoming='Incoming'
     Folder_Outgoing='Outgoing'
@@ -373,18 +385,11 @@ class CallHistoryWidget(scrolled.ScrolledPanel, widgets.BitPimWidget):
         self.total_out.SetLabel('  Outgoing Calls: '+`out`)
         self.total_missed.SetLabel('  Missed Calls: '+`miss`)
         self.total_data.SetLabel('  Data Calls: '+`data`)
-        self.duration_all.SetLabel('  Total Duration(h:m:s): '+self.GetDurationStr(total_d))
-        self.duration_in.SetLabel('  Incoming Duration(h:m:s): '+self.GetDurationStr(in_d))
-        self.duration_out.SetLabel('  Outgoing Duration(h:m:s): '+self.GetDurationStr(out_d))
-        self.duration_data.SetLabel('  Data Duration(h:m:s): '+self.GetDurationStr(data_d))
+        self.duration_all.SetLabel('  Total Duration(h:m:s): '+GetDurationStr(total_d))
+        self.duration_in.SetLabel('  Incoming Duration(h:m:s): '+GetDurationStr(in_d))
+        self.duration_out.SetLabel('  Outgoing Duration(h:m:s): '+GetDurationStr(out_d))
+        self.duration_data.SetLabel('  Data Duration(h:m:s): '+GetDurationStr(data_d))
             
-    def GetDurationStr(self, duration):
-        sec=duration%60
-        min=duration/60
-        hr=min/60
-        min=min%60
-        return "%d:%02d:%02d" % (hr, min, sec)
-
     def _OnPBLookup(self, msg):
         d=msg.data
         k=d.get('item', None)
@@ -481,7 +486,7 @@ class CallHistoryList(wx.Panel, widgets.BitPimWidget):
         column_info.append(("Call Type", 80, False))
         column_info.append(("Date", 120, False))
         column_info.append(("Number", 100, False))
-        column_info.append(("Duration", 80, True))
+        column_info.append(("Duration", 80, False))
         column_info.append(("Name", 130, False))
         self._item_list=guiwidgets.BitPimListCtrl(self, column_info)
         self._item_list.ResetView(self.nodes, self.nodes_keys)
@@ -568,10 +573,6 @@ class CallHistoryList(wx.Panel, widgets.BitPimWidget):
         index=0
         for k,e in self._stats._data.items():
             if self._display_filter=="All" or e.folder==self._display_filter:
-                if e.duration==None:
-                    duration=0
-                else:
-                    duration=e.duration
                 name=e.name
                 if name==None or name=="":
                     temp=self._stats._name_map.get(e.number, None)
@@ -581,7 +582,7 @@ class CallHistoryList(wx.Panel, widgets.BitPimWidget):
                         name=""
                 self.nodes[index]=(e.folder, e.get_date_time_str(),
                                    phonenumber.format(e.number),
-                                   `duration`, name)
+                                   GetDurationStr(e.duration), name)
                 self.nodes_keys[index]=k
                 index+=1
         self._item_list.ResetView(self.nodes, self.nodes_keys)
