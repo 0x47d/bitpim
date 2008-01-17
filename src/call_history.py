@@ -174,7 +174,11 @@ class CallHistoryEntry(object):
         if v is not None and not isinstance(v, int):
             raise TypeError('duration property is an int arg')
         self._set_or_del(self._duration_key, v)
+    def _get_durationstr(self):
+        return GetDurationStr(self.duration)
     duration=property(fget=_get_duration, fset=_set_duration)
+    durationstr=property(fget=_get_durationstr)
+    
 
     def _get_datetime(self):
         return self._data.get(self._datetime_key, '')
@@ -582,7 +586,7 @@ class CallHistoryList(wx.Panel, widgets.BitPimWidget):
                         name=""
                 self.nodes[index]=(e.folder, e.get_date_time_str(),
                                    phonenumber.format(e.number),
-                                   GetDurationStr(e.duration), name)
+                                   e.durationstr, name)
                 self.nodes_keys[index]=k
                 index+=1
         self._item_list.ResetView(self.nodes, self.nodes_keys)
