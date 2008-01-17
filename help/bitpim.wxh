@@ -4015,7 +4015,7 @@
           </document>
         </document>
         <document>
-          <string name="title">"Frequently Asked Questions"</string>
+          <string name="title">"Frequently Asked Questions (FAQ)"</string>
           <string name="type">"text-editor-document"</string>
           <string name="filename">"faq.htd"</string>
           <string name="icon-name">"htmlfolder"</string>

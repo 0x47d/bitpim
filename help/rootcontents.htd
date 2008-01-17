@@ -326,7 +326,7 @@ BEGIN_TOC
         TOCITEM_1(Configuring BitPim to use BitFling,bitpim-bitfling-configure.htm)
         TOCITEM_1(Security Considerations,bitfling-security.htm)
         ENDTOC_1
-    TOCITEM_0(Frequently Asked Questions,faq.htm)
+    TOCITEM_0(Frequently Asked Questions (FAQ),faq.htm)
         TOC_1
         TOCITEM_1(My phone is not in the list,faq-phonenotlisted.htm)
         TOCITEM_1(Which features will BitPim support of my phone?,faq-phonefeaturessupport.htm)
