@@ -1079,10 +1079,8 @@ class MainWindow(wx.Frame):
     # deal with configuring the phone (commport)
     def OnEditSettings(self, _=None):
         if wx.IsBusy():
-            with guihelper.WXDialogWrapper(wx.MessageBox("BitPim is busy.  You can't change settings until it has finished talking to your phone.",
-                                                         "BitPim is busy.", wx.OK|wx.ICON_EXCLAMATION),
-                                           True):
-                pass
+            wx.MessageBox("BitPim is busy.  You can't change settings until it has finished talking to your phone.",
+                                                         "BitPim is busy.", wx.OK|wx.ICON_EXCLAMATION)
         else:
             # clear the ower's name for manual setting
             self.__owner_name=''
