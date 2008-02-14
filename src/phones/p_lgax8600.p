@@ -200,11 +200,27 @@ PACKET ULRes:
 # the features that other phones support, when you run bitpim you see loads of
 # options that do not work in the vx8100 on the memo page
 PACKET textmemo:
-    152 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False } text
-    4 UINT {'default' : 0x1000000} +dunno
+    151 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False } text
     4 LGCALDATE memotime # time the memo was writen LG time
 
 PACKET textmemofile:
     4 UINT itemcount
     * LIST { 'elementclass': textmemo } +items
 
+
+PACKET call:
+    4 GPSDATE GPStime #no. of seconds since 0h 1-6-80, based off local time.
+    4 UINT unknown2 # different for each call
+    4 UINT duration #seconds, not certain about length of this field
+    49 USTRING {'raiseonunterminatedread': False} number
+    36 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False} name
+    2 UINT numberlength # length of phone number
+    1 UINT pbnumbertype # 1=cell, 2=home, 3=office, 4=cell2, 5=fax, 6=vmail, 0xFF=not in phone book
+    3 UINT unknown2 #
+    2 UINT pbentrynum #entry number in phonebook
+    58 UINT unknown3
+       
+PACKET callhistory:
+    4 UINT numcalls
+    1 UINT unknown1
+    * LIST {'elementclass': call} +calls

@@ -9,7 +9,8 @@
 ### by David Ritter 7/10/07
 ### Write to phonebook working msg ringtones not supported
 ### Write to Calendar, wallpaper, and ringtones is working
-
+###
+### $Id$
 
 """
 Communicate with the LG AX8600 cell phone
@@ -148,8 +149,50 @@ class Phone(parentphone):
         com_lgvx8100.Phone.get_detect_data(self, res)
         res[self.esn_file_key]=self.get_esn()
 
-#------------------------------------------------------
-# must be included for difference between alltel and verizon
+    #------------------------------------------------------
+    # must be included for difference between alltel and verizon
+    def getcallhistory(self, result):
+        res={}
+        # read the incoming call history file
+        # the telus lg8100 programmers were on something when they wrote their code.
+        if hasattr(self.protocolclass, 'this_takes_the_prize_for_the_most_brain_dead_call_history_file_naming_ive_seen'):
+            self._readhistoryfile("pim/missed_log.dat", 'Incoming', res)
+            self._readhistoryfile("pim/outgoing_log.dat", 'Missed', res)
+            self._readhistoryfile("pim/incoming_log.dat", 'Outgoing', res)
+        else:
+            self._readhistoryfile("pim/missed_log.dat", 'Missed', res)
+            self._readhistoryfile("pim/outgoing_log.dat", 'Outgoing', res)
+            self._readhistoryfile("pim/incoming_log.dat", 'Incoming', res)
+            self._readhistoryfile("pim/data_log.data", 'Data', res)
+        result['call_history']=res
+        return result
+
+    # Don't need this if there're no changes
+##    def _readhistoryfile(self, fname, folder, res):
+##        try:
+##            buf=prototypes.buffer(self.getfilecontents(fname))
+##            ch=self.protocolclass.callhistory()
+##            ch.readfrombuffer(buf, logtitle="Call History")
+##            for call_idx in range(ch.numcalls):
+##                call=ch.calls[call_idx]
+##                if call.number=='' and call.name=='':
+##                        continue
+##                entry=call_history.CallHistoryEntry()
+##                entry.folder=folder
+##                if call.duration:
+##                    entry.duration=call.duration
+##                entry.datetime=((call.GPStime))
+##                if call.number=='': # restricted calls have no number
+##                    entry.number=call.name
+##                else:
+##                    entry.number=call.number
+##                    if call.name:
+##                        entry.name=call.name
+##                res[entry.id]=entry
+##        except (com_brew.BrewNoSuchFileException,
+##                IndexError):
+##            pass # do nothing if file doesn't exist or is corrupted
+##        return
 
     def getcalendar(self,result):
         res={}
@@ -545,9 +588,9 @@ class Profile(parentprofile):
         ('calendar', 'read', None),   # all calendar reading
         ('wallpaper', 'read', None),  # all wallpaper reading
         ('ringtone', 'read', None),   # all ringtone reading
-##        ('call_history', 'read', None),# all call history list reading
+        ('call_history', 'read', None),# all call history list reading
 ##        ('sms', 'read', None),         # all SMS list reading
-##        ('memo', 'read', None),        # all memo list reading
+        ('memo', 'read', None),        # all memo list reading
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
         ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
         ('wallpaper', 'write', 'MERGE'),      # merge and overwrite wallpaper
@@ -555,7 +598,7 @@ class Profile(parentprofile):
         ('ringtone', 'write', 'MERGE'),      # merge and overwrite ringtone
         ('ringtone', 'write', 'OVERWRITE'),
 ##        ('sms', 'write', 'OVERWRITE'),        # all SMS list writing
-##        ('memo', 'write', 'OVERWRITE'),       # all memo list writing
+        ('memo', 'write', 'OVERWRITE'),       # all memo list writing
 ##        ('t9_udb', 'read', 'OVERWRITE'),
 ##        ('t9_udb', 'write', 'OVERWRITE'),
         )
