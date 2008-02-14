@@ -291,7 +291,7 @@ class textmemo(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_cdate
         except:
-            self.__field_cdate=GPSDATE(**{'sizeinbytes': 4,  'default': GPSDATE.now() })
+            self.__field_cdate=GPSDATE(**{'sizeinbytes': 4,  'default': GPSDATE.now(),                'unique': True })
         self.__field_cdate.writetobuffer(buf)
         self.__field_text.writetobuffer(buf)
         self.__field_memotime.writetobuffer(buf)
@@ -303,7 +303,7 @@ class textmemo(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_cdate=GPSDATE(**{'sizeinbytes': 4,  'default': GPSDATE.now() })
+        self.__field_cdate=GPSDATE(**{'sizeinbytes': 4,  'default': GPSDATE.now(),                'unique': True })
         self.__field_cdate.readfrombuffer(buf)
         self.__field_text=USTRING(**{'sizeinbytes': 304, 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False })
         self.__field_text.readfrombuffer(buf)
@@ -315,14 +315,14 @@ class textmemo(BaseProtogenClass):
     def __getfield_cdate(self):
         try: self.__field_cdate
         except:
-            self.__field_cdate=GPSDATE(**{'sizeinbytes': 4,  'default': GPSDATE.now() })
+            self.__field_cdate=GPSDATE(**{'sizeinbytes': 4,  'default': GPSDATE.now(),                'unique': True })
         return self.__field_cdate.getvalue()
 
     def __setfield_cdate(self, value):
         if isinstance(value,GPSDATE):
             self.__field_cdate=value
         else:
-            self.__field_cdate=GPSDATE(value,**{'sizeinbytes': 4,  'default': GPSDATE.now() })
+            self.__field_cdate=GPSDATE(value,**{'sizeinbytes': 4,  'default': GPSDATE.now(),                'unique': True })
 
     def __delfield_cdate(self): del self.__field_cdate
 

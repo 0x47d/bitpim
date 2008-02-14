@@ -49,7 +49,8 @@ PACKET indexfile:
     * LIST {'elementclass': indexentry, 'createdefault': True} +items
 
 PACKET textmemo:
-    4 GPSDATE { 'default': GPSDATE.now() } +cdate
+    4 GPSDATE { 'default': GPSDATE.now(),
+                'unique': True } +cdate
     304 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False } text
     4 LGCALDATE memotime # time the memo was writen LG time
 
