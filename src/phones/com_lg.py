@@ -1604,9 +1604,8 @@ class LGDMPhone:
             raise EnterDMError('Bad response - unlock_ok: %d'%_resp.unlock_ok)
 
     def enter_DM(self, e=None):
-        # do nothing if (1) the phone is already in DM, or (2) the phone failed
-        # to previously enter DM
-        if self._in_DM is not None:
+        # do nothing if the phone failed to previously enter DM
+        if self._in_DM is False:
             return
         # check for DMv5 applicability
         if self._DMv5 is None:
@@ -1625,18 +1624,6 @@ class LGDMPhone:
             if __debug__:
                 raise
             return
-        
-        self.log('Successfully transitioned to DM')
-        # DM entered successfully, kick off the timer if specified
-        if self._timeout:
-            # clear existing timer
-            if self._timer:
-                self._timer.cancel()
-                del self._timer
-            # and set a new one
-            self.log('Starting DM timeout for %s seconds'%self._timeout)
-            self._timer=threading.Timer(self._timeout, self._OnTimer)
-            self._timer.start()
 
     def _OnTimer(self):
         if self._in_DM:
