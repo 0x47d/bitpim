@@ -30,7 +30,7 @@ NotImplemented_Error=2
 InvalidDir_Error=3
 DirExists_Error=4
 
-_commands=frozenset(('ls', 'll', 'cp', 'mkdir', 'cli', 'rm'))
+_commands=frozenset(('ls', 'll', 'cp', 'mkdir', 'cli', 'rm', 'rmdir'))
 wildcards=re.compile('.*[\*+|\?+]')
 
 def valid_command(arg):
@@ -79,7 +79,8 @@ class CLI(object):
             except KeyError:
                 raise PhoneModelError
             self.phone=self.phonemodule.Phone(self, self.commport)
-            self._pwd='/'
+            self._rootdir=''
+            self._pwd=self._rootdir
             self._in=file_in
             self._out=file_out
             self._err=file_err
@@ -108,8 +109,12 @@ class CLI(object):
             else:
                 _dirname=_item
                 _phonefs=force_phonefs
-            if _phonefs and not _dirname.startswith('/'):
-                _dirname=self.phone.join(self._pwd, _dirname)
+            if _phonefs:
+                if _dirname.startswith('/'):
+                    # absolute path
+                    _dirname=self.phone.join(self._rootdir, _dirname[1:])
+                else:
+                    _dirname=self.phone.join(self._pwd, _dirname)
             # check for wildcards
             global wildcards
             _name=self.phone.basename(_dirname)
@@ -122,7 +127,7 @@ class CLI(object):
             if _phonefs:
                 _path=None
             else:
-                _path=os.path.join(_dirname.split('/'))
+                _path=os.path.join(*_dirname.split('/'))
             _res.append({ 'name': _dirname, 'phonefs': _phonefs,
                           'wildcard': _wildcard,
                           'path': _path })
@@ -240,10 +245,10 @@ class CLI(object):
             return (False, InvalidDir_Error)
         for _item in args[:-1]:
             _name=_item['name']
-            if self.phone.exists(_name):
+            if self.phone.isdir(_name):
                 # this is a dir, cp all files under it
                 self._cpdirfromphone(_name, _destdir, _item['wildcard'])
-            elif self.phone.statfile(_name):
+            elif self.phone.isfile(_name):
                 # this is a file, just copy it
                 self._cpfilefromphone(_name, _destdir)
             else:
@@ -258,7 +263,7 @@ class CLI(object):
                                   os.path.basename(name))
         if not force:
             # check if file already exists
-            if self.phone.statfile(_filename):
+            if self.phone.exists(_filename):
                 # file exists, warn
                 self._out.write('Phone file %(name)s exists, overwrite (y/n): '%\
                                 { 'name': _filename })
@@ -292,7 +297,7 @@ class CLI(object):
     def _cptophone(self, args):
         # copy files to the phone
         _destdir=args[-1]['name']
-        if not self.phone.exists(_destdir):
+        if not self.phone.isdir(_destdir):
             self._out.write('Error: phone directory %(dirname)s is not exist.\n'%\
                             { 'dirname': _destdir })
             return (False, InvalidDir_Error)
@@ -300,9 +305,9 @@ class CLI(object):
             if _item['phonefs']:
                 # this one on the phone
                 _name=_item['name']
-                if self.phone.exists(_name):
+                if self.phone.isdir(_name):
                     self._cpdirtophone(_name, _destdir, phonefs=True)
-                elif self.phone.statfile(_name):
+                elif self.phone.isfile(_name):
                     self._cpfiletophone(_name, _destdir, phonefs=True)
                 else:
                     self._out.write('Error: %(name)s does not exist.\n'%\
@@ -380,6 +385,8 @@ class CLI(object):
         _dirs=self._parse_args(args, force_phonefs=True)
         if _dirs:
             _dirname=_dirs[0]['name']
+            if _dirname=='/':
+                _dirname=self._rootdir
             if self.phone.exists(_dirname):
                 self._pwd=_dirname
             else:
@@ -413,7 +420,7 @@ class CLI(object):
         _filenames=self._parse_args(args, force_phonefs=True)
         for _item in _filenames:
             _name=_item['name']
-            if self.phone.statfile(_name) and not self.phone.exists(_name):
+            if self.phone.isfile(_name):
                 self.phone.rmfile(_name)
                 self._out.write('File %(name)s deleted\n'%{ 'name': _name })
             else:
@@ -428,7 +435,7 @@ class CLI(object):
         _dirnames=self._parse_args(args, force_phonefs=True)
         for _item in _dirnames:
             _name=_item['name']
-            if self.phone.exists(_name):
+            if self.phone.isdir(_name):
                 # this is  a dir, check for empty
                 if self.phone.hassubdirs(_name) or \
                    self.phone.listfiles(_name):

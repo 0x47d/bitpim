@@ -368,9 +368,15 @@ class RealBrewProtocol:
 
     def mkdir(self, name):
         self.log("Making directory '"+name+"'")
+        if self.isdir(name):
+            raise BrewDirectoryExistsException
         req=p_brew.mkdirrequest()
         req.dirname=name
-        self.sendbrewcommand(req, p_brew.mkdirresponse)
+        try:
+            self.sendbrewcommand(req, p_brew.mkdirresponse)
+        except BrewDirectoryExistsException:
+            # sometime the phone returns this, which is OK
+            pass
 
     def mkdirs(self, directory):
         if len(directory)<1:
@@ -413,16 +419,20 @@ class RealBrewProtocol:
         self.rmdir(path)
 
     def exists(self, path):
-        # Return True if path refers to an existing path
-        # just try a list file command and see if it bombs out
-        req=p_brew.listfilerequest()
-        req.dirname=path
-        req.entrynumber=0
+        # Return True if this path (dir/file) exists
+        return bool(self.statfile(path))
+
+    def isdir(self, path):
+        # Return True if path refers to an existing dir
+        if not self.statfile(path):
+            # if it doesn't exist, bail
+            return False
+        # just try a list dirs command and see if it bombs out
+        req=p_brew.listdirectoriesrequest(dirname=path)
         try:
-            res=self.sendbrewcommand(req,p_brew.listfileresponse)
-        except BrewNoMoreEntriesException:
-            pass
-        except (BrewBadPathnameException, BrewNoSuchDirectoryException,
+            self.sendbrewcommand(req, p_brew.listdirectoriesresponse)
+        except (BrewCommandException, BrewBadPathnameException,
+                BrewNoSuchDirectoryException,
                 BrewAccessDeniedException):
             return False
         except:
@@ -430,6 +440,13 @@ class RealBrewProtocol:
                 raise
             return False
         return True
+
+    def isfile(self, filename):
+        # return True if filename is a file
+        if not self.statfile(filename):
+            return False
+        # if it exists and not a dir, then it must be a file!
+        return not self.isdir(filename)
 
     def basename(self, path):
         # return the basename of the path, does not check on whether the path
@@ -450,7 +467,7 @@ class RealBrewProtocol:
 
     def join(self, *args):
         # join the dir/file components and return the full path name
-        return '/'.join([x.strip('/') for x in args])
+        return '/'.join([x.strip('/') for x in args if x])
 
     def listsubdirs(self, dir='', recurse=0):
         results={}
@@ -565,7 +582,7 @@ class RealBrewProtocol:
                     # invalid date - see SF bug #833517
                     results['date']=(0, '')
             return results
-        except BrewNoSuchFileException:
+        except (BrewCommandException, BrewNoSuchFileException):
             # File does not exist, bail
             return None
         except:
@@ -1093,72 +1110,6 @@ if __debug__ and phone_path:
 else:
     BrewProtocol=RealBrewProtocol
 del phone_path
-
-##class BrewProtocol(RealBrewProtocol):
-##    """This is just a wrapper class that allows the manipulation between
-##    RealBrewProtocol and DebugBrewProtocol classes.
-##    """
-##    def __init__(self):
-##        RealBrewProtocol.__init__(self)
-##        # if the env var PHONE_FS is set, we're debugging!
-##        phone_path=os.environ.get('PHONE_FS', None)
-##        if __debug__ and phone_path:
-##            print 'Debug Phone File System:',phone_path
-##            # we probably need to do this only once for the whole class,
-##            # but what the heck!
-##            DebugBrewProtocol._fs_path=os.path.normpath(phone_path)
-##            for _attr in DebugBrewProtocol.exportedfuncs:
-##                setattr(self, _attr, getattr(DebugBrewProtocol, _attr))
-##            self._update_base_class(self.__class__)
-##            for _attr in DebugBrewProtocol.exportedfuncs:
-##                setattr(BrewProtocol, _attr, getattr(DebugBrewProtocol, _attr))
-##            # define BREW_FILE_SYSTEM=2 in protocol class to enable 
-##            # new brew filesystem support. Debug mode only
-####        elif __debug__ and getattr(self, "protocolclass", 0) and \
-####                getattr(self.protocolclass, "BREW_FILE_SYSTEM", 0) == 2:
-####            print '_set_new_brew', self.protocolclass
-####            self._set_new_brew(self.__class__)
-##
-##    def __call__(self, *args, **kwargs):
-##        return self._klass.__call__(self, *args, **kwargs)
-##    def _printclass(self, klass):
-##        if klass.__bases__:
-##            for _c in klass.__bases__:
-##                self._printclass(_c)
-##        else:
-##            print klass
-##            
-##    def _update_base_class(self, klass):
-##        # update the RealBrewProtocol class to DebugBrewProtocol one.
-##        _bases=[]
-##        found=False
-##        for e in klass.__bases__:
-##            if e==RealBrewProtocol or e==RealBrewProtocol2:
-##                _bases.append(DebugBrewProtocol)
-##                found=True
-##            else:
-##                _bases.append(e)
-##        if found:
-##            klass.__bases__=tuple(_bases)
-##        else:
-##            for e in _bases:
-##                self._update_base_class(e)
-##
-##    def _set_new_brew(self, klass):
-##        # update the class hierachy to include RealBrewProtocol2 so that 
-##        # it's functions override RealBrewProtocol's ones.
-##        _bases=[]
-##        found=False
-##        for e in klass.__bases__:
-##            if e==RealBrewProtocol:
-##                _bases.append(RealBrewProtocol2)
-##                found=True
-##            _bases.append(e)
-##        if found:
-##            klass.__bases__=tuple(_bases)
-##        else:
-##            for e in _bases:
-##                self._set_new_brew(e)
 
 def formatpacketerrorlog(str, origdata, data, klass):
     # copied from guiwidgets.LogWindow.logdata
