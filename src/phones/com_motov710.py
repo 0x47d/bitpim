@@ -47,10 +47,22 @@ class Phone(com_moto_cdma.Phone):
 
     def __init__(self, logtarget, commport):
         com_moto_cdma.Phone.__init__(self, logtarget, commport)
+        self._group_count=None
 
     # fundamentals stuff--------------------------------------------------------
     def _get_groups(self):
-        _req=self.protocolclass.read_group_req()
+        if self._group_count is None:
+            self._group_count=self.protocolclass.PB_TOTAL_GROUP
+            try:
+                _req=self.protocolclass.group_count_req()
+                _res=self.sendATcommand(_req, self.protocolclass.group_count_resp)
+                if len(_res)==1 and _res[0].countstring.startswith('(1-'):
+                    self._group_count=int(_res[0].countstring[3:-1])
+                    self.log('Group Count: %d' % self._group_count)
+            except:
+                if __debug__:
+                    raise
+        _req=self.protocolclass.read_group_req(end_index=self._group_count)
         _res=self.sendATcommand(_req, self.protocolclass.read_group_resp)
         res={}
         for e in _res:

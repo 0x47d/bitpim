@@ -6,6 +6,7 @@
       <LI><P>Improvement: <B>LG AX-8600</B> Call History and Note Pad (patch submitted by David Ritter).
       <LI><P>Bug fix: <B>LG VX-8500/8800/10000</B>: better BREW file access (i.e. fewer "file block" errors).
       <LI><P>Bug fix: <B>LG VX-9900</B>: access to the mmc1 dir via Command Line Interface (CLI).
+      <LI><P>Bug fix: <B>Motorola</B>: BitPim failed to read phonebook from some Motorola models.
     </ul>
 
    <h2><a name="1.0.5">Changes in 1.0.5</a></h2>

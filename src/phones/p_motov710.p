@@ -50,6 +50,16 @@ CAL_ALARM_NODATE='00-00-2000'
 
 %}
 
+PACKET group_count_req:
+    * CSVSTRING { 'quotechar': None,
+                  'terminator': None, 'default': '+MPGR=?' } +command
+
+PACKET group_count_resp:
+    * CSVSTRING { 'quotechar': None, 'terminator': ord(' '),
+                  'default': '+MPGR:' } command
+    * CSVSTRING { 'quotechar': None } countstring
+    * DATA dontcare
+
 PACKET read_group_req:
     * CSVSTRING { 'quotechar': None,
                   'terminator': None, 'default': '+MPGR=' } +command

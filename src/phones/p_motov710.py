@@ -39,6 +39,190 @@ CAL_REP_YEARLY=5
 CAL_ALARM_NOTIME='00:00'
 CAL_ALARM_NODATE='00-00-2000'
 
+class group_count_req(BaseProtogenClass):
+    __fields=['command']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(group_count_req,self).__init__(**dict)
+        if self.__class__ is group_count_req:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(group_count_req,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(group_count_req,kwargs)
+        if len(args):
+            dict2={ 'quotechar': None,                  'terminator': None, 'default': '+MPGR=?' }
+            dict2.update(kwargs)
+            kwargs=dict2
+            self.__field_command=CSVSTRING(*args,**dict2)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_command
+        except:
+            self.__field_command=CSVSTRING(**{ 'quotechar': None,                  'terminator': None, 'default': '+MPGR=?' })
+        self.__field_command.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_command=CSVSTRING(**{ 'quotechar': None,                  'terminator': None, 'default': '+MPGR=?' })
+        self.__field_command.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_command(self):
+        try: self.__field_command
+        except:
+            self.__field_command=CSVSTRING(**{ 'quotechar': None,                  'terminator': None, 'default': '+MPGR=?' })
+        return self.__field_command.getvalue()
+
+    def __setfield_command(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_command=value
+        else:
+            self.__field_command=CSVSTRING(value,**{ 'quotechar': None,                  'terminator': None, 'default': '+MPGR=?' })
+
+    def __delfield_command(self): del self.__field_command
+
+    command=property(__getfield_command, __setfield_command, __delfield_command, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('command', self.__field_command, None)
+
+
+
+
+class group_count_resp(BaseProtogenClass):
+    __fields=['command', 'countstring', 'dontcare']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(group_count_resp,self).__init__(**dict)
+        if self.__class__ is group_count_resp:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(group_count_resp,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(group_count_resp,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_command.writetobuffer(buf)
+        self.__field_countstring.writetobuffer(buf)
+        self.__field_dontcare.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_command=CSVSTRING(**{ 'quotechar': None, 'terminator': ord(' '),                  'default': '+MPGR:' })
+        self.__field_command.readfrombuffer(buf)
+        self.__field_countstring=CSVSTRING(**{ 'quotechar': None })
+        self.__field_countstring.readfrombuffer(buf)
+        self.__field_dontcare=DATA()
+        self.__field_dontcare.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_command(self):
+        return self.__field_command.getvalue()
+
+    def __setfield_command(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_command=value
+        else:
+            self.__field_command=CSVSTRING(value,**{ 'quotechar': None, 'terminator': ord(' '),                  'default': '+MPGR:' })
+
+    def __delfield_command(self): del self.__field_command
+
+    command=property(__getfield_command, __setfield_command, __delfield_command, None)
+
+    def __getfield_countstring(self):
+        return self.__field_countstring.getvalue()
+
+    def __setfield_countstring(self, value):
+        if isinstance(value,CSVSTRING):
+            self.__field_countstring=value
+        else:
+            self.__field_countstring=CSVSTRING(value,**{ 'quotechar': None })
+
+    def __delfield_countstring(self): del self.__field_countstring
+
+    countstring=property(__getfield_countstring, __setfield_countstring, __delfield_countstring, None)
+
+    def __getfield_dontcare(self):
+        return self.__field_dontcare.getvalue()
+
+    def __setfield_dontcare(self, value):
+        if isinstance(value,DATA):
+            self.__field_dontcare=value
+        else:
+            self.__field_dontcare=DATA(value,)
+
+    def __delfield_dontcare(self): del self.__field_dontcare
+
+    dontcare=property(__getfield_dontcare, __setfield_dontcare, __delfield_dontcare, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('command', self.__field_command, None)
+        yield ('countstring', self.__field_countstring, None)
+        yield ('dontcare', self.__field_dontcare, None)
+
+
+
+
 class read_group_req(BaseProtogenClass):
     __fields=['command', 'start_index', 'end_index']
 
