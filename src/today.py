@@ -159,12 +159,23 @@ def send_request_event():
     pubsub.publish(pubsub.REQUEST_TODAY_DATA)
 
 #-------------------------------------------------------------------------------
+EVT_HYPERLINK_LEFT=hl.EVT_HYPERLINK_LEFT
 class HyperLinkCtrl(hl.HyperLinkCtrl):
     def __init__(self, *args, **kargs):
         super(HyperLinkCtrl, self).__init__(*args, **kargs)
         self.AutoBrowse(False)
         self.DoPopup(False)
         self.client_data=None
+
+    def SetToolTip(self, tip):
+        if isinstance(tip, (str, unicode)):
+            super(HyperLinkCtrl, self).SetToolTip(wx.ToolTip(tip))
+        else:
+            super(HyperLinkCtrl, self).SetToolTip(tip)
+
+    def SetLabel(self, label):
+        super(HyperLinkCtrl, self).SetLabel(label)
+        self.SetToolTip(label)
 
 #-------------------------------------------------------------------------------
 class StaticText(wx.StaticText):

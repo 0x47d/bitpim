@@ -255,15 +255,32 @@ class CallHistoryWidget(scrolled.ScrolledPanel, widgets.BitPimWidget):
         hbs.Add(static_bs, 1, wx.EXPAND|wx.ALL, 5)
         vbs.Add(hbs, 0, wx.EXPAND|wx.ALL, 5)
         # main stats display
-        self.total_calls=wx.StaticText(self, -1, '  Total Calls: 0')
-        self.total_in=wx.StaticText(self, -1, '  Incoming Calls: 0')
-        self.total_out=wx.StaticText(self, -1, '  Outgoing Calls: 0')
-        self.total_missed=wx.StaticText(self, -1, '  Missed Calls: 0')
-        self.total_data=wx.StaticText(self, -1, '  Data Calls: 0')
+        self.total_calls=today.HyperLinkCtrl(self, -1, '  Total Calls: 0')
+        today.EVT_HYPERLINK_LEFT(self, self.total_calls.GetId(),
+                                 self.OnNodeSelection)
+        self.total_in=today.HyperLinkCtrl(self, -1, '  Incoming Calls: 0')
+        today.EVT_HYPERLINK_LEFT(self, self.total_in.GetId(),
+                                 self.OnNodeSelection)
+        self.total_out=today.HyperLinkCtrl(self, -1, '  Outgoing Calls: 0')
+        today.EVT_HYPERLINK_LEFT(self, self.total_out.GetId(),
+                                 self.OnNodeSelection)
+        self.total_missed=today.HyperLinkCtrl(self, -1, '  Missed Calls: 0')
+        today.EVT_HYPERLINK_LEFT(self, self.total_missed.GetId(),
+                                 self.OnNodeSelection)
+        self.total_data=today.HyperLinkCtrl(self, -1, '  Data Calls: 0')
+        today.EVT_HYPERLINK_LEFT(self, self.total_data.GetId(),
+                                 self.OnNodeSelection)
         self.duration_all=wx.StaticText(self, -1, '  Total Duration(h:m:s): 0')
         self.duration_in=wx.StaticText(self, -1, '  Incoming Duration(h:m:s): 0')
         self.duration_out=wx.StaticText(self, -1, '  Outgoing Duration(h:m:s): 0')
         self.duration_data=wx.StaticText(self, -1, '  Data Duration(h:m:s): 0')
+        self._id_dict={
+            self.total_calls.GetId(): self.stat_list[4],
+            self.total_in.GetId(): self.stat_list[2],
+            self.total_out.GetId(): self.stat_list[3],
+            self.total_missed.GetId(): self.stat_list[1],
+            self.total_data.GetId(): self.stat_list[0],
+            }
         vbs.Add(wx.StaticText(self, -1, ''), 0, wx.ALIGN_LEFT|wx.ALL, 2)
         vbs.Add(self.total_calls, 0, wx.ALIGN_LEFT|wx.ALL, 2)
         vbs.Add(self.total_in, 0, wx.ALIGN_LEFT|wx.ALL, 2)
@@ -283,6 +300,12 @@ class CallHistoryWidget(scrolled.ScrolledPanel, widgets.BitPimWidget):
         self.SetBackgroundColour(wx.WHITE)
         # populate data
         self._populate()
+
+    def OnNodeSelection(self, evt):
+        # Request to select a subnode
+        _node=self._id_dict.get(evt.GetId(), None)
+        if _node and self.call_history_tree_nodes.get(_node, None):
+            self.ActivateSelf(self.call_history_tree_nodes[_node])
 
     def populate(self, dict, force=False):
         if self.read_only and not force:
