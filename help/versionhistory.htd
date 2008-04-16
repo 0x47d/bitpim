@@ -8,7 +8,6 @@
       <LI><P>Bug fix: <B>LG VX-9900</B>: access to the mmc1 dir via Command Line Interface (CLI).
       <LI><P>Bug fix: <B>Motorola</B>: BitPim failed to read phonebook from some Motorola models.
       <LI><P>Improvement: <B>Call History</B>: Navigate to other subtrees.
-      <LI><P>
     </ul>
 
    <h2><a name="1.0.5">Changes in 1.0.5</a></h2>
