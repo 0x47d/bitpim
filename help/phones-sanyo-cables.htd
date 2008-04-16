@@ -23,14 +23,21 @@ IMAGE(cable-sanyo-usb-futuredial.jpg,)
 <h2>Drivers</h2>
 <blockquote>
 <h3>Windows</h3>
-<p>These cables require a driver.  Drivers may be downloaded either from
-URL(http://www.sanyo.com/consumer/communications/usb_driver_install.htm,Sanyo),
-URL(http://www.futuredial.com/support/download/USB_Drivers.htm,FutureDial),
-or 
-URL(http://support.susteen.com/ics/support/default.asp?deptID=2623,DataPilot)
-(Go to "Downloads" and then download the "Motorola/Sanyo Phone Driver").
-Most phones will work with any of these
-drivers, but newer phones such as the SCP-3100, SCP-6600 (Katana) only work with the DataPilot driver.</p>
+<p>These cables require a driver.  Some cable vendors will supply
+drivers, but some cables may not be supplied with drivers or the
+drivers may not support the most recent phones.  The "Sprint PCS
+Connection Manager for Phone as Modem/USB Cables" package includes
+drivers for many Sanyo and other Sprint phones.  To download this
+package, visit URL(http://www.sprint.com/downloads,Sprint's download
+page), select your version of Windows and look for 3.07.044 or later
+of the Connection Manager software.
+<p>
+Some users may wish to avoid installing the whole Sprint Connection
+Manager package.  This can be done by using an archive extractor such
+as URL(http://legroom.net/software/uniextract,Universal Extractor) to
+extract "files\Common Files\Sprint\Sanyo
+USB\SANYO_Installer\US_UsbDriver.exe" from the msi file.
+
 <h3>Linux</h3>
 <p>Older Sanyo phones use the Linux "acm" driver with this cable.  This
 driver will automatically install with most modern Linux distributions
