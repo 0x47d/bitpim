@@ -1,3 +1,10 @@
+# Copyright Roger Binns <rogerb@rogerbinns.com>
+#
+# This file is under the BitPim license.
+#
+# Alternatively you can use it under any OSI certified license as listed
+# at http://www.opensource.org/licenses/alphabetical
+#
 # Jaro/Winkler string match algorithm.  There is a native C
 # implementation in this directory as well.  There is an excellent
 # paper on the "quality" of various string matching algorithms at
