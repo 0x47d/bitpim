@@ -528,6 +528,11 @@ if __debug__:
                                       'brand': b_sanyo,
                                       'helpid': helpids.ID_PHONE_SANYOOTHERS,
                                       },
+                        'SPH-A640': { 'module': 'com_samsungspha640',
+                                      'carrier': [c_sprint],
+                                      'brand': b_samsung,
+                                      'helpid': helpids.ID_PHONE_SAMSUNGOTHERS,
+                                      },
                         })
 
 # update the module path
