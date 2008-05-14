@@ -1,5 +1,5 @@
-PYTHONVER=python2.3
-INCLUDEDIR=/System/Library/Frameworks/Python.framework/Versions/2.3/include/$PYTHONVER
+PYTHONVER=python2.5
+INCLUDEDIR=/System/Library/Frameworks/Python.framework/Versions/2.5/include/$PYTHONVER
 
 swig -version 2>&1 | grep Version
 
