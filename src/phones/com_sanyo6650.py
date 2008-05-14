@@ -84,7 +84,7 @@ class Profile(parentprofile):
     phone_manufacturer=Phone.my_manufacturer
     phone_model=Phone.my_model
 
-    usbids=( ( 0x0474, 0x0745, 1),)  # VID=Sanyo,
+    usbids=( ( 0x0474, 0x0745, 2),)  # VID=Sanyo,
     deviceclasses=("serial",)
 
     def __init__(self):
