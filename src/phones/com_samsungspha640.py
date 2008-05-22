@@ -24,6 +24,7 @@ import p_brew
 import com_brew
 import com_phone
 import com_samsung_packet
+import com_samsungspha620
 import prototypes
 import fileinfo
 import helpids
