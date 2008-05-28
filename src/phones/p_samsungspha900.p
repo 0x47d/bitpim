@@ -25,6 +25,9 @@ MAXNUMBERLEN=32
 NUMTODOENTRIES=9
 NUMSMSENTRIES=94
 
+MAXMEMOLEN=72
+
+
 NUMGROUPS=4
 
 AMSREGISTRY="ams/AmsRegistry"
@@ -42,12 +45,12 @@ PACKET firmwareresponse:
     * UNKNOWN unknown
 
 PACKET numberheader:
-    1 UINT {'constant': 0x26} +head1
+    1 UINT {'default': 0x26} +head1
     1 UINT {'constant': 0x39} +head2
     1 UINT {'constant': 0x0} +head3
 
 PACKET nameheader:
-    1 UINT {'constant': 0xd3} +head1
+    1 UINT {'default': 0xd3} +head1
     1 UINT {'constant': 0x59} +head2
     1 UINT {'constant': 0x0e} +head3
 
@@ -59,13 +62,21 @@ PACKET numberrequest:
 PACKET numberresponse:
     * numberheader header
     2 UINT slot
-    1 UINT pad1
+    * numberentry entry
+    * UNKNOWN pad
+
+PACKET numberentry:
+    1 UNKNOWN +pad1
     1 UINT pos
     1 UINT numbertype
-    2 UINT pad2
+    2 UNKNOWN +pad2
     1 UINT numlen
     48 USTRING {'raiseonunterminatedread': False} num
-    * UNKNOWN pad
+
+PACKET numberupdaterequest:
+    * numberheader {'head1': 0x27} +header
+    2 UINT slot
+    * numberentry +entry
 
 PACKET namerequest:
     * nameheader +header
@@ -75,19 +86,73 @@ PACKET namerequest:
 PACKET nameresponse:
     * nameheader header
     2 UINT slot
+    * nameentry entry
+    * UNKNOWN pad
+
+PACKET nameentry:
     2 UINT bitmask
-    2 UINT p2
+    2 UNKNOWN +p2
     * LIST {'length': NUMPHONENUMBERS} +numberps:
-        2 UINT {'default': 0xffff} slot
-    2 UINT {'default': 0xffff} +emailp
-    2 UINT {'default': 0xffff} +urlp
-    2 UINT p3
+        2 UINT {'default': 0} slot
+    2 UINT {'default': 0} +emailp
+    2 UINT {'default': 0} +urlp
+    2 UNKNOWN +p3
     1 UINT name_len
-    2 UNKNOWN pad1
-    20 USTRING {'raiseonunterminatedread': False} name
-    1 UNKNOWN pad2
-    20 USTRING {'raiseonunterminatedread': False} nickname
-    1 UNKNOWN pad3
-    72 USTRING {'raiseonunterminatedread': False} memo
-    * UNKNOWN pad4
+    2 UNKNOWN +pad1
+    20 USTRING {'raiseonunterminatedread': False, 'raiseontruncate': False} name
+    1 UNKNOWN +pad2
+    20 USTRING {'raiseonunterminatedread': False, 'default': ""} +nickname
+    1 UNKNOWN +pad3
+    72 USTRING {'raiseonunterminatedread': False, 'default': "", 'raiseontruncate': False} +memo
     
+PACKET nameupdaterequest:
+    * nameheader {'head1': 0xd4} +header
+    2 UINT slot
+    * nameentry +entry
+    3 UNKNOWN +pad
+    
+PACKET beginendupdaterequest:
+    1 UINT {'constant': 0x29} +command
+    2 UINT beginend
+
+PACKET beginendupdateresponse:
+    1 UINT command
+    2 UINT beginend
+
+PACKET statusrequest:
+    1 UINT {'constant': 0x0c} +command
+
+PACKET statusresponse:
+    P UINT {'constant': 0x0} readyvalue
+    1 UINT command
+    3 UNKNOWN dunno1
+    4 UINT esn
+    1 UINT flag0
+    14 UNKNOWN dunno2
+    1 UINT ready
+    1 UINT dunno3
+    1 UINT flag2
+    6 UNKNOWN dunno4
+    1 UINT flag3
+    * UNKNOWN unknown
+    
+PACKET writeenable:
+    1 UINT {'constant': 0x46} +c1
+    1 UINT {'constant': 0x01} +c2
+    1 UINT {'constant': 0xf2} +c3
+    1 UINT {'constant': 0x03} +c4
+    1 UINT {'constant': 0x0f} +c5
+    1 UINT {'constant': 0x5f} +c6
+    1 UINT {'constant': 0x67} +c7
+    1 UINT {'constant': 0x8f} +c8
+    1 UINT {'constant': 0xf9} +c9
+    1 UINT {'constant': 0xa2} +c10
+    1 UINT {'constant': 0x3f} +c11
+    1 UINT {'constant': 0x7d} +c12
+    1 UINT {'constant': 0x5e} +c13
+    1 UINT {'constant': 0x35} +c14
+    1 UINT {'constant': 0x5c} +c15
+    1 UINT {'constant': 0x7e} +c16
+
+PACKET writeenableresponse:
+    * UNKNOWN unknown

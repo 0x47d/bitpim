@@ -1,6 +1,6 @@
 ### BITPIM
 ###
-### Copyright (C) 2005 Stephen Wood <saw@bitpim.org>
+### Copyright (C) 2008 Stephen Wood <saw@bitpim.org>
 ###
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
@@ -174,10 +174,10 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         for slot in range(1,self.protocolclass.NUMPHONEBOOKENTRIES+1):
             reqname.slot=slot
             resname=self.sendpbcommand(reqname, self.protocolclass.nameresponse)
-            bitmask=resname.bitmask
+            bitmask=resname.entry.bitmask
             if bitmask:
                 entry={}
-                name=resname.name
+                name=resname.entry.name
                 entry['serials']=[ {'sourcetype': self.serialsname,
 
                                     'slot': slot,
@@ -185,35 +185,35 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
                 entry['names']=[{'full':name}]
                 entry['numbers']=[]
                 bit=1
-                print resname.p2,name
+                print resname.entry.p2,name
                 for num in range(self.protocolclass.NUMPHONENUMBERS):
                     bit <<= 1
                     if bitmask & bit:
-                        numslot=resname.numberps[num].slot
+                        numslot=resname.entry.numberps[num].slot
                         reqnumber.slot=numslot
                         resnumber=self.sendpbcommand(reqnumber, self.protocolclass.numberresponse)
-                        numhash={'number':resnumber.num, 'type' : self.numbertypetab[resnumber.numbertype-1]}
+                        numhash={'number':resnumber.entry.num, 'type' : self.numbertypetab[resnumber.entry.numbertype-1]}
                         entry['numbers'].append(numhash)
 
-                        print " ",self.numbertypetab[resnumber.numbertype-1]+": ",numslot,resnumber.num
+                        print " ",self.numbertypetab[resnumber.entry.numbertype-1]+": ",numslot,resnumber.entry.num
                 bit <<= 1
                 if bitmask & bit:
-                    reqnumber.slot=resname.emailp
+                    reqnumber.slot=resname.entry.emailp
                     resnumber=self.sendpbcommand(reqnumber, self.protocolclass.numberresponse)
-                    print " Email: ",resname.emailp,resnumber.num
+                    print " Email: ",resname.entry.emailp,resnumber.entry.num
                     entry['emails']=[]
-                    entry['emails'].append({'email':resnumber.num})
+                    entry['emails'].append({'email':resnumber.entry.num})
                 bit <<= 1
                 if bitmask & bit:
-                    reqnumber.slot=resname.urlp
+                    reqnumber.slot=resname.entry.urlp
                     resnumber=self.sendpbcommand(reqnumber, self.protocolclass.numberresponse)
-                    print " URL:   ",resname.urlp,resnumber.num
-                    entry['urls']=[{'url':resnumber.num}]
-                if resname.nickname:
-                    print " Nick:  ",resname.nickname
-                if resname.memo:
-                    print " Memo   ",resname.memo
-                    entry['memos']=[{'memo':resname.memo}]
+                    print " URL:   ",resname.entry.urlp,resnumber.entry.num
+                    entry['urls']=[{'url':resnumber.entry.num}]
+                if resname.entry.nickname:
+                    print " Nick:  ",resname.entry.nickname
+                if resname.entry.memo:
+                    print " Memo   ",resname.entry.memo
+                    entry['memos']=[{'memo':resname.entry.memo}]
 
                 pbook[count]=entry
                 self.progress(slot, self.protocolclass.NUMPHONEBOOKENTRIES+1, name)
@@ -229,6 +229,118 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         result['phonebook']=pbook
 
         return pbook
+
+    def writewait(self):
+        """Loop until phone status indicates ready to write"""
+        for i in range(100):
+            req=self.protocolclass.statusrequest()
+            res=self.sendpbcommand(req, self.protocolclass.statusresponse)
+            # print res.flag0, res.ready, res.flag2, res.flag3
+            if res.ready==res.readyvalue:
+                return
+            time.sleep(0.1)
+
+        self.log("Phone did not transfer to ready to write state")
+        self.log("Waiting a bit longer and trying anyway")
+        return
+
+    def savephonebook(self, data):
+        newphonebook={}
+
+        nump=2
+        urlp=0
+        memop=0
+        addressp=0
+        emailp=0
+        slotsused=1
+
+        namemap=[]
+        contactmap=[]
+        urlmap=[]
+
+        pbook=data['phonebook']
+        self.log("Putting phone into write mode")
+        req=self.protocolclass.beginendupdaterequest()
+        req.beginend=1 # Start update
+        res=self.sendpbcommand(req, self.protocolclass.beginendupdateresponse, writemode=True)
+#        self.writewait()
+
+        req=self.protocolclass.writeenable()
+        try:
+            res=self.sendpbcommand(req, self.protocolclass.writeenableresponse, writemode=True)
+        except:
+            pass
+
+        keys=pbook.keys()
+        keys.sort()
+        nnames = len(keys)
+        
+        reqnumber=self.protocolclass.numberupdaterequest()
+        for ikey in keys:
+            ii=pbook[ikey]
+            slot=slotsused
+            slotsused+=1
+
+            reqname=self.protocolclass.nameupdaterequest()
+            reqname.slot=slot
+            name=ii['name']
+            self.progress(slot-1, nnames, "Writing "+name)
+            self.log("Writing "+`name`+" to slot "+`slot`)
+            namemap.append((slot,name))
+
+            reqname.entry.name=name
+            reqname.entry.name_len=ii['name_len']
+
+            bitmask=0
+            bit=1
+            for numindex in range(len(ii['numbers'])):
+                reqnumber.slot=nump
+                reqnumber.entry.num=ii['numbers'][numindex]
+                reqnumber.entry.numlen=len(ii['numbers'][numindex])
+                numbertype=ii['numbertypes'][numindex]
+                reqnumber.entry.numbertype=numbertype
+                reqnumber.entry.pos=numindex+1
+
+                resnumber=self.sendpbcommand(reqnumber,self.protocolclass.numberresponse)
+
+                reqname.entry.numberps.append(nump)
+                bitmask |= bit
+                bit <<= 1
+
+                nump+=1
+            
+            for numindex in range(len(ii['numbers']),self.protocolclass.NUMPHONENUMBERS):
+                reqname.entry.numberps.append(0)
+
+            reqname.entry.bitmask=bitmask
+            resname=self.sendpbcommand(reqname,self.protocolclass.nameresponse)
+
+        # Zero out unused slots
+        for slot in range(nump,self.protocolclass.NUMPHONEBOOKENTRIES+2):
+            reqnumber.slot=slot
+            reqnumber.entry.num=''
+            reqnumber.entry.numlen=0
+            reqnumber.entry.numbertype=0
+            reqnumber.entry.pos=0
+            resnumber=self.sendpbcommand(reqnumber,self.protocolclass.numberresponse)
+        for slot in range(slotsused,self.protocolclass.NUMPHONEBOOKENTRIES+1):
+            reqname=self.protocolclass.nameupdaterequest()
+            reqname.slot=slot
+            reqname.entry.name=''
+            reqname.entry.name_len=0
+            for numindex in range(self.protocolclass.NUMPHONENUMBERS):
+                reqname.entry.numberps.append(0)
+            reqname.entry.bitmask=0
+            resname=self.sendpbcommand(reqname,self.protocolclass.nameresponse)
+
+        self.progress(1,1, "Phonebook write completed")
+
+        req=self.protocolclass.beginendupdaterequest()
+        req.beginend=2 # Finish update
+        res=self.sendpbcommand(req, self.protocolclass.beginendupdateresponse, writemode=True)
+        req=p_brew.setmodemmoderequest()
+        res=self.sendpbcommand(req, p_brew.setmoderesponse, writemode=True)
+        #data['rebootphone']=1
 
     def getcalendar(self, results):
         return result
@@ -252,9 +364,111 @@ class Profile(com_phone.Profile):
 
     _supportedsyncs=(
         ('phonebook', 'read', None),  # all phonebook reading
+        ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
     )
     
     def __init__(self):
         self.numbertypetab=numbertypetab
         com_phone.Profile.__init__(self)
 
+    def convertphonebooktophone(self, helper, data):
+        "Converts the data to what will be used by the phone"
+
+        results={}
+
+        slotsused={}
+        pb=data['phonebook']
+        for pbentry in pb:
+            entry=pb[pbentry]
+            slot=helper.getserial(entry.get('serials', []), self.serialsname, data['uniqueserial'], 'slot', -1)
+            if(slot > 0 and slot <= self.protocolclass.NUMPHONEBOOKENTRIES):
+                slotsused[slot]=1
+
+        lastunused=0 # One more than last unused slot
+        
+        for pbentry in pb:
+            e={} # entry out
+            entry=pb[pbentry] # entry in
+            try:
+                try:
+                    e['name']=helper.getfullname(entry.get('names', []),1,1,20)[0]
+                except:
+                    e['name']=''
+                e['name_len']=len(e['name'])
+                if len(e['name'])==0:
+                    print "Entry with no name"
+
+#                cat=helper.makeone(helper.getcategory(entry.get('categories',[]),0,1,16), None)
+#                if cat is None:
+#                    e['group']=0
+#                else:
+#                    key,value=self._getgroup(cat, data['groups'])
+#                    if key is not None:
+#                        e['group']=key
+#                    else:
+#                        e['group']=0
+                e['group']=0
+
+                serial1=helper.getserial(entry.get('serials', []), self.serialsname, data['uniqueserial'], 'slot', -1)
+
+                if(slot > 0 and slot <= self.protocolclass.NUMPHONEBOOKENTRIES):
+                    e['slot']=slot
+                else:  # A new entry.  Must find unused slot
+                    while(slotsused.has_key(lastunused)):
+                        lastunused+=1
+                        if(lastunused > self.protocolclass.NUMPHONEBOOKENTRIES):
+                            raise helper.ConversionFailed()
+                    e['slot']=lastunused
+                    slotsused[lastunused]=1
+
+#                e['emails']=helper.getemails(entry.get('emails', []),0,self.protocolclass.NUMEMAILS,self.protocolclass.MAXEMAILLEN)
+
+#                e['url']=helper.makeone(helper.geturls(entry.get('urls', []), 0,1,self.protocolclass.MAXURLLEN), "")
+
+                e['memo']=helper.makeone(helper.getmemos(entry.get('memos', []), 0,1,self.protocolclass.MAXMEMOLEN), "")
+
+                numbers=helper.getnumbers(entry.get('numbers', []),0,self.protocolclass.NUMPHONENUMBERS)
+                e['numbertypes']=[]
+                e['numbers']=[]
+                e['numberspeeds']=[]
+                
+                for numindex in range(len(numbers)):
+                    num=numbers[numindex]
+                    type=num['type']
+                    numtype=len(self.numbertypetab) # None type is default
+                    for i,t in enumerate(self.numbertypetab):
+                        if type==t:
+                            numtype=i+1
+                            break
+                    # If type not found, give it "none" type
+                    e['numbertypes'].append(numtype)
+
+                    # Need to enforce phone number length limit
+                    number=self.phonize(num['number'])
+                    e['numbers'].append(number)
+
+                    # deal with speed dial
+#                    sd=num.get("speeddial", 0xFF)
+#                    if sd>=self.protocolclass.FIRSTSPEEDDIAL and sd<=self.protocolclass.LASTSPEEDDIAL:
+#                        e['numberspeeds'].append(sd)
+#                    else:
+#                        e['numberspeeds'].append(0)
+                    
+                #e['numberspeeds']=helper.filllist(e['numberspeeds'], self.protocolclass.NUMPHONENUMBERS, 0xFF)
+                #e['numbertypes']=helper.filllist(e['numbertypes'], self.protocolclass.NUMPHONENUMBERS, 0)
+                #e['numbers']=helper.filllist(e['numbers'], self.protocolclass.NUMPHONENUMBERS, "")
+                
+
+                e['ringtone']=helper.getringtone(entry.get('ringtones', []), 'call', None)
+                e['wallpaper']=helper.getwallpaper(entry.get('wallpapers', []), 'call', None)
+
+                e['secret']=helper.getflag(entry.get('flags', []), 'secret', False)
+                results[pbentry]=e
+                
+            except helper.ConversionFailed:
+                #self.log("No Free Slot for "+e['name'])
+                print "No Free Slot for "+e['name']
+                continue
+
+        data['phonebook']=results
+        return data
