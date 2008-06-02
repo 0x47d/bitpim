@@ -9,6 +9,9 @@
       <LI><P>Bug fix: <B>Motorola</B>: BitPim failed to read phonebook from some Motorola models.
       <LI><P>Improvement: <B>Call History</B>: Navigate to other subtrees.
       <LI><p>Bug fix: <B>SCP-6650</B>: Fix Katana-II phone/port detection
+      <li><p>Add "extrazero" fields to listfile and listdirectory responses so
+             that filesystem view will work for Samsung SPHA-900.  May break
+             filesystem view for other phones.
     </ul>
 
    <h2><a name="1.0.5">Changes in 1.0.5</a></h2>

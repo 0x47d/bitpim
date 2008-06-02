@@ -472,6 +472,7 @@ class RealBrewProtocol:
     def listsubdirs(self, dir='', recurse=0):
         results={}
         self.log("Listing subdirs in dir: '"+dir+"'")
+        self.log("X recurse="+`recurse`)
 
         req=p_brew.listdirectoryrequest()
         req.dirname=dir
@@ -487,6 +488,7 @@ class RealBrewProtocol:
                     subdir=res.subdir
                 if len(dir):
                     subdir=dir+"/"+subdir
+                self.log("subdir="+subdir)
                 results[subdir]={ 'name': subdir, 'type': 'directory' }
             except BrewNoMoreEntriesException:
                 break
@@ -1225,6 +1227,73 @@ class SPURIOUSZERO(prototypes.BaseProtogenClass):
 
              # case C, do nothing
              self._value=-2
+             break
+             
+         self._bufferendoffset=buf.getcurrentoffset()
+
+class EXTRAZERO(prototypes.BaseProtogenClass):
+    """This is a special class used to consume the spurious zero in some p_brew.listfileresponse or p_brew.listdirectoryresponse
+
+    The two bytes are formatted as follows:
+
+       - An optional 'null' byte (this class)
+       - A byte specifying the length of the whole name
+       - The bytes of the filename (which includes the full directory name)
+
+    Allow for zero length filenames.
+    
+    """
+    def __init__(self, *args, **kwargs):
+        super(EXTRAZERO,self).__init__(*args, **kwargs)
+        
+        self._value=None
+        if self._ismostderived(EXTRAZERO):
+            self._update(args, kwargs)
+
+    def _update(self, args, kwargs):
+        super(EXTRAZERO, self)._update(args, kwargs)
+        
+        self._complainaboutunusedargs(EXTRAZERO, kwargs)
+
+        if len(args):
+            raise TypeError("Unexpected arguments "+`args`)
+
+    def readfrombuffer(self, buf):
+         self._bufferstartoffset=buf.getcurrentoffset()
+
+         # there are several cases this code has to deal with
+         #
+         # The data is ordered like this:
+         #
+         # optional spurious zero (sz)
+         # fulllen
+         # name
+         #
+         # These are the various possibilities.  The first two
+         # are a file in the root directory (dirlen=0), with the other
+         # two being a file in a subdirectory  (dirlen>0). fulllen
+         # is always >0
+         #
+         # A:    fulllen=0
+         # B: ez fulllen=0
+         # C:    fulllen>0 name
+         # D: ez fulllen>0 name
+
+         while True:  # this is just used so we can break easily
+
+             # CASE C
+             if buf.peeknextbyte()!=0:
+                 self._value=-1
+                 break
+             
+             # CASE A
+             if buf.howmuchmore()==1:
+                 self._value=-1
+                 break # Really a zero length file
+
+             # CASE B or D
+             self._value=buf.getnextbyte() # consume sz
+
              break
              
          self._bufferendoffset=buf.getcurrentoffset()

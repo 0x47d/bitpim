@@ -129,6 +129,7 @@ PACKET listfileresponse:
     4 UNKNOWN unknown2
     * com_brew.SPURIOUSZERO spuriouszero  "on some models there is a zero here"
     1 UINT dirnamelen "which portion of the filename is the directory, including the last /"
+    * com_brew.EXTRAZERO extrazero  "on some models there is a zero here"
     * USTRING {'terminator': None, 'pascal': True,
                'encoding': PHONE_ENCODING } filename 
 
@@ -143,6 +144,7 @@ PACKET listdirectoryresponse:
     * responseheader header
     4 UINT entrynumber  
     17 UNKNOWN unknown1  "probably the directory attributes"
+    * com_brew.EXTRAZERO extrazero  "on some models there is a zero here"
     * USTRING {'terminator': None, 'pascal': True,
                'encoding': PHONE_ENCODING } subdir 
 

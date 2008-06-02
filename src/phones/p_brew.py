@@ -1528,7 +1528,7 @@ class listfilerequest(BaseProtogenClass):
 
 
 class listfileresponse(BaseProtogenClass):
-    __fields=['header', 'entrynumber', 'unknown1', 'date', 'size', 'unknown2', 'spuriouszero', 'dirnamelen', 'filename']
+    __fields=['header', 'entrynumber', 'unknown1', 'date', 'size', 'unknown2', 'spuriouszero', 'dirnamelen', 'extrazero', 'filename']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -1569,6 +1569,7 @@ class listfileresponse(BaseProtogenClass):
         self.__field_unknown2.writetobuffer(buf)
         self.__field_spuriouszero.writetobuffer(buf)
         self.__field_dirnamelen.writetobuffer(buf)
+        self.__field_extrazero.writetobuffer(buf)
         self.__field_filename.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -1594,6 +1595,8 @@ class listfileresponse(BaseProtogenClass):
         self.__field_spuriouszero.readfrombuffer(buf)
         self.__field_dirnamelen=UINT(**{'sizeinbytes': 1})
         self.__field_dirnamelen.readfrombuffer(buf)
+        self.__field_extrazero=com_brew.EXTRAZERO()
+        self.__field_extrazero.readfrombuffer(buf)
         self.__field_filename=USTRING(**{'terminator': None, 'pascal': True,               'encoding': PHONE_ENCODING })
         self.__field_filename.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -1703,6 +1706,19 @@ class listfileresponse(BaseProtogenClass):
 
     dirnamelen=property(__getfield_dirnamelen, __setfield_dirnamelen, __delfield_dirnamelen, "which portion of the filename is the directory, including the last /")
 
+    def __getfield_extrazero(self):
+        return self.__field_extrazero.getvalue()
+
+    def __setfield_extrazero(self, value):
+        if isinstance(value,com_brew.EXTRAZERO):
+            self.__field_extrazero=value
+        else:
+            self.__field_extrazero=com_brew.EXTRAZERO(value,)
+
+    def __delfield_extrazero(self): del self.__field_extrazero
+
+    extrazero=property(__getfield_extrazero, __setfield_extrazero, __delfield_extrazero, "on some models there is a zero here")
+
     def __getfield_filename(self):
         return self.__field_filename.getvalue()
 
@@ -1728,6 +1744,7 @@ class listfileresponse(BaseProtogenClass):
         yield ('unknown2', self.__field_unknown2, None)
         yield ('spuriouszero', self.__field_spuriouszero, "on some models there is a zero here")
         yield ('dirnamelen', self.__field_dirnamelen, "which portion of the filename is the directory, including the last /")
+        yield ('extrazero', self.__field_extrazero, "on some models there is a zero here")
         yield ('filename', self.__field_filename, None)
 
 
@@ -1845,7 +1862,7 @@ class listdirectoryrequest(BaseProtogenClass):
 
 
 class listdirectoryresponse(BaseProtogenClass):
-    __fields=['header', 'entrynumber', 'unknown1', 'subdir']
+    __fields=['header', 'entrynumber', 'unknown1', 'extrazero', 'subdir']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -1881,6 +1898,7 @@ class listdirectoryresponse(BaseProtogenClass):
         self.__field_header.writetobuffer(buf)
         self.__field_entrynumber.writetobuffer(buf)
         self.__field_unknown1.writetobuffer(buf)
+        self.__field_extrazero.writetobuffer(buf)
         self.__field_subdir.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -1896,6 +1914,8 @@ class listdirectoryresponse(BaseProtogenClass):
         self.__field_entrynumber.readfrombuffer(buf)
         self.__field_unknown1=UNKNOWN(**{'sizeinbytes': 17})
         self.__field_unknown1.readfrombuffer(buf)
+        self.__field_extrazero=com_brew.EXTRAZERO()
+        self.__field_extrazero.readfrombuffer(buf)
         self.__field_subdir=USTRING(**{'terminator': None, 'pascal': True,               'encoding': PHONE_ENCODING })
         self.__field_subdir.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -1940,6 +1960,19 @@ class listdirectoryresponse(BaseProtogenClass):
 
     unknown1=property(__getfield_unknown1, __setfield_unknown1, __delfield_unknown1, "probably the directory attributes")
 
+    def __getfield_extrazero(self):
+        return self.__field_extrazero.getvalue()
+
+    def __setfield_extrazero(self, value):
+        if isinstance(value,com_brew.EXTRAZERO):
+            self.__field_extrazero=value
+        else:
+            self.__field_extrazero=com_brew.EXTRAZERO(value,)
+
+    def __delfield_extrazero(self): del self.__field_extrazero
+
+    extrazero=property(__getfield_extrazero, __setfield_extrazero, __delfield_extrazero, "on some models there is a zero here")
+
     def __getfield_subdir(self):
         return self.__field_subdir.getvalue()
 
@@ -1960,6 +1993,7 @@ class listdirectoryresponse(BaseProtogenClass):
         yield ('header', self.__field_header, None)
         yield ('entrynumber', self.__field_entrynumber, None)
         yield ('unknown1', self.__field_unknown1, "probably the directory attributes")
+        yield ('extrazero', self.__field_extrazero, "on some models there is a zero here")
         yield ('subdir', self.__field_subdir, None)
 
 
