@@ -19,6 +19,7 @@ import p_brew
 import p_sanyo8300
 import p_sanyo4930
 import p_sanyo6600
+import p_sanyo7050
 import p_sanyo8400
 import com_brew
 import com_phone
@@ -27,13 +28,14 @@ import com_sanyomedia
 import com_sanyonewer
 import com_sanyo3100
 import com_sanyo6600
+import com_sanyo7050
 import prototypes
 import bpcalendar
 
 numbertypetab=( 'cell', 'home', 'office', 'pager',
                     'fax', 'none')
 
-class Phone(com_sanyo6600.Phone):
+class Phone(com_sanyo7050.Phone):
     "Talk to the Sanyo Katana (SCP-8400) cell phone"
 
     desc="SCP-8400"
@@ -68,27 +70,15 @@ class Phone(com_sanyo6600.Phone):
     calendar_tonerange=xrange(4,100)
 
     def __init__(self, logtarget, commport):
-        com_sanyo6600.Phone.__init__(self, logtarget, commport)
+        com_sanyo7050.Phone.__init__(self, logtarget, commport)
         self.mode=self.MODENONE
         self.numbertypetab=numbertypetab
 
-    def getfundamentals(self, results):
-        """Gets information fundamental to interopating with the phone and UI."""
-        req=self.protocolclass.esnrequest()
-        res=self.sendpbcommand(req, self.protocolclass.esnresponse)
-        results['uniqueserial']=sha.new(self.get_esn()).hexdigest()
-        self.getmediaindices(results)
-
-        #results['groups']=self.read_groups()
-
-        self.log("Fundamentals retrieved")
-
-        return results
-
     my_model='SCP-8400/US'
+    detected_model='SCP-8400/US'
     my_manufacturer='SANYO'
 
-parentprofile=com_sanyo6600.Profile
+parentprofile=com_sanyo7050.Profile
 class Profile(parentprofile):
 
     protocolclass=Phone.protocolclass
@@ -96,17 +86,8 @@ class Profile(parentprofile):
     phone_manufacturer=Phone.my_manufacturer
     phone_model=Phone.my_model
 
-    _supportedsyncs=(
-        ('phonebook', 'read', None),  # all phonebook reading
-        ('calendar', 'read', None),   # all calendar reading
-        #('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
-        #('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
-        ('wallpaper', 'read', None),  # all wallpaper reading
-        ('ringtone', 'read', None),   # all ringtone reading
-        ('call_history', 'read', None),# all call history list reading
-        ('sms', 'read', None), # Read sms messages
-        ('todo', 'read', None), # Read todos
-    )
+    usbids=( ( 0x0474, 0x071F, 1),)  # VID=Sanyo,
+    deviceclasses=("serial",)
 
     def __init__(self):
         parentprofile.__init__(self)

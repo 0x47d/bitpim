@@ -10,6 +10,7 @@ from p_sanyomedia import *
 from p_sanyonewer import *
 from p_sanyo4930 import *
 from p_sanyo6600 import *
+from p_sanyo7050 import *
 
 # We use LSB for all integer like fields
 UINT=UINTlsb
@@ -25,7 +26,6 @@ _NUMLONGNUMBERS=5
 _LONGPHONENUMBERLEN=30
 _NUMEVENTSLOTS=100
 _NUMCALLALARMSLOTS=15
- # Need to check.  Is max phone will hold 32/96 or 33/97
 MAXNUMBERLEN=32
 MAXEMAILLEN=96
 MAXURLLEN=96
