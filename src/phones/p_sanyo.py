@@ -1134,7 +1134,7 @@ class sanyofirmwarerequest(BaseProtogenClass):
 
 
 class sanyofirmwareresponse(BaseProtogenClass):
-    __fields=['command', 'date1', 'time1', 'date2', 'time2', 'string1', 'dunno1', 'date3', 'dunno2', 'time3', 'dunno3', 'firmware', 'pad', 'model', 'prl']
+    __fields=['command', 'date1', 'time1', 'date2', 'time2', 'string1', 'dunno1', 'date3', 'dunno2', 'time3', 'dunno3', 'firmware', 'pad', 'phonemodel', 'prl']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -1180,7 +1180,7 @@ class sanyofirmwareresponse(BaseProtogenClass):
         self.__field_dunno3.writetobuffer(buf)
         self.__field_firmware.writetobuffer(buf)
         self.__field_pad.writetobuffer(buf)
-        self.__field_model.writetobuffer(buf)
+        self.__field_phonemodel.writetobuffer(buf)
         self.__field_prl.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -1216,8 +1216,8 @@ class sanyofirmwareresponse(BaseProtogenClass):
         self.__field_firmware.readfrombuffer(buf)
         self.__field_pad=UNKNOWN(**{'sizeinbytes': 7})
         self.__field_pad.readfrombuffer(buf)
-        self.__field_model=USTRING(**{'sizeinbytes': 16, 'terminator': None})
-        self.__field_model.readfrombuffer(buf)
+        self.__field_phonemodel=USTRING(**{'sizeinbytes': 16, 'terminator': None})
+        self.__field_phonemodel.readfrombuffer(buf)
         self.__field_prl=USTRING(**{'sizeinbytes': 5, 'terminator': None})
         self.__field_prl.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -1392,18 +1392,18 @@ class sanyofirmwareresponse(BaseProtogenClass):
 
     pad=property(__getfield_pad, __setfield_pad, __delfield_pad, None)
 
-    def __getfield_model(self):
-        return self.__field_model.getvalue()
+    def __getfield_phonemodel(self):
+        return self.__field_phonemodel.getvalue()
 
-    def __setfield_model(self, value):
+    def __setfield_phonemodel(self, value):
         if isinstance(value,USTRING):
-            self.__field_model=value
+            self.__field_phonemodel=value
         else:
-            self.__field_model=USTRING(value,**{'sizeinbytes': 16, 'terminator': None})
+            self.__field_phonemodel=USTRING(value,**{'sizeinbytes': 16, 'terminator': None})
 
-    def __delfield_model(self): del self.__field_model
+    def __delfield_phonemodel(self): del self.__field_phonemodel
 
-    model=property(__getfield_model, __setfield_model, __delfield_model, None)
+    phonemodel=property(__getfield_phonemodel, __setfield_phonemodel, __delfield_phonemodel, None)
 
     def __getfield_prl(self):
         return self.__field_prl.getvalue()
@@ -1435,7 +1435,7 @@ class sanyofirmwareresponse(BaseProtogenClass):
         yield ('dunno3', self.__field_dunno3, None)
         yield ('firmware', self.__field_firmware, None)
         yield ('pad', self.__field_pad, None)
-        yield ('model', self.__field_model, None)
+        yield ('phonemodel', self.__field_phonemodel, None)
         yield ('prl', self.__field_prl, None)
 
 

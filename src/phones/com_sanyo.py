@@ -1303,17 +1303,24 @@ class SanyoPhonebook:
     def getphoneinfo(self, phone_info):
         self.log('Getting Phone Info')
         try:
-            phone_info.append('Model:', self.desc)
             phone_info.append('ESN:', self.get_esn())
             phone_info.append('Manufacturer:', 'Sanyo')
             req=self.protocolclass.lockcoderequest()
-            res=self.sendpbcommand(req, self.protocolclass.lockcoderesponse)
-            phone_info.append('Lock Code:', res.lockcode)
+            try:
+                res=self.sendpbcommand(req, self.protocolclass.lockcoderesponse)
+                phone_info.append('Lock Code:', res.lockcode)
+            except:
+                pass
+                
             req=self.protocolclass.sanyofirmwarerequest()
             res=self.sendpbcommand(req, self.protocolclass.sanyofirmwareresponse)
             phone_info.append('Firmware Version:',res.firmware)
             if 'prl' in res.getfields():
                 phone_info.append('PRL:', res.prl)
+            if 'phonemodel' in res.getfields():
+                phone_info.append('Model:', res.phonemodel)
+            else:
+                phone_info.append('Model:', self.desc)
             req=self.protocolclass.phonenumberrequest()
             res=self.sendpbcommand(req, self.protocolclass.phonenumberresponse)
             phone_info.append('Phone Number:', res.myphonenumber)

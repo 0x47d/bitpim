@@ -116,7 +116,7 @@ PACKET sanyofirmwareresponse:
     11 UNKNOWN dunno3
     10 USTRING {'terminator': None} firmware
     7 UNKNOWN pad
-    16 USTRING {'terminator': None} model
+    16 USTRING {'terminator': None} phonemodel
     5 USTRING {'terminator': None} prl
 
 PACKET reconditionedrequest:
