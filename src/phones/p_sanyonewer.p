@@ -29,7 +29,7 @@ _NUMCALLALARMSLOTS=15
  # Need to check.  Is max phone will hold 32/96 or 33/97
 _MAXNUMBERLEN=32
 _MAXEMAILLEN=96
-
+NUMMESSAGESLOTS=256
 %}
 
 #fa 00 02 3c 0f   -  1034 bytes total
