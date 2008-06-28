@@ -711,7 +711,7 @@ class MainWindow(wx.Frame):
                 impmenu.Append(x, desc, help)
                 wx.EVT_MENU(self, x, MenuCallback(func, self) )
 
-        menu.AppendMenu(guihelper.ID_FILEIMPORT, "Import", impmenu)
+        menu.AppendMenu(guihelper.ID_FILEIMPORT, "&Import", impmenu)
 
         # exports
         expmenu=wx.Menu()
@@ -719,7 +719,7 @@ class MainWindow(wx.Frame):
             expmenu.Append(x, desc, help)
             wx.EVT_MENU(self, x, MenuCallback(func, self) )
 
-        menu.AppendMenu(guihelper.ID_FILEEXPORT, "Export", expmenu)
+        menu.AppendMenu(guihelper.ID_FILEEXPORT, "&Export", expmenu)
 
         if not guihelper.IsMac():
             menu.AppendSeparator()
@@ -764,11 +764,15 @@ class MainWindow(wx.Frame):
         menu.AppendSeparator()
         menu.Append(guihelper.ID_EDITPHONEINFO,
                     "Phone &Info", "Display Phone Information")
-        menu.AppendSeparator()
-        menu.Append(guihelper.ID_DR_SETTINGS, 'Data Recording',
-                    'Data Recording Settings')
         menuBar.Append(menu, "&View")
-
+        # Debug menu
+        menu=wx.Menu()
+        menu.Append(guihelper.ID_DR_SETTINGS, '&Data Recording',
+                    'Data Recording Settings')
+        menu.Append(guihelper.ID_DEBUG_SCRIPT, '&Script',
+                    'Run Debug Script')
+        menuBar.Append(menu, "De&bug")
+        # Help menu
         menu=wx.Menu()
         if guihelper.IsMac():
             menu.Append(guihelper.ID_HELPHELP, "&Help on this panel", "Help for the panel you are looking at")
