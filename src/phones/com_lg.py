@@ -1603,6 +1603,27 @@ class LGDMPhone:
         if _resp.unlock_ok!=1:
             raise EnterDMError('Bad response - unlock_ok: %d'%_resp.unlock_ok)
 
+    def _enter_DMv6(self):
+        # similar but slightly different from v5, the enV2 started this!
+        # request the seed
+        _req=self.protocolclass.DMKeyReq()
+        _resp=self.sendbrewcommand(_req, self.protocolclass.DMKeyResp)
+        _key=self.get_challenge_response(_resp.unlock_key)
+        if _key is None:
+            self.log('Failed to get the key.')
+            raise EnterDMError('Failed to get the key')
+        _req=self.protocolclass.DMEnterReq(unlock_key=_key)
+        if _resp.unlock_code==0:
+            _req.unlock_code=1
+        elif _resp.unlock_code==2:
+            _req.unlock_code=3
+            _req.convert_to_key2()
+        else:
+            raise EnterDMError('Unknown unlock_code: %d'%_resp.unlock_code)
+        _resp=self.sendbrewcommand(_req, self.protocolclass.DMEnterResp)
+        if _resp.result!=1:
+            raise EnterDMError('Bad response - unlock_ok: %d'%_resp.result)
+
     def enter_DM(self, e=None):
         # do nothing if the phone failed to previously enter DM
         if self._in_DM is False:
@@ -1611,7 +1632,10 @@ class LGDMPhone:
         if self._DMv5 is None:
             self.setDMversion()
         try:
-            if self._DMv5:
+            if self._DMv6:
+                # new DM scheme
+                self._enter_DMv6()
+            elif self._DMv5:
                 # enter DMv5
                 self._enter_DMv5()
             else:
@@ -1621,8 +1645,8 @@ class LGDMPhone:
         except:
             self.log('Failed to transition to DM')
             self._in_DM=False
-            if __debug__:
-                raise
+##            if __debug__:
+##                raise
             return
 
     def _OnTimer(self):
@@ -1647,11 +1671,13 @@ class LGDMPhone:
     def setDMversion(self):
         """Define the DM version required for this phone, default to DMv5"""
         self._DMv5=True
+        self._DMv6=False
 
     def __init__(self):
         self._in_DM=None
         self._timer=None
         self._DMv5=None
+        self._DMv6=None
         self._timeout=None
         if not hasattr(self, '_real_getfilecontents'):
             (self._real_getfilecontents,

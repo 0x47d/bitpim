@@ -2309,6 +2309,697 @@ class ULRes(BaseProtogenClass):
 
 
 
+class DMKeyReq(BaseProtogenClass):
+    "Slightly different command for DMv6"
+    __fields=['cmd', 'unlock_code', 'unlock_key', 'zero', 'option']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(DMKeyReq,self).__init__(**dict)
+        if self.__class__ is DMKeyReq:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(DMKeyReq,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(DMKeyReq,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_cmd
+        except:
+            self.__field_cmd=UINT(**{'sizeinbytes': 1,  'default': 0xFE })
+        self.__field_cmd.writetobuffer(buf)
+        try: self.__field_unlock_code
+        except:
+            self.__field_unlock_code=UINT(**{'sizeinbytes': 1,  'default': 0x00 })
+        self.__field_unlock_code.writetobuffer(buf)
+        try: self.__field_unlock_key
+        except:
+            self.__field_unlock_key=UINT(**{'sizeinbytes': 4,  'default': 0x00 })
+        self.__field_unlock_key.writetobuffer(buf)
+        try: self.__field_zero
+        except:
+            self.__field_zero=UINT(**{'sizeinbytes': 1,  'default': 0x00 })
+        self.__field_zero.writetobuffer(buf)
+        try: self.__field_option
+        except:
+            self.__field_option=UINT(**{'sizeinbytes': 1,  'default': 0x00 })
+        self.__field_option.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_cmd=UINT(**{'sizeinbytes': 1,  'default': 0xFE })
+        self.__field_cmd.readfrombuffer(buf)
+        self.__field_unlock_code=UINT(**{'sizeinbytes': 1,  'default': 0x00 })
+        self.__field_unlock_code.readfrombuffer(buf)
+        self.__field_unlock_key=UINT(**{'sizeinbytes': 4,  'default': 0x00 })
+        self.__field_unlock_key.readfrombuffer(buf)
+        self.__field_zero=UINT(**{'sizeinbytes': 1,  'default': 0x00 })
+        self.__field_zero.readfrombuffer(buf)
+        self.__field_option=UINT(**{'sizeinbytes': 1,  'default': 0x00 })
+        self.__field_option.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_cmd(self):
+        try: self.__field_cmd
+        except:
+            self.__field_cmd=UINT(**{'sizeinbytes': 1,  'default': 0xFE })
+        return self.__field_cmd.getvalue()
+
+    def __setfield_cmd(self, value):
+        if isinstance(value,UINT):
+            self.__field_cmd=value
+        else:
+            self.__field_cmd=UINT(value,**{'sizeinbytes': 1,  'default': 0xFE })
+
+    def __delfield_cmd(self): del self.__field_cmd
+
+    cmd=property(__getfield_cmd, __setfield_cmd, __delfield_cmd, None)
+
+    def __getfield_unlock_code(self):
+        try: self.__field_unlock_code
+        except:
+            self.__field_unlock_code=UINT(**{'sizeinbytes': 1,  'default': 0x00 })
+        return self.__field_unlock_code.getvalue()
+
+    def __setfield_unlock_code(self, value):
+        if isinstance(value,UINT):
+            self.__field_unlock_code=value
+        else:
+            self.__field_unlock_code=UINT(value,**{'sizeinbytes': 1,  'default': 0x00 })
+
+    def __delfield_unlock_code(self): del self.__field_unlock_code
+
+    unlock_code=property(__getfield_unlock_code, __setfield_unlock_code, __delfield_unlock_code, None)
+
+    def __getfield_unlock_key(self):
+        try: self.__field_unlock_key
+        except:
+            self.__field_unlock_key=UINT(**{'sizeinbytes': 4,  'default': 0x00 })
+        return self.__field_unlock_key.getvalue()
+
+    def __setfield_unlock_key(self, value):
+        if isinstance(value,UINT):
+            self.__field_unlock_key=value
+        else:
+            self.__field_unlock_key=UINT(value,**{'sizeinbytes': 4,  'default': 0x00 })
+
+    def __delfield_unlock_key(self): del self.__field_unlock_key
+
+    unlock_key=property(__getfield_unlock_key, __setfield_unlock_key, __delfield_unlock_key, None)
+
+    def __getfield_zero(self):
+        try: self.__field_zero
+        except:
+            self.__field_zero=UINT(**{'sizeinbytes': 1,  'default': 0x00 })
+        return self.__field_zero.getvalue()
+
+    def __setfield_zero(self, value):
+        if isinstance(value,UINT):
+            self.__field_zero=value
+        else:
+            self.__field_zero=UINT(value,**{'sizeinbytes': 1,  'default': 0x00 })
+
+    def __delfield_zero(self): del self.__field_zero
+
+    zero=property(__getfield_zero, __setfield_zero, __delfield_zero, None)
+
+    def __getfield_option(self):
+        try: self.__field_option
+        except:
+            self.__field_option=UINT(**{'sizeinbytes': 1,  'default': 0x00 })
+        return self.__field_option.getvalue()
+
+    def __setfield_option(self, value):
+        if isinstance(value,UINT):
+            self.__field_option=value
+        else:
+            self.__field_option=UINT(value,**{'sizeinbytes': 1,  'default': 0x00 })
+
+    def __delfield_option(self): del self.__field_option
+
+    option=property(__getfield_option, __setfield_option, __delfield_option, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('cmd', self.__field_cmd, None)
+        yield ('unlock_code', self.__field_unlock_code, None)
+        yield ('unlock_key', self.__field_unlock_key, None)
+        yield ('zero', self.__field_zero, None)
+        yield ('option', self.__field_option, None)
+
+
+
+
+class DMKeyResp(BaseProtogenClass):
+    "Return the key/seed needed to transition to DMv6"
+    __fields=['cmd', 'unlock_code', 'unlock_key']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(DMKeyResp,self).__init__(**dict)
+        if self.__class__ is DMKeyResp:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(DMKeyResp,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(DMKeyResp,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_cmd.writetobuffer(buf)
+        self.__field_unlock_code.writetobuffer(buf)
+        self.__field_unlock_key.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_cmd=UINT(**{'sizeinbytes': 1})
+        self.__field_cmd.readfrombuffer(buf)
+        self.__field_unlock_code=UINT(**{'sizeinbytes': 1})
+        self.__field_unlock_code.readfrombuffer(buf)
+        self.__field_unlock_key=UINT(**{'sizeinbytes': 4})
+        self.__field_unlock_key.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_cmd(self):
+        return self.__field_cmd.getvalue()
+
+    def __setfield_cmd(self, value):
+        if isinstance(value,UINT):
+            self.__field_cmd=value
+        else:
+            self.__field_cmd=UINT(value,**{'sizeinbytes': 1})
+
+    def __delfield_cmd(self): del self.__field_cmd
+
+    cmd=property(__getfield_cmd, __setfield_cmd, __delfield_cmd, None)
+
+    def __getfield_unlock_code(self):
+        return self.__field_unlock_code.getvalue()
+
+    def __setfield_unlock_code(self, value):
+        if isinstance(value,UINT):
+            self.__field_unlock_code=value
+        else:
+            self.__field_unlock_code=UINT(value,**{'sizeinbytes': 1})
+
+    def __delfield_unlock_code(self): del self.__field_unlock_code
+
+    unlock_code=property(__getfield_unlock_code, __setfield_unlock_code, __delfield_unlock_code, None)
+
+    def __getfield_unlock_key(self):
+        return self.__field_unlock_key.getvalue()
+
+    def __setfield_unlock_key(self, value):
+        if isinstance(value,UINT):
+            self.__field_unlock_key=value
+        else:
+            self.__field_unlock_key=UINT(value,**{'sizeinbytes': 4})
+
+    def __delfield_unlock_key(self): del self.__field_unlock_key
+
+    unlock_key=property(__getfield_unlock_key, __setfield_unlock_key, __delfield_unlock_key, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('cmd', self.__field_cmd, None)
+        yield ('unlock_code', self.__field_unlock_code, None)
+        yield ('unlock_key', self.__field_unlock_key, None)
+
+
+
+
+class DMEnterReq(BaseProtogenClass):
+    "Request to transition to DMv6"
+    __fields=['cmd', 'unlock_code', 'unlock_key', 'zero', 'option', 'unlock_key2']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(DMEnterReq,self).__init__(**dict)
+        if self.__class__ is DMEnterReq:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(DMEnterReq,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(DMEnterReq,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_cmd
+        except:
+            self.__field_cmd=UINT(**{'sizeinbytes': 1,  'default': 0xFE })
+        self.__field_cmd.writetobuffer(buf)
+        try: self.__field_unlock_code
+        except:
+            self.__field_unlock_code=UINT(**{'sizeinbytes': 1,  'default': 0x00 })
+        self.__field_unlock_code.writetobuffer(buf)
+        try: self.__field_unlock_key
+        except:
+            self.__field_unlock_key=UINT(**{'sizeinbytes': 4,  'default': 0x00 })
+        self.__field_unlock_key.writetobuffer(buf)
+        try: self.__field_zero
+        except:
+            self.__field_zero=UINT(**{'sizeinbytes': 1,  'default': 0x00 })
+        self.__field_zero.writetobuffer(buf)
+        try: self.__field_option
+        except:
+            self.__field_option=UINT(**{'sizeinbytes': 1,  'default': 0x00 })
+        self.__field_option.writetobuffer(buf)
+        if self.unlock_code==3:
+            try: self.__field_unlock_key2
+            except:
+                self.__field_unlock_key2=LIST(**{'elementclass': _gen_p_lg_179,  'createdefault': True,                 'length': 16 })
+            self.__field_unlock_key2.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_cmd=UINT(**{'sizeinbytes': 1,  'default': 0xFE })
+        self.__field_cmd.readfrombuffer(buf)
+        self.__field_unlock_code=UINT(**{'sizeinbytes': 1,  'default': 0x00 })
+        self.__field_unlock_code.readfrombuffer(buf)
+        self.__field_unlock_key=UINT(**{'sizeinbytes': 4,  'default': 0x00 })
+        self.__field_unlock_key.readfrombuffer(buf)
+        self.__field_zero=UINT(**{'sizeinbytes': 1,  'default': 0x00 })
+        self.__field_zero.readfrombuffer(buf)
+        self.__field_option=UINT(**{'sizeinbytes': 1,  'default': 0x00 })
+        self.__field_option.readfrombuffer(buf)
+        if self.unlock_code==3:
+            self.__field_unlock_key2=LIST(**{'elementclass': _gen_p_lg_179,  'createdefault': True,                 'length': 16 })
+            self.__field_unlock_key2.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_cmd(self):
+        try: self.__field_cmd
+        except:
+            self.__field_cmd=UINT(**{'sizeinbytes': 1,  'default': 0xFE })
+        return self.__field_cmd.getvalue()
+
+    def __setfield_cmd(self, value):
+        if isinstance(value,UINT):
+            self.__field_cmd=value
+        else:
+            self.__field_cmd=UINT(value,**{'sizeinbytes': 1,  'default': 0xFE })
+
+    def __delfield_cmd(self): del self.__field_cmd
+
+    cmd=property(__getfield_cmd, __setfield_cmd, __delfield_cmd, None)
+
+    def __getfield_unlock_code(self):
+        try: self.__field_unlock_code
+        except:
+            self.__field_unlock_code=UINT(**{'sizeinbytes': 1,  'default': 0x00 })
+        return self.__field_unlock_code.getvalue()
+
+    def __setfield_unlock_code(self, value):
+        if isinstance(value,UINT):
+            self.__field_unlock_code=value
+        else:
+            self.__field_unlock_code=UINT(value,**{'sizeinbytes': 1,  'default': 0x00 })
+
+    def __delfield_unlock_code(self): del self.__field_unlock_code
+
+    unlock_code=property(__getfield_unlock_code, __setfield_unlock_code, __delfield_unlock_code, None)
+
+    def __getfield_unlock_key(self):
+        try: self.__field_unlock_key
+        except:
+            self.__field_unlock_key=UINT(**{'sizeinbytes': 4,  'default': 0x00 })
+        return self.__field_unlock_key.getvalue()
+
+    def __setfield_unlock_key(self, value):
+        if isinstance(value,UINT):
+            self.__field_unlock_key=value
+        else:
+            self.__field_unlock_key=UINT(value,**{'sizeinbytes': 4,  'default': 0x00 })
+
+    def __delfield_unlock_key(self): del self.__field_unlock_key
+
+    unlock_key=property(__getfield_unlock_key, __setfield_unlock_key, __delfield_unlock_key, None)
+
+    def __getfield_zero(self):
+        try: self.__field_zero
+        except:
+            self.__field_zero=UINT(**{'sizeinbytes': 1,  'default': 0x00 })
+        return self.__field_zero.getvalue()
+
+    def __setfield_zero(self, value):
+        if isinstance(value,UINT):
+            self.__field_zero=value
+        else:
+            self.__field_zero=UINT(value,**{'sizeinbytes': 1,  'default': 0x00 })
+
+    def __delfield_zero(self): del self.__field_zero
+
+    zero=property(__getfield_zero, __setfield_zero, __delfield_zero, None)
+
+    def __getfield_option(self):
+        try: self.__field_option
+        except:
+            self.__field_option=UINT(**{'sizeinbytes': 1,  'default': 0x00 })
+        return self.__field_option.getvalue()
+
+    def __setfield_option(self, value):
+        if isinstance(value,UINT):
+            self.__field_option=value
+        else:
+            self.__field_option=UINT(value,**{'sizeinbytes': 1,  'default': 0x00 })
+
+    def __delfield_option(self): del self.__field_option
+
+    option=property(__getfield_option, __setfield_option, __delfield_option, None)
+
+    def __getfield_unlock_key2(self):
+        try: self.__field_unlock_key2
+        except:
+            self.__field_unlock_key2=LIST(**{'elementclass': _gen_p_lg_179,  'createdefault': True,                 'length': 16 })
+        return self.__field_unlock_key2.getvalue()
+
+    def __setfield_unlock_key2(self, value):
+        if isinstance(value,LIST):
+            self.__field_unlock_key2=value
+        else:
+            self.__field_unlock_key2=LIST(value,**{'elementclass': _gen_p_lg_179,  'createdefault': True,                 'length': 16 })
+
+    def __delfield_unlock_key2(self): del self.__field_unlock_key2
+
+    unlock_key2=property(__getfield_unlock_key2, __setfield_unlock_key2, __delfield_unlock_key2, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('cmd', self.__field_cmd, None)
+        yield ('unlock_code', self.__field_unlock_code, None)
+        yield ('unlock_key', self.__field_unlock_key, None)
+        yield ('zero', self.__field_zero, None)
+        yield ('option', self.__field_option, None)
+        if self.unlock_code==3:
+            yield ('unlock_key2', self.__field_unlock_key2, None)
+
+
+    def init_key2(self):
+        if self.unlock_code==3 and \
+           not len(self.unlock_key2):
+            for _idx in range(16):
+                self.unlock_key2.append(0)
+
+    def convert_to_key2(self):  
+        """Convert the key value to key2"""
+        if self.unlock_code!=3:
+            return
+        self.init_key2()
+        _buf=buffer()
+        UINT(sizeinbytes=4, value=self.unlock_key).writetobuffer(_buf)
+        _key=_buf.getvalue()
+        for _idx in range(4):
+            self.unlock_key2[_idx*4]=~ord(_key[_idx])
+
+
+
+
+
+class _gen_p_lg_179(BaseProtogenClass):
+    'Anonymous inner class'
+    __fields=['data']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(_gen_p_lg_179,self).__init__(**dict)
+        if self.__class__ is _gen_p_lg_179:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(_gen_p_lg_179,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(_gen_p_lg_179,kwargs)
+        if len(args):
+            dict2={'sizeinbytes': 1,  'default': 0 }
+            dict2.update(kwargs)
+            kwargs=dict2
+            self.__field_data=UINT(*args,**dict2)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_data
+        except:
+            self.__field_data=UINT(**{'sizeinbytes': 1,  'default': 0 })
+        self.__field_data.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_data=UINT(**{'sizeinbytes': 1,  'default': 0 })
+        self.__field_data.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_data(self):
+        try: self.__field_data
+        except:
+            self.__field_data=UINT(**{'sizeinbytes': 1,  'default': 0 })
+        return self.__field_data.getvalue()
+
+    def __setfield_data(self, value):
+        if isinstance(value,UINT):
+            self.__field_data=value
+        else:
+            self.__field_data=UINT(value,**{'sizeinbytes': 1,  'default': 0 })
+
+    def __delfield_data(self): del self.__field_data
+
+    data=property(__getfield_data, __setfield_data, __delfield_data, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('data', self.__field_data, None)
+
+
+
+
+class DMEnterResp(BaseProtogenClass):
+    "Response to our request to enter DMv6"
+    __fields=['cmd', 'unlock_code', 'unlock_key', 'result']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(DMEnterResp,self).__init__(**dict)
+        if self.__class__ is DMEnterResp:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(DMEnterResp,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(DMEnterResp,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_cmd.writetobuffer(buf)
+        self.__field_unlock_code.writetobuffer(buf)
+        self.__field_unlock_key.writetobuffer(buf)
+        self.__field_result.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_cmd=UINT(**{'sizeinbytes': 1})
+        self.__field_cmd.readfrombuffer(buf)
+        self.__field_unlock_code=UINT(**{'sizeinbytes': 1})
+        self.__field_unlock_code.readfrombuffer(buf)
+        self.__field_unlock_key=UINT(**{'sizeinbytes': 4})
+        self.__field_unlock_key.readfrombuffer(buf)
+        self.__field_result=UINT(**{'sizeinbytes': 1})
+        self.__field_result.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_cmd(self):
+        return self.__field_cmd.getvalue()
+
+    def __setfield_cmd(self, value):
+        if isinstance(value,UINT):
+            self.__field_cmd=value
+        else:
+            self.__field_cmd=UINT(value,**{'sizeinbytes': 1})
+
+    def __delfield_cmd(self): del self.__field_cmd
+
+    cmd=property(__getfield_cmd, __setfield_cmd, __delfield_cmd, None)
+
+    def __getfield_unlock_code(self):
+        return self.__field_unlock_code.getvalue()
+
+    def __setfield_unlock_code(self, value):
+        if isinstance(value,UINT):
+            self.__field_unlock_code=value
+        else:
+            self.__field_unlock_code=UINT(value,**{'sizeinbytes': 1})
+
+    def __delfield_unlock_code(self): del self.__field_unlock_code
+
+    unlock_code=property(__getfield_unlock_code, __setfield_unlock_code, __delfield_unlock_code, None)
+
+    def __getfield_unlock_key(self):
+        return self.__field_unlock_key.getvalue()
+
+    def __setfield_unlock_key(self, value):
+        if isinstance(value,UINT):
+            self.__field_unlock_key=value
+        else:
+            self.__field_unlock_key=UINT(value,**{'sizeinbytes': 4})
+
+    def __delfield_unlock_key(self): del self.__field_unlock_key
+
+    unlock_key=property(__getfield_unlock_key, __setfield_unlock_key, __delfield_unlock_key, None)
+
+    def __getfield_result(self):
+        return self.__field_result.getvalue()
+
+    def __setfield_result(self, value):
+        if isinstance(value,UINT):
+            self.__field_result=value
+        else:
+            self.__field_result=UINT(value,**{'sizeinbytes': 1})
+
+    def __delfield_result(self): del self.__field_result
+
+    result=property(__getfield_result, __setfield_result, __delfield_result, "0=Failure, 1=Success")
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('cmd', self.__field_cmd, None)
+        yield ('unlock_code', self.__field_unlock_code, None)
+        yield ('unlock_key', self.__field_unlock_key, None)
+        yield ('result', self.__field_result, "0=Failure, 1=Success")
+
+
+
+
 class data(BaseProtogenClass):
     __fields=['bytes']
 

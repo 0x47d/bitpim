@@ -152,6 +152,58 @@ PACKET ULRes:
     4 UINT unlock_key
     1 UINT unlock_ok
 
+PACKET DMKeyReq:
+    "Slightly different command for DMv6"
+    1 UINT { 'default': 0xFE } +cmd
+    1 UINT { 'default': 0x00 } +unlock_code
+    4 UINT { 'default': 0x00 } +unlock_key
+    1 UINT { 'default': 0x00 } +zero
+    1 UINT { 'default': 0x00 } +option
 
+PACKET DMKeyResp:
+    "Return the key/seed needed to transition to DMv6"
+    1 UINT cmd
+    1 UINT unlock_code
+    4 UINT unlock_key
+
+PACKET DMEnterReq:
+    "Request to transition to DMv6"
+    1 UINT { 'default': 0xFE } +cmd
+    1 UINT { 'default': 0x00 } +unlock_code
+    4 UINT { 'default': 0x00 } +unlock_key
+    1 UINT { 'default': 0x00 } +zero
+    1 UINT { 'default': 0x00 } +option
+    if self.unlock_code==3:
+        * LIST { 'createdefault': True,
+                 'length': 16 } +unlock_key2:
+            1 UINT { 'default': 0 } +data
+    %{
+
+    def init_key2(self):
+        if self.unlock_code==3 and \
+           not len(self.unlock_key2):
+            for _idx in range(16):
+                self.unlock_key2.append(0)
+
+    def convert_to_key2(self):  
+        """Convert the key value to key2"""
+        if self.unlock_code!=3:
+            return
+        self.init_key2()
+        _buf=buffer()
+        UINT(sizeinbytes=4, value=self.unlock_key).writetobuffer(_buf)
+        _key=_buf.getvalue()
+        for _idx in range(4):
+            self.unlock_key2[_idx*4]=~ord(_key[_idx])
+
+    %}
+
+PACKET DMEnterResp:
+    "Response to our request to enter DMv6"
+    1 UINT cmd
+    1 UINT unlock_code
+    4 UINT unlock_key
+    1 UINT result "0=Failure, 1=Success"
+    
 PACKET data:
     * DATA bytes
