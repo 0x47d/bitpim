@@ -191,10 +191,12 @@ PACKET DMEnterReq:
             return
         self.init_key2()
         _buf=buffer()
-        UINT(sizeinbytes=4, value=self.unlock_key).writetobuffer(_buf)
+        UINT(sizeinbytes=4, value=~self.unlock_key).writetobuffer(_buf)
         _key=_buf.getvalue()
         for _idx in range(4):
-            self.unlock_key2[_idx*4]=~ord(_key[_idx])
+            for _idy in range(4):
+                _nth_key=ord(_key[_idx])
+                self.unlock_key2[_idx*4+_idy]=_nth+key
 
     %}
 
