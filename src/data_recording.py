@@ -253,7 +253,7 @@ class DR_Rec_File(DR_File):
     def _write_record(self, dr_type, dr_data, dr_class=None):
         _rec=DR_Record(dr_type, dr_data, dr_class)
         _s=cPickle.dumps(_rec)
-        self._file.write(DR_Rec_Marker+struct.pack('L', len(_s))+_s)
+        self._file.write(DR_Rec_Marker+struct.pack('<L', len(_s))+_s)
 
     def stop(self):
         global DR_On, _the_recorder
@@ -299,7 +299,7 @@ class DR_Read_File(DR_File):
             return None
         try:
             _slen=self._file.read(struct.calcsize('L'))
-            _data_len=struct.unpack('L', _slen)[0]
+            _data_len=struct.unpack('<L', _slen)[0]
             _sdata=self._file.read(_data_len)
             return cPickle.loads(_sdata)
         except (MemoryError, cPickle.UnpicklingError):

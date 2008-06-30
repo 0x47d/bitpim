@@ -13,6 +13,8 @@
              that filesystem view will work for Samsung SPHA-900.  May break
              filesystem view for other phones.
       <li><p>New phone support: <b>Sanyo SCP-8400</b>
+      <LI><P>New phone support: <B>LG VX-9100 (enV2)</B> (preliminary)
+      <LI><P>Bug fix: Can't view Data Recording files on non-Intel Mac.
     </ul>
 
    <h2><a name="1.0.5">Changes in 1.0.5</a></h2>
