@@ -17,6 +17,7 @@ import com_phone
 import p_lg
 import prototypes
 import common
+import struct
 
 class LGPhonebook:
 
@@ -1605,6 +1606,24 @@ class LGDMPhone:
         if _resp.unlock_ok!=1:
             raise EnterDMError('Bad response - unlock_ok: %d'%_resp.unlock_ok)
 
+    def _DMv6_get_esn(self):
+        _req=self.protocolclass.NVReq(field=0x0000)
+        _res=self.sendbrewcommand(_req, self.protocolclass.NVRes)
+
+        return struct.unpack_from ('<L', _res.data, 0)[0]
+
+    def _DMv6_get_extra_data(self):
+        _req=self.protocolclass.NVReq(field=0x13d7)
+        _res=self.sendbrewcommand(_req, self.protocolclass.NVRes)
+
+        return struct.unpack_from ('<L', _res.data, 0)[0]
+
+    def _DMv6_get_compile_time(self):
+        _req=self.protocolclass.FWInfoReq()
+        _res=self.sendbrewcommand(_req, self.protocolclass.FWInfoRes)
+
+        return _res.get_compile_time()
+
     def _enter_DMv6(self):
         # similar but slightly different from v5, the enV2 started this!
         # request the seed
@@ -1614,12 +1633,21 @@ class LGDMPhone:
         if _key is None:
             self.log('Failed to get the key.')
             raise EnterDMError('Failed to get the key')
+
+        _esn=self._DMv6_get_esn()
+        _extra=self._DMv6_get_extra_data()
+        _ctime=self._DMv6_get_compile_time()
+
+        # determine how many bytes the key needs be be shifted
+        _shift_bytes = (_esn + ((_extra >> 16) & 0xf) + ((_extra >> 11) & 0x1f) + _ctime) % 16
+        _shift = _shift_bytes / 4
+
         _req=self.protocolclass.DMEnterReq(unlock_key=_key)
         if _resp.unlock_code==0:
             _req.unlock_code=1
         elif _resp.unlock_code==2:
             _req.unlock_code=3
-            _req.convert_to_key2()
+            _req.convert_to_key2(_shift)
         else:
             raise EnterDMError('Unknown unlock_code: %d'%_resp.unlock_code)
         _resp=self.sendbrewcommand(_req, self.protocolclass.DMEnterResp)

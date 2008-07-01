@@ -12,6 +12,7 @@
 """Various descriptions of data specific to LG phones"""
 
 from prototypes import *
+import re
 
 # We use LSB for all integer like fields
 UINT=UINTlsb
@@ -185,7 +186,7 @@ PACKET DMEnterReq:
             for _idx in range(16):
                 self.unlock_key2.append(0)
 
-    def convert_to_key2(self):  
+    def convert_to_key2(self,shift):  
         """Convert the key value to key2"""
         if self.unlock_code!=3:
             return
@@ -194,7 +195,7 @@ PACKET DMEnterReq:
         UINT(sizeinbytes=4, value=~self.unlock_key).writetobuffer(_buf)
         _key=_buf.getvalue()
         for _idx in range(4):
-            _nth_key=ord(_key[_idx])
+            _nth_key=ord(_key[(_idx + 4 - shift) % 4])
             for _idy in range(4):
                 self.unlock_key2[_idx*4+_idy]=_nth_key
 
@@ -206,6 +207,30 @@ PACKET DMEnterResp:
     1 UINT unlock_code
     4 UINT unlock_key
     1 UINT result "0=Failure, 1=Success"
-    
+
+PACKET NVReq:
+    1 UINT { 'constant': 0x26 } +cmd
+    2 UINT field
+    130 DATA { 'default': '\x00'*130 } +data
+
+PACKET NVRes:
+    1 UINT { 'constant': 0x26 } cmd
+    2 UINT field
+    130 DATA data
+
+PACKET FWInfoReq:
+    1 UINT { 'constant': 0x00} +cmd
+
+PACKET FWInfoRes:
+    1 UINT { 'constant': 0x00} cmd
+    53 DATA fw_data
+    %{
+
+    def get_compile_time(self):
+        _comptime = re.findall(r'(\d\d):(\d\d):(\d\d)', self.fw_data)[0]
+        return int(_comptime[0]) * 100 + int (_comptime[1])
+
+    %}
+
 PACKET data:
     * DATA bytes

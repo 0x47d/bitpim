@@ -3,6 +3,7 @@
 """Various descriptions of data specific to LG phones"""
 
 from prototypes import *
+import re
 
 # We use LSB for all integer like fields
 UINT=UINTlsb
@@ -2641,7 +2642,7 @@ class DMEnterReq(BaseProtogenClass):
         if self.unlock_code==3:
             try: self.__field_unlock_key2
             except:
-                self.__field_unlock_key2=LIST(**{'elementclass': _gen_p_lg_179,  'createdefault': True,                 'length': 16 })
+                self.__field_unlock_key2=LIST(**{'elementclass': _gen_p_lg_180,  'createdefault': True,                 'length': 16 })
             self.__field_unlock_key2.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -2662,7 +2663,7 @@ class DMEnterReq(BaseProtogenClass):
         self.__field_option=UINT(**{'sizeinbytes': 1,  'default': 0x00 })
         self.__field_option.readfrombuffer(buf)
         if self.unlock_code==3:
-            self.__field_unlock_key2=LIST(**{'elementclass': _gen_p_lg_179,  'createdefault': True,                 'length': 16 })
+            self.__field_unlock_key2=LIST(**{'elementclass': _gen_p_lg_180,  'createdefault': True,                 'length': 16 })
             self.__field_unlock_key2.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -2750,14 +2751,14 @@ class DMEnterReq(BaseProtogenClass):
     def __getfield_unlock_key2(self):
         try: self.__field_unlock_key2
         except:
-            self.__field_unlock_key2=LIST(**{'elementclass': _gen_p_lg_179,  'createdefault': True,                 'length': 16 })
+            self.__field_unlock_key2=LIST(**{'elementclass': _gen_p_lg_180,  'createdefault': True,                 'length': 16 })
         return self.__field_unlock_key2.getvalue()
 
     def __setfield_unlock_key2(self, value):
         if isinstance(value,LIST):
             self.__field_unlock_key2=value
         else:
-            self.__field_unlock_key2=LIST(value,**{'elementclass': _gen_p_lg_179,  'createdefault': True,                 'length': 16 })
+            self.__field_unlock_key2=LIST(value,**{'elementclass': _gen_p_lg_180,  'createdefault': True,                 'length': 16 })
 
     def __delfield_unlock_key2(self): del self.__field_unlock_key2
 
@@ -2782,7 +2783,7 @@ class DMEnterReq(BaseProtogenClass):
             for _idx in range(16):
                 self.unlock_key2.append(0)
 
-    def convert_to_key2(self):  
+    def convert_to_key2(self,shift):  
         """Convert the key value to key2"""
         if self.unlock_code!=3:
             return
@@ -2791,7 +2792,7 @@ class DMEnterReq(BaseProtogenClass):
         UINT(sizeinbytes=4, value=~self.unlock_key).writetobuffer(_buf)
         _key=_buf.getvalue()
         for _idx in range(4):
-            _nth_key=ord(_key[_idx])
+            _nth_key=ord(_key[(_idx + 4 - shift) % 4])
             for _idy in range(4):
                 self.unlock_key2[_idx*4+_idy]=_nth_key
 
@@ -2799,7 +2800,7 @@ class DMEnterReq(BaseProtogenClass):
 
 
 
-class _gen_p_lg_179(BaseProtogenClass):
+class _gen_p_lg_180(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['data']
 
@@ -2808,8 +2809,8 @@ class _gen_p_lg_179(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_lg_179,self).__init__(**dict)
-        if self.__class__ is _gen_p_lg_179:
+        super(_gen_p_lg_180,self).__init__(**dict)
+        if self.__class__ is _gen_p_lg_180:
             self._update(args,dict)
 
 
@@ -2818,7 +2819,7 @@ class _gen_p_lg_179(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_lg_179,self)._update(args,kwargs)
+        super(_gen_p_lg_180,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -2826,7 +2827,7 @@ class _gen_p_lg_179(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_lg_179,kwargs)
+            self._complainaboutunusedargs(_gen_p_lg_180,kwargs)
         if len(args):
             dict2={'sizeinbytes': 1,  'default': 0 }
             dict2.update(kwargs)
@@ -2998,6 +2999,399 @@ class DMEnterResp(BaseProtogenClass):
         yield ('unlock_code', self.__field_unlock_code, None)
         yield ('unlock_key', self.__field_unlock_key, None)
         yield ('result', self.__field_result, "0=Failure, 1=Success")
+
+
+
+
+class NVReq(BaseProtogenClass):
+    __fields=['cmd', 'field', 'data']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(NVReq,self).__init__(**dict)
+        if self.__class__ is NVReq:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(NVReq,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(NVReq,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_cmd
+        except:
+            self.__field_cmd=UINT(**{'sizeinbytes': 1,  'constant': 0x26 })
+        self.__field_cmd.writetobuffer(buf)
+        self.__field_field.writetobuffer(buf)
+        try: self.__field_data
+        except:
+            self.__field_data=DATA(**{'sizeinbytes': 130,  'default': '\x00'*130 })
+        self.__field_data.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_cmd=UINT(**{'sizeinbytes': 1,  'constant': 0x26 })
+        self.__field_cmd.readfrombuffer(buf)
+        self.__field_field=UINT(**{'sizeinbytes': 2})
+        self.__field_field.readfrombuffer(buf)
+        self.__field_data=DATA(**{'sizeinbytes': 130,  'default': '\x00'*130 })
+        self.__field_data.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_cmd(self):
+        try: self.__field_cmd
+        except:
+            self.__field_cmd=UINT(**{'sizeinbytes': 1,  'constant': 0x26 })
+        return self.__field_cmd.getvalue()
+
+    def __setfield_cmd(self, value):
+        if isinstance(value,UINT):
+            self.__field_cmd=value
+        else:
+            self.__field_cmd=UINT(value,**{'sizeinbytes': 1,  'constant': 0x26 })
+
+    def __delfield_cmd(self): del self.__field_cmd
+
+    cmd=property(__getfield_cmd, __setfield_cmd, __delfield_cmd, None)
+
+    def __getfield_field(self):
+        return self.__field_field.getvalue()
+
+    def __setfield_field(self, value):
+        if isinstance(value,UINT):
+            self.__field_field=value
+        else:
+            self.__field_field=UINT(value,**{'sizeinbytes': 2})
+
+    def __delfield_field(self): del self.__field_field
+
+    field=property(__getfield_field, __setfield_field, __delfield_field, None)
+
+    def __getfield_data(self):
+        try: self.__field_data
+        except:
+            self.__field_data=DATA(**{'sizeinbytes': 130,  'default': '\x00'*130 })
+        return self.__field_data.getvalue()
+
+    def __setfield_data(self, value):
+        if isinstance(value,DATA):
+            self.__field_data=value
+        else:
+            self.__field_data=DATA(value,**{'sizeinbytes': 130,  'default': '\x00'*130 })
+
+    def __delfield_data(self): del self.__field_data
+
+    data=property(__getfield_data, __setfield_data, __delfield_data, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('cmd', self.__field_cmd, None)
+        yield ('field', self.__field_field, None)
+        yield ('data', self.__field_data, None)
+
+
+
+
+class NVRes(BaseProtogenClass):
+    __fields=['cmd', 'field', 'data']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(NVRes,self).__init__(**dict)
+        if self.__class__ is NVRes:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(NVRes,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(NVRes,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_cmd.writetobuffer(buf)
+        self.__field_field.writetobuffer(buf)
+        self.__field_data.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_cmd=UINT(**{'sizeinbytes': 1,  'constant': 0x26 })
+        self.__field_cmd.readfrombuffer(buf)
+        self.__field_field=UINT(**{'sizeinbytes': 2})
+        self.__field_field.readfrombuffer(buf)
+        self.__field_data=DATA(**{'sizeinbytes': 130})
+        self.__field_data.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_cmd(self):
+        return self.__field_cmd.getvalue()
+
+    def __setfield_cmd(self, value):
+        if isinstance(value,UINT):
+            self.__field_cmd=value
+        else:
+            self.__field_cmd=UINT(value,**{'sizeinbytes': 1,  'constant': 0x26 })
+
+    def __delfield_cmd(self): del self.__field_cmd
+
+    cmd=property(__getfield_cmd, __setfield_cmd, __delfield_cmd, None)
+
+    def __getfield_field(self):
+        return self.__field_field.getvalue()
+
+    def __setfield_field(self, value):
+        if isinstance(value,UINT):
+            self.__field_field=value
+        else:
+            self.__field_field=UINT(value,**{'sizeinbytes': 2})
+
+    def __delfield_field(self): del self.__field_field
+
+    field=property(__getfield_field, __setfield_field, __delfield_field, None)
+
+    def __getfield_data(self):
+        return self.__field_data.getvalue()
+
+    def __setfield_data(self, value):
+        if isinstance(value,DATA):
+            self.__field_data=value
+        else:
+            self.__field_data=DATA(value,**{'sizeinbytes': 130})
+
+    def __delfield_data(self): del self.__field_data
+
+    data=property(__getfield_data, __setfield_data, __delfield_data, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('cmd', self.__field_cmd, None)
+        yield ('field', self.__field_field, None)
+        yield ('data', self.__field_data, None)
+
+
+
+
+class FWInfoReq(BaseProtogenClass):
+    __fields=['cmd']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(FWInfoReq,self).__init__(**dict)
+        if self.__class__ is FWInfoReq:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(FWInfoReq,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(FWInfoReq,kwargs)
+        if len(args):
+            dict2={'sizeinbytes': 1,  'constant': 0x00}
+            dict2.update(kwargs)
+            kwargs=dict2
+            self.__field_cmd=UINT(*args,**dict2)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_cmd
+        except:
+            self.__field_cmd=UINT(**{'sizeinbytes': 1,  'constant': 0x00})
+        self.__field_cmd.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_cmd=UINT(**{'sizeinbytes': 1,  'constant': 0x00})
+        self.__field_cmd.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_cmd(self):
+        try: self.__field_cmd
+        except:
+            self.__field_cmd=UINT(**{'sizeinbytes': 1,  'constant': 0x00})
+        return self.__field_cmd.getvalue()
+
+    def __setfield_cmd(self, value):
+        if isinstance(value,UINT):
+            self.__field_cmd=value
+        else:
+            self.__field_cmd=UINT(value,**{'sizeinbytes': 1,  'constant': 0x00})
+
+    def __delfield_cmd(self): del self.__field_cmd
+
+    cmd=property(__getfield_cmd, __setfield_cmd, __delfield_cmd, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('cmd', self.__field_cmd, None)
+
+
+
+
+class FWInfoRes(BaseProtogenClass):
+    __fields=['cmd', 'fw_data']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(FWInfoRes,self).__init__(**dict)
+        if self.__class__ is FWInfoRes:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(FWInfoRes,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(FWInfoRes,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_cmd.writetobuffer(buf)
+        self.__field_fw_data.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_cmd=UINT(**{'sizeinbytes': 1,  'constant': 0x00})
+        self.__field_cmd.readfrombuffer(buf)
+        self.__field_fw_data=DATA(**{'sizeinbytes': 53})
+        self.__field_fw_data.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_cmd(self):
+        return self.__field_cmd.getvalue()
+
+    def __setfield_cmd(self, value):
+        if isinstance(value,UINT):
+            self.__field_cmd=value
+        else:
+            self.__field_cmd=UINT(value,**{'sizeinbytes': 1,  'constant': 0x00})
+
+    def __delfield_cmd(self): del self.__field_cmd
+
+    cmd=property(__getfield_cmd, __setfield_cmd, __delfield_cmd, None)
+
+    def __getfield_fw_data(self):
+        return self.__field_fw_data.getvalue()
+
+    def __setfield_fw_data(self, value):
+        if isinstance(value,DATA):
+            self.__field_fw_data=value
+        else:
+            self.__field_fw_data=DATA(value,**{'sizeinbytes': 53})
+
+    def __delfield_fw_data(self): del self.__field_fw_data
+
+    fw_data=property(__getfield_fw_data, __setfield_fw_data, __delfield_fw_data, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('cmd', self.__field_cmd, None)
+        yield ('fw_data', self.__field_fw_data, None)
+
+
+    def get_compile_time(self):
+        _comptime = re.findall(r'(\d\d):(\d\d):(\d\d)', self.fw_data)[0]
+        return int(_comptime[0]) * 100 + int (_comptime[1])
+
 
 
 
