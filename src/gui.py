@@ -769,8 +769,8 @@ class MainWindow(wx.Frame):
         menu=wx.Menu()
         menu.Append(guihelper.ID_DR_SETTINGS, '&Data Recording',
                     'Data Recording Settings')
-        menu.Append(guihelper.ID_DEBUG_SCRIPT, '&Script',
-                    'Run Debug Script')
+##        menu.Append(guihelper.ID_DEBUG_SCRIPT, '&Script',
+##                    'Run Debug Script')
         menuBar.Append(menu, "De&bug")
         # Help menu
         menu=wx.Menu()

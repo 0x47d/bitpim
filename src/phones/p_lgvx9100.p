@@ -25,6 +25,28 @@ from p_lgvx8550 import *
 UINT=UINTlsb
 BOOL=BOOLlsb
 
+NUMSPEEDDIALS=1000
+
 BREW_FILE_SYSTEM=2
 
+INDEX_RT_TYPE=257
+INDEX_SOUND_TYPE=2
+INDEX_VIDEO_TYPE=3
+INDEX_IMAGE_TYPE=0
+
 %}
+
+PACKET indexentry:
+    256 USTRING {'encoding': PHONE_ENCODING,
+                 'raiseonunterminatedread': False,
+                 'raiseontruncate': False } filename  "full pathname"
+    4 UINT size
+    4 UINT {'default': 0} +date
+    4 UINT type
+    4 UINT { 'default': 0 } +dunno
+    
+
+PACKET indexfile:
+    "Used for tracking wallpaper and ringtones"
+    * LIST {'elementclass': indexentry, 'createdefault': True} +items
+

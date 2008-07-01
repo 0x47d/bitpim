@@ -1,0 +1,25 @@
+#include "pagestart.h"
+<H3>Firmware Version</H3>
+<UL>
+<li><p>The firmware version of the phone used for development & test is <B>VX910V03</B>.
+</UL>
+
+<H3>Ringtones</H3>
+<UL>
+<LI><P>BitPim can retrieve and add <B>Ringtones</B> and <B>Sounds</B> files from/to the phone.
+<LI><P>BitPim will not delete <B>Ringtones</B> and <B>Sounds</B> files on the phone.  They must be deleted manually from the phone.
+</UL>
+
+<H3>Pictues and Videos</H3>
+<UL>
+<LI><P>BitPim can retrieve and save <B>Pictures</B> and <B>Videos</B> from/to the phone.
+<LI><P>BitPim will not delete <B>Pictures</B> and <B>Vidoes</B> files on the phone.  They must be deleted manually from the phone.
+<li><p>The default <B>Pictures</B> format is JPEG.
+<li><p>The default <B>Pictures</B> resolutions are:
+<UL>
+<li><p><B>wallpaper:</B>320x215
+<li><p><B>outsidelcd:</B>160x64
+</UL>
+</UL>
+
+#include "pageend.h"

@@ -1323,7 +1323,8 @@ class LGUncountedIndexedMedia:
         dircache.rmfile(test_name)
         return True
 
-    def savemedia(self, mediakey, mediaindexkey, maps, results, merge, reindexfunction):
+    def savemedia(self, mediakey, mediaindexkey, maps, results, merge,
+                  reindexfunction, update_index_file=True):
         """Actually saves out the media
 
         @param mediakey: key of the media (eg 'wallpapers' or 'ringtones')
@@ -1459,25 +1460,26 @@ class LGUncountedIndexedMedia:
                     else:
                         dircache.writefile(filename, data)
             # write out index
-            ifile=self.protocolclass.indexfile()
-            idxlist=init[type].keys()
-            idxlist.sort()
-            idxlist.reverse()
-            for idx in idxlist:
-                ie=self.protocolclass.indexentry()
-                ie.type=typemajor
-                ie.filename=init[type][idx]['filename']
-                fstat=dircache.stat(init[type][idx]['filename'])
-                if fstat is not None:
-                    ie.size=fstat['size']
-                else:
-                    ie.size=0
-                # ie.date left as zero
-                ifile.items.append(ie)
-            buf=prototypes.buffer()
-            ifile.writetobuffer(buf, logtitle="Index file "+indexfile)
-            self.log("Writing index file "+indexfile+" for type "+type+" with "+`len(idxlist)`+" entries.")
-            dircache.writefile(indexfile, buf.getvalue()) # doesn't really need to go via dircache
+            if update_index_file:
+                ifile=self.protocolclass.indexfile()
+                idxlist=init[type].keys()
+                idxlist.sort()
+                idxlist.reverse()
+                for idx in idxlist:
+                    ie=self.protocolclass.indexentry()
+                    ie.type=typemajor
+                    ie.filename=init[type][idx]['filename']
+                    fstat=dircache.stat(init[type][idx]['filename'])
+                    if fstat is not None:
+                        ie.size=fstat['size']
+                    else:
+                        ie.size=0
+                    # ie.date left as zero
+                    ifile.items.append(ie)
+                buf=prototypes.buffer()
+                ifile.writetobuffer(buf, logtitle="Index file "+indexfile)
+                self.log("Writing index file "+indexfile+" for type "+type+" with "+`len(idxlist)`+" entries.")
+                dircache.writefile(indexfile, buf.getvalue()) # doesn't really need to go via dircache
         return reindexfunction(results)
                             
     def getwallpaperindices(self, results):
