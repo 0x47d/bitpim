@@ -36,6 +36,7 @@ INDEX_IMAGE_TYPE=0
 
 %}
 
+# Media index file format
 PACKET indexentry:
     256 USTRING {'encoding': PHONE_ENCODING,
                  'raiseonunterminatedread': False,
@@ -50,3 +51,79 @@ PACKET indexfile:
     "Used for tracking wallpaper and ringtones"
     * LIST {'elementclass': indexentry, 'createdefault': True} +items
 
+# phonebook stuff
+# pbspeed.dat
+PACKET speeddial:
+    2 UINT {'default': 0xffff} +entry "0-based entry number"
+    1 UINT {'default': 0xff} +number "number type"
+    %{
+    def valid(self):
+        return self.entry!=0xffff
+    %}
+
+PACKET speeddials:
+   * LIST {'length': NUMSPEEDDIALS, 'elementclass': speeddial} +speeddials
+
+
+# /pim/pbentry.dat format
+PACKET pbfileentry:
+    4   STRING { 'terminator': None,
+                 'raiseonunterminatedread': False,
+                 'raiseontruncate': False,
+                 'default': '<PE>'} +entry_tag
+    if self.entry_tag=='<PE>':
+        # this is a valid entry
+        1 UINT { 'default': 0 } +pad00
+        # year, month, day, hour, min, sec
+        * LIST { 'length': 6 } +mod_date:
+           2 UINT { 'default': 0 } +date_entry
+        6   STRING { 'terminator': None, 'default': '\xff\xff\xff\xff\xff\xff' } +unk0
+        4   UINT entry_number1 # 1 based entry number -- might be just 2 bytes long
+        2   UINT entry_number0 # 0 based entry number
+        33  USTRING { 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False } +name
+        2   UINT    { 'default': 0 } +group
+        *  LIST {'length': NUMEMAILS} +emails:
+           49 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False} email
+        2   UINT { 'default': 0xffff } +ringtone
+        2   UINT { 'default': 0 } +wallpaper
+        * LIST {'length': NUMPHONENUMBERS} +numbertypes:
+           1 UINT { 'default': 0 } numbertype
+        * LIST {'length': NUMPHONENUMBERS} +numberindices:
+           2 UINT { 'default': 0xffff } numberindex
+        69  USTRING { 'raiseonunterminatedread': False, 'default': '', 'encoding': PHONE_ENCODING } +memo # maybe
+        6   USTRING { 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False, 'default': '</PE>'} +exit_tag
+    else:
+        # this is a blank entry, fill it up with 0xFF
+        252 DATA { 'default': '\xff'*252 } +dontcare
+    %{
+    def valid(self):
+        return self.entry_tag=='<PE>'
+    %}
+
+PACKET pbfile:
+    * LIST { 'elementclass': pbfileentry } +items
+
+# /pim/pbnumber.dat format
+PACKET pnfileentry:
+    5   USTRING { 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False, 'default': '<PN>'} +entry_tag # some entries don't have this??
+    # year, month, day, hour, min, sec
+    * LIST { 'length': 6 } +mod_date:
+       2 UINT { 'default': 0 } +date_entry
+    6   STRING { 'default': '', 'raiseonunterminatedread': False } +unk0
+    2   UINT pn_id # 0 based
+    2   UINT pe_id # 0 based
+    1   UINT pn_order "0-based order of this phone within this contact"
+    25  LGHEXPN phone_number
+    2   UINT type
+    3   UINT { 'default': 0 } +unk2
+    6   USTRING { 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False, 'default': '</PN>'} +exit_tag # some entries don't have this??       
+PACKET pnfile:
+    * LIST { 'elementclass': pnfileentry } +items
+
+PACKET PathIndexEntry:
+    255 USTRING { 'encoding': PHONE_ENCODING,
+                  'default': '' } +pathname
+PACKET PathIndexFile:
+    * LIST { 'elementclass': PathIndexEntry,
+             'createdefault': True,
+             'length': NUMPHONEBOOKENTRIES } +items
