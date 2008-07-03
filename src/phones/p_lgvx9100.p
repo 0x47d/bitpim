@@ -34,6 +34,10 @@ INDEX_SOUND_TYPE=2
 INDEX_VIDEO_TYPE=3
 INDEX_IMAGE_TYPE=0
 
+PB_ENTRY_SOR='<PE>'
+PB_ENTRY_EOR='<HPE>\x00VX9100\x00\x00\x00\x00\xD8\x07\x06\x00\x10\x00\x0F\x00\x14\x00\x30'+'\x00'*222+'</HPE>\x00'
+PB_NUMBER_SOR='<PN>'
+
 %}
 
 # Media index file format
@@ -70,8 +74,8 @@ PACKET pbfileentry:
     4   STRING { 'terminator': None,
                  'raiseonunterminatedread': False,
                  'raiseontruncate': False,
-                 'default': '<PE>'} +entry_tag
-    if self.entry_tag=='<PE>':
+                 'default': '\xff\xff\xff\xff'} +entry_tag
+    if self.entry_tag==PB_ENTRY_SOR:
         # this is a valid entry
         1 UINT { 'default': 0 } +pad00
         # year, month, day, hour, min, sec
@@ -97,28 +101,48 @@ PACKET pbfileentry:
         252 DATA { 'default': '\xff'*252 } +dontcare
     %{
     def valid(self):
-        return self.entry_tag=='<PE>'
+        global PB_ENTRY_SOR
+        return self.entry_tag==PB_ENTRY_SOR
     %}
 
 PACKET pbfile:
-    * LIST { 'elementclass': pbfileentry } +items
+    * LIST { 'elementclass': pbfileentry,
+             'length': NUMPHONEBOOKENTRIES,
+             'createdefault': True} +items
+    * DATA { 'default': PB_ENTRY_EOR } +eor
 
 # /pim/pbnumber.dat format
 PACKET pnfileentry:
-    5   USTRING { 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False, 'default': '<PN>'} +entry_tag # some entries don't have this??
-    # year, month, day, hour, min, sec
-    * LIST { 'length': 6 } +mod_date:
-       2 UINT { 'default': 0 } +date_entry
-    6   STRING { 'default': '', 'raiseonunterminatedread': False } +unk0
-    2   UINT pn_id # 0 based
-    2   UINT pe_id # 0 based
-    1   UINT pn_order "0-based order of this phone within this contact"
-    25  LGHEXPN phone_number
-    2   UINT type
-    3   UINT { 'default': 0 } +unk2
-    6   USTRING { 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False, 'default': '</PN>'} +exit_tag # some entries don't have this??       
+    4   STRING { 'terminator': None,
+                 'raiseonunterminatedread': False,
+                 'raiseontruncate': False,
+                 'default': '\xff\xff\xff\xff'} +entry_tag # some entries don't have this??
+    if self.entry_tag==PB_NUMBER_SOR:
+        # this is a valid slot
+        1 UINT { 'default': 0 } +pad00
+        # year, month, day, hour, min, sec
+        * LIST { 'length': 6 } +mod_date:
+           2 UINT { 'default': 0 } +date_entry
+        6   STRING { 'default': '', 'raiseonunterminatedread': False } +unk0
+        2   UINT pn_id # 0 based
+        2   UINT pe_id # 0 based
+        1   UINT pn_order "0-based order of this phone within this contact"
+        25  LGHEXPN phone_number
+        2   UINT type
+        3   UINT { 'default': 0 } +unk2
+        6   USTRING { 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False, 'default': '</PN>'} +exit_tag # some entries don't have this??
+    else:
+        # empty slot: all 0xFF
+        60 DATA { 'default': '\xFF'*60 } +blanks
+    %{
+    def valid(self):
+        global PB_NUMBER_SOR
+        return self.entry_tag==PB_NUMBER_SOR
+    %}
 PACKET pnfile:
-    * LIST { 'elementclass': pnfileentry } +items
+    * LIST { 'elementclass': pnfileentry,
+             'createdefault': True,
+             'length': NUMPHONENUMBERENTRIES } +items
 
 PACKET PathIndexEntry:
     255 USTRING { 'encoding': PHONE_ENCODING,
