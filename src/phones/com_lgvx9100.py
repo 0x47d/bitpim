@@ -255,6 +255,10 @@ class Phone(parentphone):
         # for some phones (e.g. vx8100) the speeddial numberindex is really the numbertype (now why would LG want to change this!)
         res['numbers']=[]
         for i in range(self.protocolclass.NUMPHONENUMBERS):
+            if entry.numberindices[i].numberindex>=\
+               self.protocolclass.NUMPHONENUMBERENTRIES:
+                # invalid number
+                continue
             _pnentry=numbers.items[entry.numberindices[i].numberindex]
             num=_pnentry.phone_number
             num_type=_pnentry.type
@@ -264,7 +268,8 @@ class Phone(parentphone):
                     t=t[:-1]
                 res['numbers'].append({'number': num, 'type': t})
                 # if this is a speeddial number set it
-                if speeds[entry.entry_number0].get(num_type, None) is not None:
+                if speeds.has_key(entry.entry_number0) and \
+                   speeds[entry.entry_number0].has_key(num_type):
                     res['numbers'][i]['speeddial']=speeds[entry.entry_number0][num_type]
         return res
 
