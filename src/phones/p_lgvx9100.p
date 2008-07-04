@@ -10,7 +10,7 @@
 %{
 
 """Various descriptions of data specific to LG VX9100"""
-
+import time
 from prototypes import *
 from prototypeslg import *
 
@@ -26,6 +26,8 @@ UINT=UINTlsb
 BOOL=BOOLlsb
 
 NUMSPEEDDIALS=1000
+FIRSTSPEEDDIAL=1
+LASTSPEEDDIAL=999
 
 BREW_FILE_SYSTEM=2
 
@@ -34,9 +36,13 @@ INDEX_SOUND_TYPE=2
 INDEX_VIDEO_TYPE=3
 INDEX_IMAGE_TYPE=0
 
+MAX_PHONEBOOK_GROUPS=30
 PB_ENTRY_SOR='<PE>'
-PB_ENTRY_EOR='<HPE>\x00VX9100\x00\x00\x00\x00\xD8\x07\x06\x00\x10\x00\x0F\x00\x14\x00\x30'+'\x00'*222+'</HPE>\x00'
+PB_ENTRY_EOF='<HPE>\x00VX9100\x00\x00\x00\x00\xD8\x07\x06\x00\x10\x00\x0F\x00\x14\x00\x30'+'\x00'*222+'</HPE>\x00'
 PB_NUMBER_SOR='<PN>'
+
+pb_group_filename='pim/pbgroup.dat'
+pb_recordid_filename='pim/record_id.dat'
 
 %}
 
@@ -56,6 +62,25 @@ PACKET indexfile:
     * LIST {'elementclass': indexentry, 'createdefault': True} +items
 
 # phonebook stuff
+
+# pbgroup.dat
+# The VX9100 has a fixed size pbgroup.dat, hence the need to fill up with
+# unused slots.
+PACKET pbgroup:
+    33 USTRING {'encoding': PHONE_ENCODING,
+                'raiseonunterminatedread': False,
+                'raiseontruncate': False,
+                'default': '' } +name
+    2  UINT { 'default': 0 } +groupid
+    1  UINT {'default': 0} +user_added "=1 when was added by user"
+
+PACKET pbgroups:
+    "Phonebook groups"
+    * LIST {'elementclass': pbgroup,
+            'length': MAX_PHONEBOOK_GROUPS,
+            'createdefault': True} +groups
+
+
 # pbspeed.dat
 PACKET speeddial:
     2 UINT {'default': 0xffff} +entry "0-based entry number"
@@ -69,6 +94,23 @@ PACKET speeddials:
    * LIST {'length': NUMSPEEDDIALS, 'elementclass': speeddial} +speeddials
 
 
+PACKET PBDateTime:
+    2 UINT { 'default': 0 } +year
+    2 UINT { 'default': 0 } +month
+    2 UINT { 'default': 0 } +day
+    2 UINT { 'default': 0 } +hour
+    2 UINT { 'default': 0 } +min
+    2 UINT { 'default': 0 } +sec
+    %{
+    def set_value(self, datetimelist):
+        if len(datetimelist)!=6:
+            raise ValueError('(y,m,d,h,m,s)')
+        self.year,self.month,self.day,self.hour,self.min,self.sec=datetimelist
+    def get_value(self):
+        return (self.year,self.month,self.day,self.hour,self.min,self.sec)
+    def set_current_time(self):
+        self.set_value(time.localtime()[:6])
+    %}
 # /pim/pbentry.dat format
 PACKET pbfileentry:
     4   STRING { 'terminator': None,
@@ -78,9 +120,7 @@ PACKET pbfileentry:
     if self.entry_tag==PB_ENTRY_SOR:
         # this is a valid entry
         1 UINT { 'default': 0 } +pad00
-        # year, month, day, hour, min, sec
-        * LIST { 'length': 6 } +mod_date:
-           2 UINT { 'default': 0 } +date_entry
+        * PBDateTime +mod_date
         6   STRING { 'terminator': None, 'default': '\xff\xff\xff\xff\xff\xff' } +unk0
         4   UINT entry_number1 # 1 based entry number -- might be just 2 bytes long
         2   UINT entry_number0 # 0 based entry number
@@ -103,13 +143,24 @@ PACKET pbfileentry:
     def valid(self):
         global PB_ENTRY_SOR
         return self.entry_tag==PB_ENTRY_SOR
+    def set_current_time(self):
+        if self.valid():
+            self.mod_date.set_current_time()
     %}
 
 PACKET pbfile:
     * LIST { 'elementclass': pbfileentry,
              'length': NUMPHONEBOOKENTRIES,
              'createdefault': True} +items
-    * DATA { 'default': PB_ENTRY_EOR } +eor
+    6 STRING { 'default': '<HPE>',
+               'raiseonunterminatedread': False,
+               'raiseontruncate': False } +eof_tag
+    10 STRING { 'default': 'VX9100' } +model_name
+    * PBDateTime +mod_date
+    221 STRING { 'default': '' } +blanks
+    7 STRING { 'default': '</HPE>',
+               'raiseonunterminatedread': False,
+               'raiseontruncate': False  } +eof_close_tag
 
 # /pim/pbnumber.dat format
 PACKET pnfileentry:
@@ -121,8 +172,7 @@ PACKET pnfileentry:
         # this is a valid slot
         1 UINT { 'default': 0 } +pad00
         # year, month, day, hour, min, sec
-        * LIST { 'length': 6 } +mod_date:
-           2 UINT { 'default': 0 } +date_entry
+        * PBDateTime +mod_date:
         6   STRING { 'default': '', 'raiseonunterminatedread': False } +unk0
         2   UINT pn_id # 0 based
         2   UINT pe_id # 0 based
@@ -138,6 +188,9 @@ PACKET pnfileentry:
     def valid(self):
         global PB_NUMBER_SOR
         return self.entry_tag==PB_NUMBER_SOR
+    def set_current_time(self):
+        if self.valid():
+            self.mod_date.set_current_time()
     %}
 PACKET pnfile:
     * LIST { 'elementclass': pnfileentry,
@@ -151,3 +204,7 @@ PACKET PathIndexFile:
     * LIST { 'elementclass': PathIndexEntry,
              'createdefault': True,
              'length': NUMPHONEBOOKENTRIES } +items
+
+# record_id.dat
+PACKET RecordIdEntry:
+    4 UINT idnum

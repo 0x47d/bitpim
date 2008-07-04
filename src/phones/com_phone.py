@@ -18,6 +18,7 @@ import field_color
 import re
 import sys
 import time
+import prototypes
 
 
 # when trying to setmode, we ignore various exception types
@@ -138,7 +139,28 @@ class Phone(object):
                 return True
             except modeignoreerrortypes:
                 pass
-        return False       
+        return False
+
+    def readobject(self, filename, object_class, logtitle=None,
+                   uselocalfs=False):
+        """Read the specified filename and bind it to the object class"""
+        if uselocalfs:
+            _buf=prototypes.bufffer(file(filename, 'rb').read())
+        else:
+            _buf=prototypes.buffer(self.getfilecontents(filename))
+        _obj=object_class()
+        _obj.readfrombuffer(_buf, logtitle=logtitle)
+        return _obj
+
+    def writeobject(self, filename, obj, logtitle=None,
+                    uselocalfs=False):
+        """Writhe the object into the file"""
+        _buf=prototypes.buffer()
+        obj.writetobuffer(_buf, logtitle=logtitle)
+        if uselocalfs:
+            file(filename, 'wb').write(_buf.getvalue())
+        else:
+            self.writefile(filename, _buf.getvalue())
 
     getmemo=NotImplemented
     gettodo=NotImplemented
