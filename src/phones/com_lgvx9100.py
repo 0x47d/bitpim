@@ -321,7 +321,6 @@ class Phone(parentphone):
 
         # write phonebook entries
         self.log ("Writing phonebook entries")
-        pb_entries.mod_date.set_current_time()
         self.writeobject(self.protocolclass.pb_file_name,
                          pb_entries,
                          logtitle='Writing phonebook entries',
@@ -372,7 +371,6 @@ class Phone(parentphone):
             raise
         
         new_entry = self.protocolclass.pnfileentry(entry_tag=self.protocolclass.PB_NUMBER_SOR)
-        new_entry.set_current_time()
         new_entry.pn_id = pn_id
         new_entry.pe_id = pe_id
         new_entry.phone_number = phone_number
@@ -387,8 +385,6 @@ class Phone(parentphone):
                     rt_index, picid_pathf, wp_index):
         """ Create a pbfileentry from a bitpim phonebook entry """
         new_entry = self.protocolclass.pbfileentry(entry_tag=self.protocolclass.PB_ENTRY_SOR)
-        # set modification date to current date
-        new_entry.set_current_time()
         # entry IDs
         new_entry.entry_number0 = entry_num0
         new_entry.entry_number1 = entry_num1

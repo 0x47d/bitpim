@@ -724,3 +724,73 @@ class LGHEXPN(prototypes.DATA):
                 # end of packed number, not an error
                 break
         return pn
+
+class PBDateTime(prototypes.BaseProtogenClass):
+    "Handle  six 2-byte UINTs: y, m, d, h, m, s"
+
+    def __init__(self, *args, **kwargs):
+        """
+        Class to handle the date/time format of 6 2-byte UINTs: y, m, d, h, m, s
+        @keyword default: (Optional) Our default value
+        @keyword defaulttocurrenttime: (Optional) Default to the current date/time
+        """
+        super(PBDateTime, self).__init__(*args, **kwargs)
+        self._default=None
+        self._defaulttocurrenttime=False
+        self._value=None
+
+        if self._ismostderived(PBDateTime):
+            self._update(args, kwargs)
+    
+    def _update(self, args, kwargs):
+        super(PBDateTime, self)._update(args, kwargs)
+        self._consumekw(kwargs, ("default", "defaulttocurrenttime", "value"))
+        self._complainaboutunusedargs(PBDateTime, kwargs)
+
+        if len(args)==0:
+            pass
+        elif len(args)==1:
+            self._value=args[0]
+        else:
+            raise TypeError("Unexpected arguments "+`args`)
+
+        if self._value is None:
+            # value not specified, check for either default or default to
+            # current time
+            if self._default:
+                self._value=self._default
+            elif self._defaulttocurrenttime:
+                self._value=time.localtime()[:6]
+
+    def readfrombuffer(self, buf):
+        self._bufferstartoffset=buf.getcurrentoffset()
+
+        _res=[]
+        for i in range(6):
+            _res.append(buf.getnextbyte()|(buf.getnextbyte()<<8))
+        self._value=_res
+
+        self._bufferendoffset=buf.getcurrentoffset()
+
+    def writetobuffer(self, buf):
+        if self._value is None:
+            raise ValueNotSetException()
+        if not isinstance(self._value, (list, tuple)):
+            raise TypeError('value needs to be a list/tuple')
+        if len(self._value)!=6:
+            raise TypeError('len of value needs to be 6')
+
+        self._bufferstartoffset=buf.getcurrentoffset()
+        for _num in self._value:
+            buf.appendbyte(_num&0xff)
+            buf.appendbyte((_num>>8)&0xff)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+    def packetsize(self):
+        """Size in bytes"""
+        return 12
+
+    def getvalue(self):
+        if self._value is None:
+            raise ValueNotSetException()
+        return self._value

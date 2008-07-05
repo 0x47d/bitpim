@@ -94,23 +94,6 @@ PACKET speeddials:
    * LIST {'length': NUMSPEEDDIALS, 'elementclass': speeddial} +speeddials
 
 
-PACKET PBDateTime:
-    2 UINT { 'default': 0 } +year
-    2 UINT { 'default': 0 } +month
-    2 UINT { 'default': 0 } +day
-    2 UINT { 'default': 0 } +hour
-    2 UINT { 'default': 0 } +min
-    2 UINT { 'default': 0 } +sec
-    %{
-    def set_value(self, datetimelist):
-        if len(datetimelist)!=6:
-            raise ValueError('(y,m,d,h,m,s)')
-        self.year,self.month,self.day,self.hour,self.min,self.sec=datetimelist
-    def get_value(self):
-        return (self.year,self.month,self.day,self.hour,self.min,self.sec)
-    def set_current_time(self):
-        self.set_value(time.localtime()[:6])
-    %}
 # /pim/pbentry.dat format
 PACKET pbfileentry:
     4   STRING { 'terminator': None,
@@ -120,7 +103,7 @@ PACKET pbfileentry:
     if self.entry_tag==PB_ENTRY_SOR:
         # this is a valid entry
         1 UINT { 'default': 0 } +pad00
-        * PBDateTime +mod_date
+        * PBDateTime { 'defaulttocurrenttime': True } +mod_date
         6   STRING { 'terminator': None, 'default': '\xff\xff\xff\xff\xff\xff' } +unk0
         4   UINT entry_number1 # 1 based entry number -- might be just 2 bytes long
         2   UINT entry_number0 # 0 based entry number
@@ -143,9 +126,6 @@ PACKET pbfileentry:
     def valid(self):
         global PB_ENTRY_SOR
         return self.entry_tag==PB_ENTRY_SOR
-    def set_current_time(self):
-        if self.valid():
-            self.mod_date.set_current_time()
     %}
 
 PACKET pbfile:
@@ -156,7 +136,7 @@ PACKET pbfile:
                'raiseonunterminatedread': False,
                'raiseontruncate': False } +eof_tag
     10 STRING { 'default': 'VX9100' } +model_name
-    * PBDateTime +mod_date
+    * PBDateTime { 'defaulttocurrenttime': True } +mod_date
     221 STRING { 'default': '' } +blanks
     7 STRING { 'default': '</HPE>',
                'raiseonunterminatedread': False,
@@ -172,7 +152,7 @@ PACKET pnfileentry:
         # this is a valid slot
         1 UINT { 'default': 0 } +pad00
         # year, month, day, hour, min, sec
-        * PBDateTime +mod_date:
+        * PBDateTime {'defaulttocurrenttime': True } +mod_date
         6   STRING { 'default': '', 'raiseonunterminatedread': False } +unk0
         2   UINT pn_id # 0 based
         2   UINT pe_id # 0 based
@@ -188,9 +168,6 @@ PACKET pnfileentry:
     def valid(self):
         global PB_NUMBER_SOR
         return self.entry_tag==PB_NUMBER_SOR
-    def set_current_time(self):
-        if self.valid():
-            self.mod_date.set_current_time()
     %}
 PACKET pnfile:
     * LIST { 'elementclass': pnfileentry,

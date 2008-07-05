@@ -651,206 +651,6 @@ class speeddials(BaseProtogenClass):
 
 
 
-class PBDateTime(BaseProtogenClass):
-    __fields=['year', 'month', 'day', 'hour', 'min', 'sec']
-
-    def __init__(self, *args, **kwargs):
-        dict={}
-        # What was supplied to this function
-        dict.update(kwargs)
-        # Parent constructor
-        super(PBDateTime,self).__init__(**dict)
-        if self.__class__ is PBDateTime:
-            self._update(args,dict)
-
-
-    def getfields(self):
-        return self.__fields
-
-
-    def _update(self, args, kwargs):
-        super(PBDateTime,self)._update(args,kwargs)
-        keys=kwargs.keys()
-        for key in keys:
-            if key in self.__fields:
-                setattr(self, key, kwargs[key])
-                del kwargs[key]
-        # Were any unrecognized kwargs passed in?
-        if __debug__:
-            self._complainaboutunusedargs(PBDateTime,kwargs)
-        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
-        # Make all P fields that haven't already been constructed
-
-
-    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
-        'Writes this packet to the supplied buffer'
-        self._bufferstartoffset=buf.getcurrentoffset()
-        try: self.__field_year
-        except:
-            self.__field_year=UINT(**{'sizeinbytes': 2,  'default': 0 })
-        self.__field_year.writetobuffer(buf)
-        try: self.__field_month
-        except:
-            self.__field_month=UINT(**{'sizeinbytes': 2,  'default': 0 })
-        self.__field_month.writetobuffer(buf)
-        try: self.__field_day
-        except:
-            self.__field_day=UINT(**{'sizeinbytes': 2,  'default': 0 })
-        self.__field_day.writetobuffer(buf)
-        try: self.__field_hour
-        except:
-            self.__field_hour=UINT(**{'sizeinbytes': 2,  'default': 0 })
-        self.__field_hour.writetobuffer(buf)
-        try: self.__field_min
-        except:
-            self.__field_min=UINT(**{'sizeinbytes': 2,  'default': 0 })
-        self.__field_min.writetobuffer(buf)
-        try: self.__field_sec
-        except:
-            self.__field_sec=UINT(**{'sizeinbytes': 2,  'default': 0 })
-        self.__field_sec.writetobuffer(buf)
-        self._bufferendoffset=buf.getcurrentoffset()
-        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
-
-
-    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
-        'Reads this packet from the supplied buffer'
-        self._bufferstartoffset=buf.getcurrentoffset()
-        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_year=UINT(**{'sizeinbytes': 2,  'default': 0 })
-        self.__field_year.readfrombuffer(buf)
-        self.__field_month=UINT(**{'sizeinbytes': 2,  'default': 0 })
-        self.__field_month.readfrombuffer(buf)
-        self.__field_day=UINT(**{'sizeinbytes': 2,  'default': 0 })
-        self.__field_day.readfrombuffer(buf)
-        self.__field_hour=UINT(**{'sizeinbytes': 2,  'default': 0 })
-        self.__field_hour.readfrombuffer(buf)
-        self.__field_min=UINT(**{'sizeinbytes': 2,  'default': 0 })
-        self.__field_min.readfrombuffer(buf)
-        self.__field_sec=UINT(**{'sizeinbytes': 2,  'default': 0 })
-        self.__field_sec.readfrombuffer(buf)
-        self._bufferendoffset=buf.getcurrentoffset()
-
-
-    def __getfield_year(self):
-        try: self.__field_year
-        except:
-            self.__field_year=UINT(**{'sizeinbytes': 2,  'default': 0 })
-        return self.__field_year.getvalue()
-
-    def __setfield_year(self, value):
-        if isinstance(value,UINT):
-            self.__field_year=value
-        else:
-            self.__field_year=UINT(value,**{'sizeinbytes': 2,  'default': 0 })
-
-    def __delfield_year(self): del self.__field_year
-
-    year=property(__getfield_year, __setfield_year, __delfield_year, None)
-
-    def __getfield_month(self):
-        try: self.__field_month
-        except:
-            self.__field_month=UINT(**{'sizeinbytes': 2,  'default': 0 })
-        return self.__field_month.getvalue()
-
-    def __setfield_month(self, value):
-        if isinstance(value,UINT):
-            self.__field_month=value
-        else:
-            self.__field_month=UINT(value,**{'sizeinbytes': 2,  'default': 0 })
-
-    def __delfield_month(self): del self.__field_month
-
-    month=property(__getfield_month, __setfield_month, __delfield_month, None)
-
-    def __getfield_day(self):
-        try: self.__field_day
-        except:
-            self.__field_day=UINT(**{'sizeinbytes': 2,  'default': 0 })
-        return self.__field_day.getvalue()
-
-    def __setfield_day(self, value):
-        if isinstance(value,UINT):
-            self.__field_day=value
-        else:
-            self.__field_day=UINT(value,**{'sizeinbytes': 2,  'default': 0 })
-
-    def __delfield_day(self): del self.__field_day
-
-    day=property(__getfield_day, __setfield_day, __delfield_day, None)
-
-    def __getfield_hour(self):
-        try: self.__field_hour
-        except:
-            self.__field_hour=UINT(**{'sizeinbytes': 2,  'default': 0 })
-        return self.__field_hour.getvalue()
-
-    def __setfield_hour(self, value):
-        if isinstance(value,UINT):
-            self.__field_hour=value
-        else:
-            self.__field_hour=UINT(value,**{'sizeinbytes': 2,  'default': 0 })
-
-    def __delfield_hour(self): del self.__field_hour
-
-    hour=property(__getfield_hour, __setfield_hour, __delfield_hour, None)
-
-    def __getfield_min(self):
-        try: self.__field_min
-        except:
-            self.__field_min=UINT(**{'sizeinbytes': 2,  'default': 0 })
-        return self.__field_min.getvalue()
-
-    def __setfield_min(self, value):
-        if isinstance(value,UINT):
-            self.__field_min=value
-        else:
-            self.__field_min=UINT(value,**{'sizeinbytes': 2,  'default': 0 })
-
-    def __delfield_min(self): del self.__field_min
-
-    min=property(__getfield_min, __setfield_min, __delfield_min, None)
-
-    def __getfield_sec(self):
-        try: self.__field_sec
-        except:
-            self.__field_sec=UINT(**{'sizeinbytes': 2,  'default': 0 })
-        return self.__field_sec.getvalue()
-
-    def __setfield_sec(self, value):
-        if isinstance(value,UINT):
-            self.__field_sec=value
-        else:
-            self.__field_sec=UINT(value,**{'sizeinbytes': 2,  'default': 0 })
-
-    def __delfield_sec(self): del self.__field_sec
-
-    sec=property(__getfield_sec, __setfield_sec, __delfield_sec, None)
-
-    def iscontainer(self):
-        return True
-
-    def containerelements(self):
-        yield ('year', self.__field_year, None)
-        yield ('month', self.__field_month, None)
-        yield ('day', self.__field_day, None)
-        yield ('hour', self.__field_hour, None)
-        yield ('min', self.__field_min, None)
-        yield ('sec', self.__field_sec, None)
-
-    def set_value(self, datetimelist):
-        if len(datetimelist)!=6:
-            raise ValueError('(y,m,d,h,m,s)')
-        self.year,self.month,self.day,self.hour,self.min,self.sec=datetimelist
-    def get_value(self):
-        return (self.year,self.month,self.day,self.hour,self.min,self.sec)
-    def set_current_time(self):
-        self.set_value(time.localtime()[:6])
-
-
-
-
 class pbfileentry(BaseProtogenClass):
     __fields=['entry_tag', 'pad00', 'mod_date', 'unk0', 'entry_number1', 'entry_number0', 'name', 'group', 'emails', 'ringtone', 'wallpaper', 'numbertypes', 'numberindices', 'memo', 'exit_tag', 'dontcare']
 
@@ -896,7 +696,7 @@ class pbfileentry(BaseProtogenClass):
             self.__field_pad00.writetobuffer(buf)
             try: self.__field_mod_date
             except:
-                self.__field_mod_date=PBDateTime()
+                self.__field_mod_date=PBDateTime(**{ 'defaulttocurrenttime': True })
             self.__field_mod_date.writetobuffer(buf)
             try: self.__field_unk0
             except:
@@ -914,7 +714,7 @@ class pbfileentry(BaseProtogenClass):
             self.__field_group.writetobuffer(buf)
             try: self.__field_emails
             except:
-                self.__field_emails=LIST(**{'elementclass': _gen_p_lgvx9100_130, 'length': NUMEMAILS})
+                self.__field_emails=LIST(**{'elementclass': _gen_p_lgvx9100_113, 'length': NUMEMAILS})
             self.__field_emails.writetobuffer(buf)
             try: self.__field_ringtone
             except:
@@ -926,11 +726,11 @@ class pbfileentry(BaseProtogenClass):
             self.__field_wallpaper.writetobuffer(buf)
             try: self.__field_numbertypes
             except:
-                self.__field_numbertypes=LIST(**{'elementclass': _gen_p_lgvx9100_134, 'length': NUMPHONENUMBERS})
+                self.__field_numbertypes=LIST(**{'elementclass': _gen_p_lgvx9100_117, 'length': NUMPHONENUMBERS})
             self.__field_numbertypes.writetobuffer(buf)
             try: self.__field_numberindices
             except:
-                self.__field_numberindices=LIST(**{'elementclass': _gen_p_lgvx9100_136, 'length': NUMPHONENUMBERS})
+                self.__field_numberindices=LIST(**{'elementclass': _gen_p_lgvx9100_119, 'length': NUMPHONENUMBERS})
             self.__field_numberindices.writetobuffer(buf)
             try: self.__field_memo
             except:
@@ -958,7 +758,7 @@ class pbfileentry(BaseProtogenClass):
         if self.entry_tag==PB_ENTRY_SOR:
             self.__field_pad00=UINT(**{'sizeinbytes': 1,  'default': 0 })
             self.__field_pad00.readfrombuffer(buf)
-            self.__field_mod_date=PBDateTime()
+            self.__field_mod_date=PBDateTime(**{ 'defaulttocurrenttime': True })
             self.__field_mod_date.readfrombuffer(buf)
             self.__field_unk0=STRING(**{'sizeinbytes': 6,  'terminator': None, 'default': '\xff\xff\xff\xff\xff\xff' })
             self.__field_unk0.readfrombuffer(buf)
@@ -970,15 +770,15 @@ class pbfileentry(BaseProtogenClass):
             self.__field_name.readfrombuffer(buf)
             self.__field_group=UINT(**{'sizeinbytes': 2,  'default': 0 })
             self.__field_group.readfrombuffer(buf)
-            self.__field_emails=LIST(**{'elementclass': _gen_p_lgvx9100_130, 'length': NUMEMAILS})
+            self.__field_emails=LIST(**{'elementclass': _gen_p_lgvx9100_113, 'length': NUMEMAILS})
             self.__field_emails.readfrombuffer(buf)
             self.__field_ringtone=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
             self.__field_ringtone.readfrombuffer(buf)
             self.__field_wallpaper=UINT(**{'sizeinbytes': 2,  'default': 0 })
             self.__field_wallpaper.readfrombuffer(buf)
-            self.__field_numbertypes=LIST(**{'elementclass': _gen_p_lgvx9100_134, 'length': NUMPHONENUMBERS})
+            self.__field_numbertypes=LIST(**{'elementclass': _gen_p_lgvx9100_117, 'length': NUMPHONENUMBERS})
             self.__field_numbertypes.readfrombuffer(buf)
-            self.__field_numberindices=LIST(**{'elementclass': _gen_p_lgvx9100_136, 'length': NUMPHONENUMBERS})
+            self.__field_numberindices=LIST(**{'elementclass': _gen_p_lgvx9100_119, 'length': NUMPHONENUMBERS})
             self.__field_numberindices.readfrombuffer(buf)
             self.__field_memo=USTRING(**{'sizeinbytes': 69,  'raiseonunterminatedread': False, 'default': '', 'encoding': PHONE_ENCODING })
             self.__field_memo.readfrombuffer(buf)
@@ -1025,14 +825,14 @@ class pbfileentry(BaseProtogenClass):
     def __getfield_mod_date(self):
         try: self.__field_mod_date
         except:
-            self.__field_mod_date=PBDateTime()
+            self.__field_mod_date=PBDateTime(**{ 'defaulttocurrenttime': True })
         return self.__field_mod_date.getvalue()
 
     def __setfield_mod_date(self, value):
         if isinstance(value,PBDateTime):
             self.__field_mod_date=value
         else:
-            self.__field_mod_date=PBDateTime(value,)
+            self.__field_mod_date=PBDateTime(value,**{ 'defaulttocurrenttime': True })
 
     def __delfield_mod_date(self): del self.__field_mod_date
 
@@ -1115,14 +915,14 @@ class pbfileentry(BaseProtogenClass):
     def __getfield_emails(self):
         try: self.__field_emails
         except:
-            self.__field_emails=LIST(**{'elementclass': _gen_p_lgvx9100_130, 'length': NUMEMAILS})
+            self.__field_emails=LIST(**{'elementclass': _gen_p_lgvx9100_113, 'length': NUMEMAILS})
         return self.__field_emails.getvalue()
 
     def __setfield_emails(self, value):
         if isinstance(value,LIST):
             self.__field_emails=value
         else:
-            self.__field_emails=LIST(value,**{'elementclass': _gen_p_lgvx9100_130, 'length': NUMEMAILS})
+            self.__field_emails=LIST(value,**{'elementclass': _gen_p_lgvx9100_113, 'length': NUMEMAILS})
 
     def __delfield_emails(self): del self.__field_emails
 
@@ -1163,14 +963,14 @@ class pbfileentry(BaseProtogenClass):
     def __getfield_numbertypes(self):
         try: self.__field_numbertypes
         except:
-            self.__field_numbertypes=LIST(**{'elementclass': _gen_p_lgvx9100_134, 'length': NUMPHONENUMBERS})
+            self.__field_numbertypes=LIST(**{'elementclass': _gen_p_lgvx9100_117, 'length': NUMPHONENUMBERS})
         return self.__field_numbertypes.getvalue()
 
     def __setfield_numbertypes(self, value):
         if isinstance(value,LIST):
             self.__field_numbertypes=value
         else:
-            self.__field_numbertypes=LIST(value,**{'elementclass': _gen_p_lgvx9100_134, 'length': NUMPHONENUMBERS})
+            self.__field_numbertypes=LIST(value,**{'elementclass': _gen_p_lgvx9100_117, 'length': NUMPHONENUMBERS})
 
     def __delfield_numbertypes(self): del self.__field_numbertypes
 
@@ -1179,14 +979,14 @@ class pbfileentry(BaseProtogenClass):
     def __getfield_numberindices(self):
         try: self.__field_numberindices
         except:
-            self.__field_numberindices=LIST(**{'elementclass': _gen_p_lgvx9100_136, 'length': NUMPHONENUMBERS})
+            self.__field_numberindices=LIST(**{'elementclass': _gen_p_lgvx9100_119, 'length': NUMPHONENUMBERS})
         return self.__field_numberindices.getvalue()
 
     def __setfield_numberindices(self, value):
         if isinstance(value,LIST):
             self.__field_numberindices=value
         else:
-            self.__field_numberindices=LIST(value,**{'elementclass': _gen_p_lgvx9100_136, 'length': NUMPHONENUMBERS})
+            self.__field_numberindices=LIST(value,**{'elementclass': _gen_p_lgvx9100_119, 'length': NUMPHONENUMBERS})
 
     def __delfield_numberindices(self): del self.__field_numberindices
 
@@ -1266,14 +1066,11 @@ class pbfileentry(BaseProtogenClass):
     def valid(self):
         global PB_ENTRY_SOR
         return self.entry_tag==PB_ENTRY_SOR
-    def set_current_time(self):
-        if self.valid():
-            self.mod_date.set_current_time()
 
 
 
 
-class _gen_p_lgvx9100_130(BaseProtogenClass):
+class _gen_p_lgvx9100_113(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['email']
 
@@ -1282,8 +1079,8 @@ class _gen_p_lgvx9100_130(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_lgvx9100_130,self).__init__(**dict)
-        if self.__class__ is _gen_p_lgvx9100_130:
+        super(_gen_p_lgvx9100_113,self).__init__(**dict)
+        if self.__class__ is _gen_p_lgvx9100_113:
             self._update(args,dict)
 
 
@@ -1292,7 +1089,7 @@ class _gen_p_lgvx9100_130(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_lgvx9100_130,self)._update(args,kwargs)
+        super(_gen_p_lgvx9100_113,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -1300,7 +1097,7 @@ class _gen_p_lgvx9100_130(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_lgvx9100_130,kwargs)
+            self._complainaboutunusedargs(_gen_p_lgvx9100_113,kwargs)
         if len(args):
             dict2={'sizeinbytes': 49, 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False}
             dict2.update(kwargs)
@@ -1348,7 +1145,7 @@ class _gen_p_lgvx9100_130(BaseProtogenClass):
 
 
 
-class _gen_p_lgvx9100_134(BaseProtogenClass):
+class _gen_p_lgvx9100_117(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['numbertype']
 
@@ -1357,8 +1154,8 @@ class _gen_p_lgvx9100_134(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_lgvx9100_134,self).__init__(**dict)
-        if self.__class__ is _gen_p_lgvx9100_134:
+        super(_gen_p_lgvx9100_117,self).__init__(**dict)
+        if self.__class__ is _gen_p_lgvx9100_117:
             self._update(args,dict)
 
 
@@ -1367,7 +1164,7 @@ class _gen_p_lgvx9100_134(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_lgvx9100_134,self)._update(args,kwargs)
+        super(_gen_p_lgvx9100_117,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -1375,7 +1172,7 @@ class _gen_p_lgvx9100_134(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_lgvx9100_134,kwargs)
+            self._complainaboutunusedargs(_gen_p_lgvx9100_117,kwargs)
         if len(args):
             dict2={'sizeinbytes': 1,  'default': 0 }
             dict2.update(kwargs)
@@ -1423,7 +1220,7 @@ class _gen_p_lgvx9100_134(BaseProtogenClass):
 
 
 
-class _gen_p_lgvx9100_136(BaseProtogenClass):
+class _gen_p_lgvx9100_119(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['numberindex']
 
@@ -1432,8 +1229,8 @@ class _gen_p_lgvx9100_136(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_lgvx9100_136,self).__init__(**dict)
-        if self.__class__ is _gen_p_lgvx9100_136:
+        super(_gen_p_lgvx9100_119,self).__init__(**dict)
+        if self.__class__ is _gen_p_lgvx9100_119:
             self._update(args,dict)
 
 
@@ -1442,7 +1239,7 @@ class _gen_p_lgvx9100_136(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_lgvx9100_136,self)._update(args,kwargs)
+        super(_gen_p_lgvx9100_119,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -1450,7 +1247,7 @@ class _gen_p_lgvx9100_136(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_lgvx9100_136,kwargs)
+            self._complainaboutunusedargs(_gen_p_lgvx9100_119,kwargs)
         if len(args):
             dict2={'sizeinbytes': 2,  'default': 0xffff }
             dict2.update(kwargs)
@@ -1546,7 +1343,7 @@ class pbfile(BaseProtogenClass):
         self.__field_model_name.writetobuffer(buf)
         try: self.__field_mod_date
         except:
-            self.__field_mod_date=PBDateTime()
+            self.__field_mod_date=PBDateTime(**{ 'defaulttocurrenttime': True })
         self.__field_mod_date.writetobuffer(buf)
         try: self.__field_blanks
         except:
@@ -1570,7 +1367,7 @@ class pbfile(BaseProtogenClass):
         self.__field_eof_tag.readfrombuffer(buf)
         self.__field_model_name=STRING(**{'sizeinbytes': 10,  'default': 'VX9100' })
         self.__field_model_name.readfrombuffer(buf)
-        self.__field_mod_date=PBDateTime()
+        self.__field_mod_date=PBDateTime(**{ 'defaulttocurrenttime': True })
         self.__field_mod_date.readfrombuffer(buf)
         self.__field_blanks=STRING(**{'sizeinbytes': 221,  'default': '' })
         self.__field_blanks.readfrombuffer(buf)
@@ -1630,14 +1427,14 @@ class pbfile(BaseProtogenClass):
     def __getfield_mod_date(self):
         try: self.__field_mod_date
         except:
-            self.__field_mod_date=PBDateTime()
+            self.__field_mod_date=PBDateTime(**{ 'defaulttocurrenttime': True })
         return self.__field_mod_date.getvalue()
 
     def __setfield_mod_date(self, value):
         if isinstance(value,PBDateTime):
             self.__field_mod_date=value
         else:
-            self.__field_mod_date=PBDateTime(value,)
+            self.__field_mod_date=PBDateTime(value,**{ 'defaulttocurrenttime': True })
 
     def __delfield_mod_date(self): del self.__field_mod_date
 
@@ -1734,7 +1531,7 @@ class pnfileentry(BaseProtogenClass):
             self.__field_pad00.writetobuffer(buf)
             try: self.__field_mod_date
             except:
-                self.__field_mod_date=LIST(**{'elementclass': _gen_p_lgvx9100_176,  'length': 6 })
+                self.__field_mod_date=PBDateTime(**{'defaulttocurrenttime': True })
             self.__field_mod_date.writetobuffer(buf)
             try: self.__field_unk0
             except:
@@ -1771,7 +1568,7 @@ class pnfileentry(BaseProtogenClass):
         if self.entry_tag==PB_NUMBER_SOR:
             self.__field_pad00=UINT(**{'sizeinbytes': 1,  'default': 0 })
             self.__field_pad00.readfrombuffer(buf)
-            self.__field_mod_date=LIST(**{'elementclass': _gen_p_lgvx9100_176,  'length': 6 })
+            self.__field_mod_date=PBDateTime(**{'defaulttocurrenttime': True })
             self.__field_mod_date.readfrombuffer(buf)
             self.__field_unk0=STRING(**{'sizeinbytes': 6,  'default': '', 'raiseonunterminatedread': False })
             self.__field_unk0.readfrombuffer(buf)
@@ -1830,14 +1627,14 @@ class pnfileentry(BaseProtogenClass):
     def __getfield_mod_date(self):
         try: self.__field_mod_date
         except:
-            self.__field_mod_date=LIST(**{'elementclass': _gen_p_lgvx9100_176,  'length': 6 })
+            self.__field_mod_date=PBDateTime(**{'defaulttocurrenttime': True })
         return self.__field_mod_date.getvalue()
 
     def __setfield_mod_date(self, value):
-        if isinstance(value,LIST):
+        if isinstance(value,PBDateTime):
             self.__field_mod_date=value
         else:
-            self.__field_mod_date=LIST(value,**{'elementclass': _gen_p_lgvx9100_176,  'length': 6 })
+            self.__field_mod_date=PBDateTime(value,**{'defaulttocurrenttime': True })
 
     def __delfield_mod_date(self): del self.__field_mod_date
 
@@ -1994,92 +1791,6 @@ class pnfileentry(BaseProtogenClass):
     def valid(self):
         global PB_NUMBER_SOR
         return self.entry_tag==PB_NUMBER_SOR
-    def set_current_time(self):
-        if not self.valid():
-            return
-        for i in time.localtime()[:6]:
-            self.mod_date.append(i)
-
-
-
-
-class _gen_p_lgvx9100_176(BaseProtogenClass):
-    'Anonymous inner class'
-    __fields=['date_entry']
-
-    def __init__(self, *args, **kwargs):
-        dict={}
-        # What was supplied to this function
-        dict.update(kwargs)
-        # Parent constructor
-        super(_gen_p_lgvx9100_176,self).__init__(**dict)
-        if self.__class__ is _gen_p_lgvx9100_176:
-            self._update(args,dict)
-
-
-    def getfields(self):
-        return self.__fields
-
-
-    def _update(self, args, kwargs):
-        super(_gen_p_lgvx9100_176,self)._update(args,kwargs)
-        keys=kwargs.keys()
-        for key in keys:
-            if key in self.__fields:
-                setattr(self, key, kwargs[key])
-                del kwargs[key]
-        # Were any unrecognized kwargs passed in?
-        if __debug__:
-            self._complainaboutunusedargs(_gen_p_lgvx9100_176,kwargs)
-        if len(args):
-            dict2={'sizeinbytes': 2,  'default': 0 }
-            dict2.update(kwargs)
-            kwargs=dict2
-            self.__field_date_entry=UINT(*args,**dict2)
-        # Make all P fields that haven't already been constructed
-
-
-    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
-        'Writes this packet to the supplied buffer'
-        self._bufferstartoffset=buf.getcurrentoffset()
-        try: self.__field_date_entry
-        except:
-            self.__field_date_entry=UINT(**{'sizeinbytes': 2,  'default': 0 })
-        self.__field_date_entry.writetobuffer(buf)
-        self._bufferendoffset=buf.getcurrentoffset()
-        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
-
-
-    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
-        'Reads this packet from the supplied buffer'
-        self._bufferstartoffset=buf.getcurrentoffset()
-        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_date_entry=UINT(**{'sizeinbytes': 2,  'default': 0 })
-        self.__field_date_entry.readfrombuffer(buf)
-        self._bufferendoffset=buf.getcurrentoffset()
-
-
-    def __getfield_date_entry(self):
-        try: self.__field_date_entry
-        except:
-            self.__field_date_entry=UINT(**{'sizeinbytes': 2,  'default': 0 })
-        return self.__field_date_entry.getvalue()
-
-    def __setfield_date_entry(self, value):
-        if isinstance(value,UINT):
-            self.__field_date_entry=value
-        else:
-            self.__field_date_entry=UINT(value,**{'sizeinbytes': 2,  'default': 0 })
-
-    def __delfield_date_entry(self): del self.__field_date_entry
-
-    date_entry=property(__getfield_date_entry, __setfield_date_entry, __delfield_date_entry, None)
-
-    def iscontainer(self):
-        return True
-
-    def containerelements(self):
-        yield ('date_entry', self.__field_date_entry, None)
 
 
 
