@@ -4,6 +4,21 @@
 <li><p>The firmware version of the phone used for development & test is <B>VX910V03</B>.
 </UL>
 
+<H3>Phonebook</H3>
+<UL>
+<LI><P>BitPim supports all phonebook features of this phone.
+<LI><P>The phonebook can include up to 1000 entries, each entry can have up to 5 numbers for a total of 5000 numbers.
+<LI><P>The phone supports up to 999 speed dials (1 through 999).  If not used, BitPim sets speed dial slot 1 to <B>Voice Mail</B>.
+<LI><P>After writing phonebook data from BitPim to the phone, you may need to (re)set your ICE entries.
+</UL>
+
+<H3>Calendar</H3>
+<UL>
+<LI><P>BitPim now fully supports all calendar features of this phone.
+<LI><P>For recurrent events, phone events have <B>End Date</B> and <B>Repeat Until</B> fields; when BitPim retrieves calendar data from the phone, it combines these 2 fields into the <B>End Date</B> field.
+<LI><P>This phone can support up to 300 calendar events.
+</UL>
+
 <H3>Ringtones</H3>
 <UL>
 <LI><P>BitPim can retrieve and add <B>Ringtones</B> and <B>Sounds</B> files from/to the phone.

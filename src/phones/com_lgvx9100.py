@@ -435,6 +435,12 @@ class Phone(parentphone):
         return new_entry
 
 
+    # Calendar stuff------------------------------------------------------------
+    def _scheduleextras(self, data, fwversion):
+        data.serial_number = '000000d1-00000000-00000000-' + fwversion
+        data.unknown3 = 0x01fc
+
+
     # ringtones and wallpapers stuff--------------------------------------------
     def savewallpapers(self, results, merge):
         results['rebootphone']=True
@@ -489,14 +495,14 @@ class Profile(parentprofile):
 
     _supportedsyncs=(
         ('phonebook', 'read', None),   # all phonebook reading
-##        ('calendar', 'read', None),    # all calendar reading
+        ('calendar', 'read', None),    # all calendar reading
         ('wallpaper', 'read', None),   # all wallpaper reading
         ('ringtone', 'read', None),    # all ringtone reading
 ##        ('call_history', 'read', None),# all call history list reading
 ##        ('sms', 'read', None),         # all SMS list reading
 ##        ('memo', 'read', None),        # all memo list reading
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
-##        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
+        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
         ('wallpaper', 'write', 'MERGE'),      # merge and overwrite wallpaper
 ##        ('wallpaper', 'write', 'OVERWRITE'),
         ('ringtone', 'write', 'MERGE'),       # merge and overwrite ringtone
