@@ -15,6 +15,7 @@
       <li><p>New phone support: <b>Sanyo SCP-8400</b>
       <LI><P>New phone support: <B>LG VX-9100 (enV2)</B> (Initial)
       <LI><P>Bug fix: Can't view Data Recording files on non-Intel Mac.
+      <LI><P>Bug fix: Correctly process BREW special files.
     </ul>
 
    <h2><a name="1.0.5">Changes in 1.0.5</a></h2>
