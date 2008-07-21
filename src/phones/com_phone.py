@@ -145,7 +145,8 @@ class Phone(object):
                    uselocalfs=False):
         """Read the specified filename and bind it to the object class"""
         if uselocalfs:
-            _buf=prototypes.bufffer(file(filename, 'rb').read())
+            self.log('Reading local file: %s'%filename)
+            _buf=prototypes.buffer(file(filename, 'rb').read())
         else:
             _buf=prototypes.buffer(self.getfilecontents(filename))
         _obj=object_class()

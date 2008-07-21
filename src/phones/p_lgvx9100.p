@@ -29,12 +29,17 @@ NUMSPEEDDIALS=1000
 FIRSTSPEEDDIAL=1
 LASTSPEEDDIAL=999
 
+NUMEMERGENCYCONTACTS=3
+
 BREW_FILE_SYSTEM=2
 
 INDEX_RT_TYPE=257
 INDEX_SOUND_TYPE=2
 INDEX_VIDEO_TYPE=3
 INDEX_IMAGE_TYPE=0
+INDEX_SDIMAGE_TYPE=16
+INDEX_SDVIDEO_TYPE=19
+INDEX_SDSOUND_TYPE=18
 
 MAX_PHONEBOOK_GROUPS=30
 PB_ENTRY_SOR='<PE>'
@@ -43,8 +48,14 @@ PB_NUMBER_SOR='<PN>'
 
 pb_group_filename='pim/pbgroup.dat'
 pb_recordid_filename='pim/record_id.dat'
+pb_ice_file_name   = 'pim/pbiceentry.dat'
 
 NUMCALENDARENTRIES=300
+
+# SMS index files
+inbox_index     = "dload/inbox.dat"
+outbox_index    = "dload/outbox.dat"
+drafts_index    = "dload/drafts.dat"
 
 %}
 
@@ -54,7 +65,7 @@ PACKET indexentry:
                  'raiseonunterminatedread': False,
                  'raiseontruncate': False } filename  "full pathname"
     4 UINT size
-    4 UINT {'default': 0} +date
+    4 GPSDATE {'default': GPSDATE.now()} +date
     4 UINT type
     4 UINT { 'default': 0 } +dunno
     
@@ -188,11 +199,30 @@ PACKET PathIndexFile:
 PACKET RecordIdEntry:
     4 UINT idnum
 
+# pciceentry.dat
+PACKET iceentry:
+    "ICE index entries"
+    2 UINT { 'default': 0x0000 } +entry_assigned "0 if not assigned, 1 if assigned"
+    2 UINT { 'default': 0xFFFF } +entry_number "0-based ICE entry number when assigned, 0xffff if unassigned"
+    2 UINT { 'default': 0x0000 } +pb_index "0-based phone book entry number"
+    82 DATA { 'default': '\x00'*82 } +dontcare
+    %{
+    def valid(self):
+        return self.entry_assigned==1 and \
+               self.entry_number<NUMEMERGENCYCONTACTS and \
+               self.pb_index<NUMPHONEBOOKENTRIES
+    %}
+    
+PACKET iceentryfile:
+    * LIST { 'elementclass': iceentry,
+             'createdefault': True,
+             'length': NUMEMERGENCYCONTACTS } +items
+
 # Calendar stuff
 PACKET scheduleevent:
     P  UINT { 'constant': 138 } packet_size
-    4  UINT { 'default': 0 } +pos "position within file, used as an event id"
-    if self.pos:
+    4  UINT { 'default': 0xffffffff } +pos "position within file, used as an event id"
+    if self.pos!=0xffffffff:
         # valid slot
         33 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False, 'default': '' } +description
         4  GPSDATE { 'default': GPSDATE.now() } +cdate      # creation date
@@ -218,8 +248,10 @@ PACKET scheduleevent:
                      'raiseonunterminatedread': False,
                      'raiseontruncate': False } +serial_number
     else:
-        # empty slot, default to all 0's
-        134 STRING { 'default': '' } +blanks
+        # empty slot, default to all 0xFF
+        134 STRING { 'default': '',
+                     'terminator': 0xff,
+                     'pad': 0xff } +blanks
 
 PACKET schedulefile:
     2 UINT numactiveitems
@@ -231,3 +263,96 @@ PACKET scheduleringerfile:
     4 UINT numringers
     * LIST +ringerpaths:
         256 USTRING { 'encoding': PHONE_ENCODING, 'raiseontruncate': True } path
+
+# SMS Stuff
+PACKET msg_record:
+    # the first few fields in this packet have something to do with the type of SMS
+    # message contained. EMS and concatinated text are coded differently than a
+    # simple text message
+    P BOOL { 'default': False } +lastone
+    P UINT { 'default': 220 if self.lastone else 223 } +msglen
+    1 UINT binary   # 0=simple text, 1=binary/concatinated
+    1 UINT unknown3 # 0=simple text, 1=binary/concatinated
+    1 UINT unknown4 # 0
+    1 UINT unknown6 # 2=simple text, 9=binary/concatinated
+    1 UINT length
+    * LIST {'length': self.msglen } +msg:
+        1 UINT byte "individual byte of message"
+
+PACKET recipient_record:
+    P BOOL { 'default': False } +lastone
+    33 DATA unknown1 # contains recipient name from phonebook on this phone
+    49 USTRING number
+    1 UINT numberlen "length of the number"
+    1 UINT status   # 1 when sent, 5 when received
+    8 UNKNOWN dunno1
+    4 LGCALDATE timesent
+    4 LGCALDATE timereceived
+    1 UINT unknown2 # 0 when not received, set to 1 when received
+    * DATA { 'sizeinbytes': 142 if self.lastone else 147 } unknown3
+
+PACKET sms_saved:
+    P BOOL { 'default': True } +outboxmsg
+    4 GPSDATE GPStime   # num seconds since 0h 1-6-80, time message received by phone
+    * sms_out outbox
+
+PACKET sms_out:
+    4 UINT unk0             # zero
+    4 UINT index            # starting from 1, unique
+    1 UINT locked           # 1=locked
+    3 UNKNOWN unk1          # zero
+    4 GPSDATE timestamp
+    4 GPSDATE timesent      # time the message was sent
+    61 USTRING {'encoding': PHONE_ENCODING} subject
+    2 UINT num_msg_elements # up to 7 -- this may not be correct
+    2 UINT priority         # 0=normal, 2=high
+    2 UNKNOWN unk2          # always 01 01
+    29 USTRING callback     # 
+    * LIST { 'elementclass': recipient_record,'length': 9 } +rcps
+    * recipient_record { 'lastone': True } +rcplast
+    * LIST {'elementclass': msg_record, 'length': 6} +msgs
+    * msg_record { 'lastone': True } +msglast
+    * UNKNOWN pad1
+    %{
+    _msg=None
+    def _get_msg(self):
+        if self._msg is None:
+            self._msg=[x for x in self.msgs]+[self.msglast]
+        return self._msg
+    messages=property(fget=_get_msg)
+    _rcp=None
+    def _get_recipients(self):
+        if self._rcp is None:
+            self._rcp=[x for x in self.rcps]+[self.rcplast]
+        return self._rcp
+    recipients=property(fget=_get_recipients)
+    %}
+
+PACKET SMSINBOXMSGFRAGMENT:
+    * LIST { 'length': 222 } +msg:
+        1 UINT byte "individual byte of message"
+
+PACKET sms_in:
+    4  UINT    unk0      # zero
+    4  UINT    index
+    4  UINT    unk1
+    4  GPSDATE GPStime # num seconds since 0h 1-6-80, time message received by phone
+    6  SMSDATE timesent
+    2  UINT    unk2      # zero
+    4  GPSDATE gtimesent # num seconds since 0h 1-6-80, time message received by phone
+    1  UINT    read
+    1  UINT    locked
+    1  UINT    priority
+    15 UNKNOWN dunno1
+    64 USTRING {'encoding': PHONE_ENCODING,
+                'raiseonunterminatedread': False } subject
+    * LIST { 'length': 20 } +msgs:
+        1 UINT msg_id
+        1 UINT msg_length
+        * SMSINBOXMSGFRAGMENT msg_data
+    49   USTRING sender
+    1    UINT sender_length
+    2    UINT unk3
+    33   USTRING sender_name
+    49   USTRING callback
+    1    UINT callback_length

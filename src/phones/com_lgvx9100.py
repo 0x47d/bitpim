@@ -19,8 +19,10 @@ import com_lgvx8550
 import p_lgvx9100
 import prototypes
 import helpids
+import sms
 
 DEBUG1=False
+DEBUG2=False
 #-------------------------------------------------------------------------------
 parentphone=com_lgvx8550.Phone
 class Phone(parentphone):
@@ -41,19 +43,19 @@ class Phone(parentphone):
 
     ringtonelocations= (
         #  type          index file            default dir        external dir    max  type Index
-        ( 'ringers',    'dload/myringtone.dat','brew/mod/10889/ringtones','mmc1/ringers', 100, 0x0101, 100),
-        ( 'sounds',     'dload/mysound.dat',   'brew/mod/18067',   '',             100, 0x02, None),
-##        ( 'sounds(sd)', 'dload/sd_sound.dat',  'mmc1/my_sounds',  '',             100, 0x02, None),
+        ( 'ringers',    'dload/myringtone.dat','brew/mod/10889/ringtones','mmc1/ringers', 100, protocolclass.INDEX_RT_TYPE, 100),
+        ( 'sounds',     'dload/mysound.dat',   'brew/mod/18067',   '',             100, protocolclass.INDEX_SOUND_TYPE, None),
+        ( 'sounds(sd)', 'dload/sd_sound.dat',  'mmc1/my_sounds',  '',             100, protocolclass.INDEX_SDSOUND_TYPE, None),
 ##        ( 'music',      'dload/efs_music.dat', 'my_music',        '',             100, 0x104, None),
 ##        ( 'music(sd)',  'dload/sd_music.dat',  'mmc1/my_music',   '',             100, 0x14, None),
         )
 
     wallpaperlocations= (
         #  type          index file            default dir     external dir  max  type Index
-        ( 'images',     'dload/image.dat',    'brew/mod/10888', '',          100, 0x00, 100),
-##        ( 'images(sd)', 'dload/sd_image.dat', 'mmc1/my_pix',   '',           100, 0x10, None),
-        ( 'video',      'dload/video.dat',    'brew/mod/10890', '',          100, 0x03, None),
-##        ( 'video(sd)',  'dload/sd_video.dat', 'mmc1/my_flix',  '',           100, 0x13, None),
+        ( 'images',     'dload/image.dat',    'brew/mod/10888', '',          100, protocolclass.INDEX_IMAGE_TYPE, 100),
+        ( 'images(sd)', 'dload/sd_image.dat', 'mmc1/my_pix',   '',           100, protocolclass.INDEX_SDIMAGE_TYPE, None),
+        ( 'video',      'dload/video.dat',    'brew/mod/10890', '',          100, protocolclass.INDEX_VIDEO_TYPE, None),
+        ( 'video(sd)',  'dload/sd_video.dat', 'mmc1/my_flix',  '',           100, protocolclass.INDEX_SDVIDEO_TYPE, None),
         )
 
     def __init__(self, logtarget, commport):
@@ -346,7 +348,10 @@ class Phone(parentphone):
         # slot 0 is always unused
         req.speeddials.append(self.protocolclass.speeddial())
         # if empty, slot 1 is for voicemail
-        if not speeddials.has_key(1):
+        if speeddials.has_key(1):
+            req.speeddials.append(self.protocolclass.speeddial(entry=speeddials[1]['entry'],
+                                                               number=speeddials[1]['type']))
+        else:
             req.speeddials.append(self.protocolclass.speeddial(entry=1000,
                                                                number=6))
         for i in range(2, self.protocolclass.NUMSPEEDDIALS):
@@ -446,15 +451,78 @@ class Phone(parentphone):
         results['rebootphone']=True
         return self.savemedia('wallpapers', 'wallpaper-index',
                               self.wallpaperlocations, results, merge,
-                              self.getwallpaperindices, False)
+                              self.getwallpaperindices, True)
             
     def saveringtones(self, results, merge):
         # Let the phone rebuild the index file, just need to reboot
         results['rebootphone']=True
         return self.savemedia('ringtone', 'ringtone-index',
                               self.ringtonelocations, results, merge,
-                              self.getringtoneindices, False)
-        
+                              self.getringtoneindices, True)
+
+    # SMS Stuff-----------------------------------------------------------------
+    # Again, this is very similar to the 8800, just make it work with the 9100
+    def getindex(self, filename):
+        try:
+            return self.readobject(filename,
+                                   self.protocolclass.indexfile,
+                                   logtitle='Reading index file',
+                                   uselocalfs=DEBUG2).items
+        except:
+            return []
+
+    def _readsms(self):
+        res={}
+        # The Voyager and Venus use index files to keep track of SMS messages
+        for item in self.getindex(self.protocolclass.drafts_index):
+                sf=self.readobject(item.filename,
+                                   self.protocolclass.sms_saved,
+                                   logtitle='SMS draft item',
+                                   uselocalfs=DEBUG2)
+                # The 9100 only has draft messages (saved outgoing messaged)
+                entry=self._getoutboxmessage(sf.outbox)
+                entry.folder=entry.Folder_Saved
+                res[entry.id]=entry
+        for item in self.getindex(self.protocolclass.inbox_index):
+                sf=self.readobject(item.filename,
+                                   self.protocolclass.sms_in,
+                                   logtitle='SMS inbox item',
+                                   uselocalfs=DEBUG2)
+                entry=self._getinboxmessage(sf)
+                res[entry.id]=entry
+        for item in self.getindex(self.protocolclass.outbox_index):
+                sf=self.readobject(item.filename,
+                                   self.protocolclass.sms_out,
+                                   logtitle='SMS outbox item',
+                                   uselocalfs=DEBUG2)
+                entry=self._getoutboxmessage(sf)
+                res[entry.id]=entry
+        return res 
+
+    def _getinboxmessage(self, sf):
+        entry=sms.SMSEntry()
+        entry.folder=entry.Folder_Inbox
+        entry.datetime="%d%02d%02dT%02d%02d%02d" % (sf.GPStime)
+        entry._from=sf.sender if sf.sender else sf.sender_name
+        entry.subject=sf.subject
+        entry.locked=sf.locked
+        if sf.priority==0:
+            entry.priority=sms.SMSEntry.Priority_Normal
+        else:
+            entry.priority=sms.SMSEntry.Priority_High
+        entry.read=sf.read
+        txt=""
+        _decode_func=self._get_text_from_sms_msg_with_header if \
+                      sf.msgs[1].msg_length else \
+                      self._get_text_from_sms_msg_without_header
+        for _entry in sf.msgs:
+            if _entry.msg_length:
+                txt+=_decode_func(_entry.msg_data.msg, _entry.msg_length)
+        entry.text=unicode(txt, errors='ignore')
+        entry.callback=sf.callback
+        return entry
+
+
 #-------------------------------------------------------------------------------
 parentprofile=com_lgvx8550.Profile
 class Profile(parentprofile):
@@ -472,16 +540,16 @@ class Profile(parentprofile):
     imageorigins={}
     imageorigins.update(common.getkv(parentprofile.stockimageorigins, "images"))
     imageorigins.update(common.getkv(parentprofile.stockimageorigins, "video"))
-##    imageorigins.update(common.getkv(parentprofile.stockimageorigins, "images(sd)"))
-##    imageorigins.update(common.getkv(parentprofile.stockimageorigins, "video(sd)"))
+    imageorigins.update(common.getkv(parentprofile.stockimageorigins, "images(sd)"))
+    imageorigins.update(common.getkv(parentprofile.stockimageorigins, "video(sd)"))
     def GetImageOrigins(self):
         return self.imageorigins
 
 
 ##    ringtoneorigins=('ringers', 'sounds', 'sounds(sd)',' music', 'music(sd)')
 ##    excluded_ringtone_origins=('sounds', 'sounds(sd)', 'music', 'music(sd)')
-    ringtoneorigins=('ringers', 'sounds')
-    excluded_ringtone_origins=('sounds',)
+    ringtoneorigins=('ringers', 'sounds', 'sounds(sd)')
+    excluded_ringtone_origins=('sounds', 'sounds(sd)')
 
     # our targets are the same for all origins
     imagetargets={}
@@ -498,9 +566,9 @@ class Profile(parentprofile):
         ('calendar', 'read', None),    # all calendar reading
         ('wallpaper', 'read', None),   # all wallpaper reading
         ('ringtone', 'read', None),    # all ringtone reading
-##        ('call_history', 'read', None),# all call history list reading
-##        ('sms', 'read', None),         # all SMS list reading
-##        ('memo', 'read', None),        # all memo list reading
+        ('call_history', 'read', None),# all call history list reading
+        ('sms', 'read', None),         # all SMS list reading
+        ('memo', 'read', None),        # all memo list reading
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
         ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
         ('wallpaper', 'write', 'MERGE'),      # merge and overwrite wallpaper
@@ -508,7 +576,7 @@ class Profile(parentprofile):
         ('ringtone', 'write', 'MERGE'),       # merge and overwrite ringtone
 ##        ('ringtone', 'write', 'OVERWRITE'),
 ####        ('sms', 'write', 'OVERWRITE'),        # all SMS list writing
-##        ('memo', 'write', 'OVERWRITE'),       # all memo list writing
+        ('memo', 'write', 'OVERWRITE'),       # all memo list writing
 ####        ('playlist', 'read', 'OVERWRITE'),
 ####        ('playlist', 'write', 'OVERWRITE'),
         )

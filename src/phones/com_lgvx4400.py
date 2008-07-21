@@ -202,7 +202,7 @@ class Phone(com_phone.Phone,com_brew.BrewProtocol,com_lg.LGPhonebook,com_lg.LGIn
     def _getoutboxmessage(self, sf):
         entry=sms.SMSEntry()
         entry.folder=entry.Folder_Sent
-        entry.datetime="%d%02d%02dT%02d%02d00" % ((sf.timesent))
+        entry.datetime="%d%02d%02dT%02d%02d00" % sf.timesent[:5]
         # add all the recipients
         for r in sf.recipients:
             if r.number:

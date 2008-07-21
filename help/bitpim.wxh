@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <anthemion-project version="1.0.0.0" xmlns="http://www.anthemion.co.uk">
   <header>
-    <long name="name_counter">414</long>
+    <long name="name_counter">415</long>
     <string name="html_path">""</string>
     <string name="title">"BitPim"</string>
     <string name="author">"Roger Binns"</string>
@@ -2762,6 +2762,24 @@
               <long name="title-mode">0</long>
               <long name="locked">0</long>
               <string name="created">"30/6/2008"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+            <document>
+              <string name="title">"Howtos"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"phone-lgvx9100-howtos.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"15/7/2008"</string>
               <long name="is-folder">0</long>
               <long name="link-icon-to-page">1</long>
               <long name="is-visible-in-contents">1</long>
