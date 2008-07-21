@@ -246,7 +246,8 @@ class Phone(parentphone):
                     tone = rt_name
                 else:
                     tone=fundamentals['ringtone-index'][entry.ringtone]['name']
-                res['ringtones']=[ {'ringtone': tone, 'use': 'call'} ]
+                if tone:
+                    res['ringtones']=[ {'ringtone': tone, 'use': 'call'} ]
             except:
                 print "can't find ringtone for index",entry.ringtone
         # assume we are like the VX-8100 in this regard -- looks correct

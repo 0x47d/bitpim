@@ -1612,8 +1612,8 @@ class LGDMPhone:
 
         return struct.unpack_from ('<L', _res.data, 0)[0]
 
-    def _DMv6_get_extra_data(self):
-        _req=self.protocolclass.NVReq(field=0x13d7)
+    def _DMv6_get_extra_data(self,data_field):
+        _req=self.protocolclass.NVReq(field=data_field)
         _res=self.sendbrewcommand(_req, self.protocolclass.NVRes)
 
         return struct.unpack_from ('<L', _res.data, 0)[0]
@@ -1625,34 +1625,47 @@ class LGDMPhone:
         return _res.get_compile_time()
 
     def _enter_DMv6(self):
-        # similar but slightly different from v5, the enV2 started this!
-        # request the seed
-        _req=self.protocolclass.DMKeyReq()
-        _resp=self.sendbrewcommand(_req, self.protocolclass.DMKeyResp)
-        _key=self.get_challenge_response(_resp.unlock_key)
-        if _key is None:
-            self.log('Failed to get the key.')
-            raise EnterDMError('Failed to get the key')
-
-        _esn=self._DMv6_get_esn()
-        _extra=self._DMv6_get_extra_data()
-        _ctime=self._DMv6_get_compile_time()
-
-        # determine how many bytes the key needs be be shifted
-        _shift_bytes = (_esn + ((_extra >> 16) & 0xf) + ((_extra >> 11) & 0x1f) + _ctime) % 16
-        _shift = _shift_bytes / 4
-
-        _req=self.protocolclass.DMEnterReq(unlock_key=_key)
-        if _resp.unlock_code==0:
-            _req.unlock_code=1
-        elif _resp.unlock_code==2:
-            _req.unlock_code=3
-            _req.convert_to_key2(_shift)
+        # this loop is a hack -- different LG phones use different commands to get _extra. once
+        # the command is figured out we won't have to try every possible shift.
+        if self._shift is None:
+            _shifts=range(4)
         else:
-            raise EnterDMError('Unknown unlock_code: %d'%_resp.unlock_code)
-        _resp=self.sendbrewcommand(_req, self.protocolclass.DMEnterResp)
-        if _resp.result!=1:
-            raise EnterDMError('Bad response - unlock_ok: %d'%_resp.result)
+            _shifts=[self._shift]
+        for _shift in _shifts:
+            # similar but slightly different from v5, the enV2 started this!
+            # request the seed
+            _req=self.protocolclass.DMKeyReq()
+            _resp=self.sendbrewcommand(_req, self.protocolclass.DMKeyResp)
+            _key=self.get_challenge_response(_resp.unlock_key)
+            if _key is None:
+                self.log('Failed to get the key.')
+                raise EnterDMError('Failed to get the key')
+
+            #_esn=self._DMv6_get_esn()
+            #_extra=self._DMv6_get_extra_data(0x13d7) # VX-9100 uses data field 0x13d7
+            #_ctime=self._DMv6_get_compile_time()
+
+            # determine how many bytes the key needs be be shifted
+            #_shift_bytes = (_esn + ((_extra >> 16) & 0xf) + ((_extra >> 11) & 0x1f) + _ctime) % 16
+            #_shift = _shift_bytes / 4
+
+            _req=self.protocolclass.DMEnterReq(unlock_key=_key)
+            if _resp.unlock_code==0:
+                # this response usually occurs in error. rebooting the phone seems to clear it
+                _req.unlock_code=1
+            elif _resp.unlock_code==2:
+                _req.unlock_code=3
+                _req.convert_to_key2(_shift)
+            else:
+                raise EnterDMError('Unknown unlock_code: %d'%_resp.unlock_code)
+            _resp=self.sendbrewcommand(_req, self.protocolclass.DMEnterResp)
+            if _resp.result == 1:
+                if self._shift is None:
+                    self._shift=_shift
+                    if __debug__:
+                        self.log('Shift key: %d'%self._shift)
+                return
+        raise EnterDMError('Failed to guess the shift/key')
 
     def enter_DM(self, e=None):
         # do nothing if the phone failed to previously enter DM
@@ -1709,6 +1722,7 @@ class LGDMPhone:
         self._DMv5=None
         self._DMv6=None
         self._timeout=None
+        self._shift=None
         if not hasattr(self, '_real_getfilecontents'):
             (self._real_getfilecontents,
              self.getfilecontents)=(self.getfilecontents,
