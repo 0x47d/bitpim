@@ -9,7 +9,6 @@
 <LI><P>BitPim supports all phonebook features of this phone.
 <LI><P>The phonebook can include up to 1000 entries, each entry can have up to 5 numbers for a total of 5000 numbers.
 <LI><P>The phone supports up to 999 speed dials (1 through 999).  If not used, BitPim sets speed dial slot 1 to <B>Voice Mail</B>.
-<LI><P>After writing phonebook data from BitPim to the phone, you may need to (re)set your ICE entries.
 </UL>
 
 <H3>Calendar</H3>

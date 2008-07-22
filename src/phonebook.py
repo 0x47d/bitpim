@@ -144,6 +144,7 @@ class phonebookdataobject(database.basedataobject):
                                   'memos': ['memo'],
                                   'numbers': ['number', 'type', 'speeddial',
                                               'ringtone', 'wallpaper' ],
+                                  'ice': [ 'iceindex' ],
 ##                                  'maillist': ['entry', 'speeddial',
 ##                                               'ringtone', 'wallpaper' ],
                                   # serials is in parent object
@@ -296,6 +297,8 @@ _getdatalist=[
     "Memo3", ("memos", 2, None, "memo", True),
     "Memo4", ("memos", 3, None, "memo", True),
     "Memo5", ("memos", 4, None, "memo", True),
+
+    "ICEindex", ("ice", 0, None, "iceindex", False),
 
     ]
 

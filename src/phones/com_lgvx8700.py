@@ -24,6 +24,7 @@ import com_lgvx8300
 import com_lgvx8500
 import p_lgvx8700
 
+DEBUG1=False
 #-------------------------------------------------------------------------------
 parentphone=com_lgvx8500.Phone
 class Phone(com_brew.RealBrewProtocol2, parentphone):
@@ -113,35 +114,54 @@ class Phone(com_brew.RealBrewProtocol2, parentphone):
         "Read groups"
         # Reads groups that use explicit IDs
         self.log("Reading group information")
-        buf=prototypes.buffer(self.getfilecontents("pim/pbgroup.dat"))
-        g=self.protocolclass.pbgroups()
-        g.readfrombuffer(buf, logtitle="Groups read")
+        g=self.readobject(self.protocolclass.pb_group_filename,
+                          self.protocolclass.pbgroups,
+                          'Reading groups data')
         groups={}
-        for i in range(len(g.groups)):
-            if len(g.groups[i].name) and (g.groups[i].groupid or i==0):
-                groups[g.groups[i].groupid]={'name': g.groups[i].name }
+        for _group in g.groups:
+            if _group.name:
+                groups[_group.groupid]= { 'name': _group.name,
+                                     'user_added': _group.user_added }
         results['groups'] = groups
         return groups
 
     def savegroups(self, data):
-        groups=data['groups']
+        groups=data.get('groups', {})
         keys=groups.keys()
         keys.sort()
+        keys.reverse()
         g=self.protocolclass.pbgroups()
+        # write the No Group entry first
+        g.groups.append(self.protocolclass.pbgroup(name='No Group'))
+        # now write the rest in reverse ID order
         for k in keys:
-            e=self.protocolclass.pbgroup()
-            e.name=groups[k]['name']
-            if 'groupid' in e.getfields():
-                e.groupid = k
-                if k != 0:
-                    e.unknown0 = 1
-            g.groups.append(e)
-        buffer=prototypes.buffer()
-        g.writetobuffer(buffer, logtitle="New group file")
-        self.writefile("pim/pbgroup.dat", buffer.getvalue())
+            if not k:
+                # already wrote this one out
+                continue
+            g.groups.append(self.protocolclass.pbgroup(name=groups[k]['name'],
+                                                       groupid=k,
+                                                       user_added=groups[k].get('user_added', 1)))
+        self.writeobject(self.protocolclass.pb_group_filename, g,
+                         logtitle='Writing phonebook groups',
+                         uselocalfs=DEBUG1)
 
     def listsubdirs(self, dir='', recurse=0):
         return com_brew.RealBrewProtocol2.getfilesystem(self, dir, recurse, directories=1, files=0)
+
+
+    # ringtones and wallpapers stuff--------------------------------------------
+    def savewallpapers(self, results, merge):
+        results['rebootphone']=True
+        return self.savemedia('wallpapers', 'wallpaper-index',
+                              self.wallpaperlocations, results, merge,
+                              self.getwallpaperindices, True)
+            
+    def saveringtones(self, results, merge):
+        # Let the phone rebuild the index file, just need to reboot
+        results['rebootphone']=True
+        return self.savemedia('ringtone', 'ringtone-index',
+                              self.ringtonelocations, results, merge,
+                              self.getringtoneindices, True)
 
 #-------------------------------------------------------------------------------
 parentprofile=com_lgvx8500.Profile
@@ -193,3 +213,50 @@ class Profile(parentprofile):
         _supportedsyncs+=(
         ('t9_udb', 'read', 'OVERWRITE'),
         )
+
+    # new group file format requires a new normalization routine
+    def normalisegroups(self, helper, data):
+        self.normalizegroups(helper, data)
+
+    def normalizegroups(self, helper, data):
+        "Assigns groups based on category data"
+
+        pad=[]
+        keys=data['groups'].keys()
+        keys.sort()
+        for k in keys:
+            if k: # ignore key 0 which is 'No Group'
+                name=data['groups'][k]['name']
+                pad.append(name)
+
+        groups=helper.getmostpopularcategories(self.protocolclass.MAX_PHONEBOOK_GROUPS, data['phonebook'], ["No Group"], 32, pad)
+
+        # alpha sort
+        groups.sort()
+
+        # newgroups
+        newgroups={}
+
+        # put in No group
+        newgroups[0]={'name': 'No Group', 'user_added': 0}
+
+        # populate
+        for name in groups:
+            # existing entries remain unchanged
+            if name=="No Group": continue
+            key,value=self._getgroup(name, data['groups'])
+            if key is not None and key!=0:
+                newgroups[key]=value
+        # new entries get whatever numbers are free
+        for name in groups:
+            key,value=self._getgroup(name, newgroups)
+            if key is None:
+                for key in range(1,100000):
+                    if key not in newgroups:
+                        newgroups[key]={'name': name, 'user_added': 1}
+                        break
+
+        # yay, done
+        if data['groups']!=newgroups:
+            data['groups']=newgroups
+            data['rebootphone']=True

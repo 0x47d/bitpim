@@ -1,6 +1,6 @@
-### BITPIM
+### BITPIM -*- Python -*-
 ###
-### Copyright (C) 2007 Nathan Hjelm <hjelmn@users.sourceforge.net>
+### Copyright (C) 2007-2008 Nathan Hjelm <hjelmn@users.sourceforge.net>
 ###
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
@@ -25,24 +25,36 @@ BREW_FILE_SYSTEM = 2
 BREW_READ_SIZE = 0x400
 BREW_WRITE_SIZE = 0x1A00
 
+MAX_PHONEBOOK_GROUPS=30
+
 # Phonebook stuff
 RTPathIndexFile='pim/pbRingIdSetAsPath.dat'
 WPPathIndexFile='pim/pbPictureIdSetAsPath.dat'
+
 pb_file_name='pim/pbentry.dat'
+pb_group_filename='pim/pbgroup.dat'
 
 T9USERDBFILENAME='t9udb/t9udb_eng.dat'
 
 %}
 
-# phonebook
+# phonebook stuff
+# pbgroup.dat
+# The VX8700 and newer phones have a fixed size pbgroup.dat, hence the need to fill up with
+# unused slots.
 PACKET pbgroup:
-    33 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False } name
-    2  UINT groupid
-    1  UINT {'default': 0} +unknown0
+    33 USTRING {'encoding': PHONE_ENCODING,
+                'raiseonunterminatedread': False,
+                'raiseontruncate': False,
+                'default': '' } +name
+    2  UINT { 'default': 0 } +groupid
+    1  UINT {'default': 0} +user_added "=1 when was added by user"
 
 PACKET pbgroups:
     "Phonebook groups"
-    * LIST {'elementclass': pbgroup} +groups
+    * LIST {'elementclass': pbgroup,
+            'length': MAX_PHONEBOOK_GROUPS,
+            'createdefault': True} +groups
 
 PACKET pbfileentry:
     4   UINT    serial1

@@ -2,7 +2,7 @@
 
 ### BITPIM
 ###
-### Copyright (C) 2007 Nathan Hjelm <hjelmn@users.sourceforge.net>
+### Copyright (C) 2007-2008 Nathan Hjelm <hjelmn@users.sourceforge.net>
 ###
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
@@ -27,6 +27,7 @@ import copy
 import time
 import os.path
 
+DEBUG1=False
 #-------------------------------------------------------------------------------
 parentphone=com_lgvx8700.Phone
 class Phone(parentphone):
@@ -49,252 +50,108 @@ class Phone(parentphone):
     #  - getringtoneindices  - LGUncountedIndexedMedia
     #  - DM Version          - 5
 
+    def _get_speeddials(self):
+        """Return the speed dials dict"""
+        speeds={}
+        try:
+            if self.protocolclass.NUMSPEEDDIALS:
+                self.log("Reading speed dials")
+                sd=self.readobject(self.protocolclass.speed_file_name,
+                                   self.protocolclass.speeddials, 'Reading speed dials')
+                for _idx,_entry in enumerate(sd.speeddials):
+                    if _entry.valid():
+                        speeds.setdefault(_entry.entry, {}).update({ _entry.number: _idx })
+        except com_brew.BrewNoSuchFileException:
+            pass
+        return speeds
+
+    def _build_media_dict(self, fundamentals, media_data, index_name):
+        """Build & return a dict with keys being the media filenames and
+        values being the name of the index item (index['name'])
+        """
+        _res={}
+        _media_index=fundamentals.get(index_name, {})
+        for _item in media_data.items:
+            _pathname=_item.pathname
+            if _pathname and not _res.has_key(_pathname):
+                # not already in dict, look up the name if any
+                _res[_pathname]=None
+                for _entry in _media_index.values():
+                    if _entry.get('filename', None)==_pathname:
+                        _res[_pathname]=_entry['name']
+                        break
+        return _res
+
     def _get_path_index(self, index_file):
         buf = prototypes.buffer(self.getfilecontents(index_file))
         _path_file=self.protocolclass.PathIndexFile()
         _path_file.readfrombuffer(buf, logtitle="Read path index: " + index_file)
         return _path_file
 
-    def savephonebook (self, data):
-        "Saves out the phonebook"
-        self.savegroups (data)
-
-        ring_pathf=self.protocolclass.PathIndexFile()
-        picid_pathf=self.protocolclass.PathIndexFile()
-
-        # the pbentry.dat will will be overwritten so there is no need to delete entries
-        pbook = data['phonebook']
-        keys = pbook.keys ()
-        keys.sort ()
-
-        _rt_index=data.get('ringtone-index', {})
-        _wp_index=data.get('wallpaper-index', {})
-
-        entry_num = 0
-        new_pn_entries = {}
-        newspeeds = {}
-        pb_entries = self.protocolclass.pbfile()
-        for i in keys:
-            pb_entries.items.append(self.make_entry (new_pn_entries, entry_num, pbook[i], data, ring_pathf, _rt_index, picid_pathf, _wp_index))
-
-            # already know the new index so speed dials can be redone here
-            if len (data['speeddials']):
-                for sd in data['speeddials']:
-                    xx = data['speeddials'][sd]
-                    if xx[0] == pbook[i]['bitpimserial']:
-                        newspeeds[sd] = (entry_num, pbook[i]['numbertypes'][xx[1]])
-                        nt = self.protocolclass.numbertypetab[pbook[i]['numbertypes'][xx[1]]]
-                    
-            entry_num += 1
-            
-            if entry_num == self.protocolclass.NUMPHONEBOOKENTRIES:
-                self.log ("Maximum number of phonebook entries reached")
-                break
-
-
-        # write phonebook entries
-        self.log ("Writing phonebook entries");
-        new_pb_entriesbuf = prototypes.buffer()
-
-        for i in range (0, entry_num):
-            pb_entries.items[i].writetobuffer (new_pb_entriesbuf)
-
-        # pad the rest of the file with -1's
-        # *NOTE* /pim/pbentry.dat is 256256 B in size
-        fill_bytes = (self.protocolclass.NUMPHONEBOOKENTRIES - entry_num + 1) * self.protocolclass.PHONEBOOKENTRYSIZE
-        new_pb_entriesbuf.appendbytes ('\xff' * fill_bytes)
-
-        # finally, write out the new phone number database
-        self.writefile (self.protocolclass.pb_file_name, new_pb_entriesbuf.getvalue())
-
-
-        # write phone numbers
-        self.log ("Writing phone numbers");
-        new_pb_numbersbuf = prototypes.buffer()
-
-        for i in range (0, len(new_pn_entries)):
-            new_pn_entries[i].writetobuffer (new_pb_numbersbuf)
-
-        # pad the rest of the file with -1's
-        fill_bytes = (self.protocolclass.NUMPHONENUMBERENTRIES - len(new_pn_entries)) * self.protocolclass.PHONENUMBERENTRYSIZE
-        new_pb_numbersbuf.appendbytes ('\xff' * fill_bytes)
-
-        # finally, write out the new phone number database
-        self.writefile (self.protocolclass.pn_file_name, new_pb_numbersbuf.getvalue())
-
-        # write ringtone index
-        _buf=prototypes.buffer()
-        ring_pathf.writetobuffer(_buf, logtitle='Writing Ringtone ID')
-        self.writefile(self.protocolclass.RTPathIndexFile, _buf.getvalue())
-
-        # write wallpaer index
-        _buf=prototypes.buffer()
-        picid_pathf.writetobuffer(_buf, logtitle='Writing Wallpaper ID')
-        self.writefile(self.protocolclass.WPPathIndexFile, _buf.getvalue())
-    
-        # might need to update the ICE index as well
-
-        # update speed dials
-        req=self.protocolclass.speeddials()
-        for i in range(self.protocolclass.NUMSPEEDDIALS):
-            sd=self.protocolclass.speeddial()
-            if i in newspeeds:
-                sd.entry=newspeeds[i][0]
-                sd.number=newspeeds[i][1]
-            req.speeddials.append(sd)
-        buffer=prototypes.buffer()
-        req.writetobuffer(buffer, logtitle="New speed dials")
-
-        # We check the existing speed dial file as changes require a reboot
-        self.log("Checking existing speed dials")
-        if buffer.getvalue()!=self.getfilecontents(self.protocolclass.speed_file_name):
-            self.writefile(self.protocolclass.speed_file_name, buffer.getvalue())
-            self.log("Your phone has to be rebooted due to the speed dials changing")
-            self.progress(1, 1, "Rebooting phone")
-            data["rebootphone"]=True
-        else:
-            self.log("No changes to speed dials")
-
-        return data
-
-    def make_pn_entry (self, phone_number, number_type, pn_id, pbpn_id, pe_id, date):
-        """ Create a non-blank pnfileentry frome a phone number string """
-        if len(phone_number) == 0:
-            raise
-        
-        new_entry = self.protocolclass.pnfileentry()
-
-        for i in range(0, 6):
-            new_entry.mod_date.append(date[i])
-        new_entry.pn_id = pn_id
-        new_entry.pe_id = pe_id
-        new_entry.phone_number = phone_number
-        new_entry.type = number_type
-        new_entry.pn_order = pbpn_id
-
-        return new_entry
-
-    def make_entry (self, pn_entries, entry_num, pb_entry, data, ring_pathf, rt_index, picid_pathf, wp_index):
-        """ Create a pbfileentry from a bitpim phonebook entry """
-        new_entry = self.protocolclass.pbfileentry()
-
-        # set modification date to current date
-        date = time.localtime()
-        for i in range(0, 6):
-            new_entry.mod_date.append(date[i])
-
-        new_entry.entry_number0 = entry_num
-        new_entry.entry_number1 = entry_num + 1
-
-        for key in pb_entry:
-            if key in ('emails', 'numbertypes'):
-                l = getattr (new_entry, key)
-                for item in pb_entry[key]:
-                    l.append(item)
-            elif key == 'numbers':
-                l = getattr (new_entry, 'numberindices')
-                for i in range(0, self.protocolclass.NUMPHONENUMBERS):
-                    new_pn_id = len (pn_entries)
-                    if new_pn_id == self.protocolclass.NUMPHONENUMBERENTRIES:
-                        # this state should not be possible. should this raise an exception?
-                        self.log ("Maximum number of phone numbers reached")
-                        break
-
-                    try:
-                         pn_entries[new_pn_id] = self.make_pn_entry (pb_entry[key][i], pb_entry['numbertypes'][i], new_pn_id, i, entry_num, date)
-                         l.append (new_pn_id)
-                    except:
-                         l.append (0xffff)
-            elif key == 'ringtone':
-                new_entry.ringtone = self._findmediainindex(data['ringtone-index'], pb_entry['ringtone'], pb_entry['name'], 'ringtone')
-                try:
-                    _filename = rt_index[new_entry.ringtone]['filename']
-                    ring_pathf.items.append(self.protocolclass.PathIndexEntry(pathname=_filename))
-                    new_entry.ringtone = 0x64
-                    self.log ('Contact ringtone: ' + _filename)
-                except:
-                    ring_pathf.items.append(self.protocolclass.PathIndexEntry())
-            elif key == 'wallpaper':
-                new_entry.wallpaper = self._findmediainindex(data['wallpaper-index'], pb_entry['wallpaper'], pb_entry['name'], 'wallpaper')
-                try:
-                    _filename = wp_index[new_entry.wallpaper]['filename']
-                    picid_pathf.items.append(self.protocolclass.PathIndexEntry(pathname=_filename))
-                    new_entry.ringtone = 0x64
-                    self.log ('Contact wallpaper: ' + _filename)
-                except:
-                    picid_pathf.items.append(self.protocolclass.PathIndexEntry())
-            elif key in new_entry.getfields():
-                setattr (new_entry, key, pb_entry[key])
-
-        return new_entry
+    def _build_ice_dict(self):
+        # Return an ICE dict for building phone entries
+        _res={}
+        _ice=self.readobject(self.protocolclass.ice_file_name,
+                             self.protocolclass.iceentryfile,
+                             logtitle='Reading ICE entries')
+        for _item in _ice.items:
+            if _item.valid():
+                _res[_item.pb_index]=_item.entry_number
+        return _res
 
     def getphonebook (self, result):
         """Reads the phonebook data.  The L{getfundamentals} information will
         already be in result."""
         # Read speed dials first -- same file format as the VX-8100
-        speeds={}
-        try:
-            if self.protocolclass.NUMSPEEDDIALS:
-                self.log("Reading speed dials")
-                buf=prototypes.buffer(self.getfilecontents(self.protocolclass.speed_file_name))
-                sd=self.protocolclass.speeddials()
-                sd.readfrombuffer(buf, logtitle="Read speed dials")
-                for i in range(self.protocolclass.FIRSTSPEEDDIAL, self.protocolclass.LASTSPEEDDIAL+1):
-                    if sd.speeddials[i].entry<0 or sd.speeddials[i].entry>self.protocolclass.NUMPHONEBOOKENTRIES:
-                        continue
-                    l=speeds.get(sd.speeddials[i].entry, [])
-                    l.append((i, sd.speeddials[i].number))
-                    speeds[sd.speeddials[i].entry]=l
-        except com_brew.BrewNoSuchFileException:
-            pass
+        _speeds=self._get_speeddials()
 
-        # VX-8550 does not appear to support the LG Phonebook protocol so pim/* files are used
+        # Read the emergency contacts list
+        self.log("Reading ICE entries")
+        _ices=self._build_ice_dict()
+
         self.log("Reading phonebook entries")
-
-        pb_entrybuf = prototypes.buffer(self.getfilecontents(self.protocolclass.pb_file_name))
-        pb_entries = self.protocolclass.pbfile()
-        pb_entries.readfrombuffer(pb_entrybuf, logtitle="Read phonebook entries")
+        pb_entries=self.readobject(self.protocolclass.pb_file_name,
+                                   self.protocolclass.pbfile,
+                                   logtitle='Reading phonebook entries')
 
         self.log("Reading phone numbers")
-
-        pb_numberbuf = prototypes.buffer(self.getfilecontents(self.protocolclass.pn_file_name))
-        pb_numbers = self.protocolclass.pnfile()
-        pb_numbers.readfrombuffer(pb_numberbuf, logtitle="Read phonebook numbers")
+        pb_numbers=self.readobject(self.protocolclass.pn_file_name,
+                                   self.protocolclass.pnfile,
+                                   logtitle='Reading phonebook numbers')
 
         self.log("Reading Ringtone IDs")
         ring_pathf=self._get_path_index(self.protocolclass.RTPathIndexFile)
+        _rt_ids=self._build_media_dict(result, ring_pathf, 'ringtone-index')
 
         self.log("Reading Picture IDs")
         picid_pathf=self._get_path_index(self.protocolclass.WPPathIndexFile)
-
-        numentries = 0
+        _wp_ids=self._build_media_dict(result, picid_pathf, 'wallpaper-index')
 
         pbook={}
-        for pb_entry in pb_entries.items:
-            # skip blank entries
-            if pb_entry.entry_number1 == 0xffffffffL:
+        for _cnt in range(self.protocolclass.NUMPHONEBOOKENTRIES):
+            pb_entry=pb_entries.items[_cnt]
+            if not pb_entry.valid():
                 continue
-
             try:
-                self.log("Parse entry "+`numentries`+" - " + pb_entry.name)
-                entry=self.extractphonebookentry(pb_entry, pb_numbers, speeds, result,
-                                                 os.path.basename(ring_pathf.items[numentries].pathname),
-                                                 os.path.basename(picid_pathf.items[numentries].pathname))
+                self.log("Parse entry "+`_cnt`+" - " + pb_entry.name)
+                pbook[_cnt]=self.extractphonebookentry(pb_entry, pb_numbers,
+                                                       _speeds, _ices, result,
+                                                       _rt_ids.get(ring_pathf.items[_cnt].pathname, None),
+                                                       _wp_ids.get(picid_pathf.items[_cnt].pathname, None))
 
-                pbook[numentries]=entry
-
-                numentries+=1
-                self.progress(numentries, len(pb_entries.items), pb_entry.name)
+                self.progress(_cnt, self.protocolclass.NUMPHONEBOOKENTRIES, pb_entry.name)
             except common.PhoneBookBusyException:
                 raise
             except Exception, e:
                 # Something's wrong with this entry, log it and skip
-                self.log('Failed to parse entry %d'%numentries)
+                self.log('Failed to parse entry %d'%_cnt)
                 self.log('Exception %s raised'%`e`)
                 if __debug__:
                     raise
-
-        self.progress(numentries, numentries, "Phone book read completed")
+            
+        self.progress(self.protocolclass.NUMPHONEBOOKENTRIES,
+                      self.protocolclass.NUMPHONEBOOKENTRIES,
+                      "Phone book read completed")
 
         result['phonebook']=pbook
         cats=[]
@@ -302,10 +159,10 @@ class Phone(parentphone):
             if result['groups'][i]['name']!='No Group':
                 cats.append(result['groups'][i]['name'])
         result['categories']=cats
-        print "returning keys",result.keys()
         return pbook
 
-    def extractphonebookentry(self, entry, numbers, speeds, fundamentals, ring_name, picid_name):
+    def extractphonebookentry(self, entry, numbers, speeds, ices, fundamentals,
+                              rt_name, wp_name):
         """Return a phonebook entry in BitPim format.  This is called from getphonebook."""
         res={}
         # serials
@@ -329,62 +186,270 @@ class Phone(parentphone):
                 res['emails'].append( {'email': i.email} )
         if not len(res['emails']): del res['emails'] # it was empty
 
-        # memos
-        if  'memo' in entry.getfields() and len(entry.memo):
-            while len(entry.memo) and ord(entry.memo[-1]) == 0xff:
-                entry.memo = entry.memo[:-1]
-            res['memos']=[ {'memo': entry.memo } ]
-
         # wallpapers
         if entry.wallpaper!=self.protocolclass.NOWALLPAPER:
             try:
                 if entry.wallpaper == 0x64:
-                    paper = picid_name
+                    paper = wp_name
                 else:
                     paper = fundamentals['wallpaper-index'][entry.wallpaper]['name']
+
+                if paper is None:
+                    raise
+
                 res['wallpapers']=[ {'wallpaper': paper, 'use': 'call'} ]                
             except:
                 print "can't find wallpaper for index",entry.wallpaper
-                pass
             
         # ringtones
-        res['ringtones']=[]
         if entry.ringtone != self.protocolclass.NORINGTONE:
             try:
                 if entry.ringtone == 0x64:
-                    tone = ring_name
+                    tone = rt_name
                 else:
-                    tone=fundamentals['ringtone-index'][entry.ringtone]['name']
-                self.log('Tone is ' + tone)
-                res['ringtones'].append({'ringtone': tone, 'use': 'call'})
+                    tone = fundamentals['ringtone-index'][entry.ringtone]['name']
+
+                if tone is None:
+                    raise
+
+                res['ringtones']=[ {'ringtone': tone, 'use': 'call'} ]
             except:
                 print "can't find ringtone for index",entry.ringtone
-        if len(res['ringtones'])==0:
-            del res['ringtones']
         # assume we are like the VX-8100 in this regard -- looks correct
         res=self._assignpbtypeandspeeddialsbytype(entry, numbers, speeds, res)
+
+        # assign the ICE entry to the associated contact to keep them in sync
+        res=self._assigniceentry(entry, numbers, ices, res)
+  
         return res
-                    
+
     def _assignpbtypeandspeeddialsbytype(self, entry, numbers, speeds, res):
         # for some phones (e.g. vx8100) the speeddial numberindex is really the numbertype (now why would LG want to change this!)
-        _sd_list=speeds.get(entry.entry_number0, [])
-        _sd_dict={}
-        for _sd in _sd_list:
-            _sd_dict[_sd[1]]=_sd[0]
         res['numbers']=[]
+
         for i in range(self.protocolclass.NUMPHONENUMBERS):
-            num_id=entry.numberindices[i].numberindex
-            type=entry.numbertypes[i].numbertype
-            if num_id != 0xffff:
-                num = numbers.items[num_id].phone_number
-                t = self.protocolclass.numbertypetab[type]
+            if entry.numberindices[i].numberindex >= self.protocolclass.NUMPHONENUMBERENTRIES:
+                # invalid number
+                continue
+            _pnentry=numbers.items[entry.numberindices[i].numberindex]
+            num=_pnentry.phone_number
+
+            if len(num):
+                if _pnentry.malformed():
+                    print "malformed phone number entry encountered"
+
+                # use the type from the phonebook entry
+                num_type = entry.numbertypes[i].numbertype
+
+                t = self.protocolclass.numbertypetab[num_type]
                 if t[-1]=='2':
                     t=t[:-1]
                 res['numbers'].append({'number': num, 'type': t})
                 # if this is a speeddial number set it
-                if _sd_dict.get(type, None):
-                    res['numbers'][i]['speeddial']=_sd_dict[type]
+                if speeds.has_key(entry.entry_number0) and \
+                   speeds[entry.entry_number0].has_key(num_type):
+                    res['numbers'][i]['speeddial']=speeds[entry.entry_number0][num_type]
         return res
+
+    def _assigniceentry(self, entry, numbers, ices, res):
+        if ices.has_key(entry.entry_number0):
+            # this contact entry is an ICE entry
+            res['ice']=[ { 'iceindex': ices[entry.entry_number0] } ]
+        return res
+
+    def _get_next_pb_id(self):
+        """Return the next available pbentry ID"""
+        return self.readobject(self.protocolclass.pb_recordid_filename,
+                               self.protocolclass.RecordIdEntry,
+                               logtitle='Reading record_id').idnum
+
+    def _save_next_pb_id(self, idnum):
+        """Save the next pbentry ID"""
+        self.writeobject(self.protocolclass.pb_recordid_filename,
+                         self.protocolclass.RecordIdEntry(idnum=idnum),
+                         logtitle='Writing record_id',
+                         uselocalfs=DEBUG1)
+
+    def savephonebook (self, data):
+        "Saves out the phonebook"
+        self.savegroups (data)
+
+        ring_pathf=self.protocolclass.PathIndexFile()
+        picid_pathf=self.protocolclass.PathIndexFile()
+
+        # the pbentry.dat will be overwritten so there is no need to delete entries
+        pbook = data.get('phonebook', {})
+        keys = pbook.keys ()
+        keys.sort ()
+
+        _rt_index=data.get('ringtone-index', {})
+        _wp_index=data.get('wallpaper-index', {})
+
+        entry_num0 = 0
+        entry_num1 = self._get_next_pb_id()
+        pb_entries = self.protocolclass.pbfile(model_name=self.my_model)
+        pn_entries = self.protocolclass.pnfile()
+
+        ice_entries = self.protocolclass.iceentryfile()
+        for i in range(self.protocolclass.NUMEMERGENCYCONTACTS):
+            ice_entries.items.append (self.protocolclass.iceentry())
+
+        speeddials={}
+
+        for i in keys:
+            pb_entries.items.append(self.make_entry (pn_entries, speeddials, ice_entries,
+                                                     entry_num0, entry_num1, pbook[i],
+                                                     data, ring_pathf,_rt_index,
+                                                     picid_pathf, _wp_index))
+            entry_num0 += 1
+            if entry_num0 >= self.protocolclass.NUMPHONEBOOKENTRIES:
+                self.log ("Maximum number of phonebook entries reached")
+                break
+            if entry_num1==0xffffffff:
+                entry_num1=0
+            else:
+                entry_num1+=1
+
+        # write phonebook entries
+        self.log ("Writing phonebook entries")
+        self.writeobject(self.protocolclass.pb_file_name,
+                         pb_entries,
+                         logtitle='Writing phonebook entries',
+                         uselocalfs=DEBUG1)
+        # write phone numbers
+        self.log ("Writing phone numbers")
+        self.writeobject(self.protocolclass.pn_file_name,
+                         pn_entries, logtitle='Writing phonebook numbers',
+                         uselocalfs=DEBUG1)
+        # write ringtone index
+        self.log('Writing ringtone ID')
+        self.writeobject(self.protocolclass.RTPathIndexFile,
+                         ring_pathf, logtitle='Writing ringtone paths',
+                         uselocalfs=DEBUG1)
+        # write wallpaper index
+        self.log('Writing picture ID')
+        self.writeobject(self.protocolclass.WPPathIndexFile,
+                         picid_pathf, logtitle='Writing wallpaper paths',
+                         uselocalfs=DEBUG1)
+
+        # write ICE index
+        self.log('Writing ICE entries')
+        self.writeobject(self.protocolclass.ice_file_name,
+                         ice_entries, logtitle='Writing ICE entries',
+                         uselocalfs=DEBUG1)
+
+        # update speed dials
+        req=self.protocolclass.speeddials()
+        # slot 0 is always unused
+        req.speeddials.append(self.protocolclass.speeddial())
+        # if empty, slot 1 is for voicemail
+        if speeddials.has_key(1):
+            req.speeddials.append(self.protocolclass.speeddial(entry=speeddials[1]['entry'],
+                                                               number=speeddials[1]['type']))
+        else:
+            req.speeddials.append(self.protocolclass.speeddial(entry=1000,
+                                                               number=6))
+        for i in range(2, self.protocolclass.NUMSPEEDDIALS):
+            sd=self.protocolclass.speeddial()
+            if speeddials.has_key(i):
+                sd.entry=speeddials[i]['entry']
+                sd.number=speeddials[i]['type']
+            req.speeddials.append(sd)
+
+        self.log('Writing speed dials')
+        self.writeobject(self.protocolclass.speed_file_name,
+                         req, logtitle='Writing speed dials data',
+                         uselocalfs=DEBUG1)
+
+        # update the next pbentries ID
+        self._save_next_pb_id(entry_num1)
+        data["rebootphone"]=True
+
+        return data
+
+    def make_pn_entry (self, phone_number, number_type, pn_id, pbpn_id, pe_id):
+        """ Create a non-blank pnfileentry frome a phone number string """
+        if len(phone_number) == 0:
+            raise
+        
+        new_entry = self.protocolclass.pnfileentry(entry_tag=self.protocolclass.PB_NUMBER_SOR)
+        new_entry.pn_id = pn_id
+        new_entry.pe_id = pe_id
+        new_entry.phone_number = phone_number
+        new_entry.ntype = number_type
+        new_entry.pn_order = pbpn_id
+
+        return new_entry
+
+    def make_ice_entry (self, ice_id, pb_id):
+        """ Create a iceentry from a pb_id and ice_id """
+        new_entry = self.protocolclass.iceentry()
+        
+        new_entry.entry_assigned = 1
+        new_entry.entry_number = ice_id
+        new_entry.pb_index = pb_id
+
+        return new_entry
+
+    def make_entry (self, pn_entries, speeddials, ice_entries,
+                    entry_num0, entry_num1, pb_entry, data,
+                    ring_pathf, rt_index, picid_pathf, wp_index):
+        """ Create a pbfileentry from a bitpim phonebook entry """
+        new_entry = self.protocolclass.pbfileentry(entry_tag=self.protocolclass.PB_ENTRY_SOR)
+        # entry IDs
+        new_entry.entry_number0 = entry_num0
+        new_entry.entry_number1 = entry_num1
+
+        for key in pb_entry:
+            if key in ('emails', 'numbertypes'):
+                l = getattr (new_entry, key)
+                for item in pb_entry[key]:
+                    l.append(item)
+            elif key == 'numbers':
+                l = getattr (new_entry, 'numberindices')
+                for i in range(0, self.protocolclass.NUMPHONENUMBERS):
+                    new_pn_id = len (pn_entries.items)
+                    if new_pn_id == self.protocolclass.NUMPHONENUMBERENTRIES:
+                        # this state should not be possible. should this raise an exception?
+                        self.log ("Maximum number of phone numbers reached")
+                        break
+
+                    try:
+                        pn_entries.items.append(self.make_pn_entry (pb_entry[key][i],pb_entry['numbertypes'][i], new_pn_id, i, entry_num0))
+                        l.append (new_pn_id)
+                    except:
+                        l.append (0xffff)
+            elif key == 'speeddials':
+                for _sd,_num_type in zip(pb_entry['speeddials'], pb_entry['numbertypes']):
+                    if _sd is not None:
+                        speeddials[_sd]={ 'entry': entry_num0,
+                                          'type': _num_type }
+            elif key == 'ice':
+                # In Case of Emergency
+                _ice = pb_entry['ice']
+                if _ice is not None and len(_ice) > 0:
+                    _ice_entry = _ice[0]['iceindex']
+                    ice_entries.items[_ice_entry] = self.make_ice_entry (_ice_entry, entry_num0)
+            elif key == 'ringtone':
+                new_entry.ringtone = self._findmediainindex(data['ringtone-index'], pb_entry['ringtone'], pb_entry['name'], 'ringtone')
+                try:
+                    _filename = rt_index[new_entry.ringtone]['filename']
+                    ring_pathf.items.append(self.protocolclass.PathIndexEntry(pathname=_filename))
+                    new_entry.ringtone = 0x64
+                except:
+                    ring_pathf.items.append(self.protocolclass.PathIndexEntry())
+            elif key == 'wallpaper':
+                new_entry.wallpaper = self._findmediainindex(data['wallpaper-index'], pb_entry['wallpaper'], pb_entry['name'], 'wallpaper')
+                try:
+                    _filename = wp_index[new_entry.wallpaper]['filename']
+                    picid_pathf.items.append(self.protocolclass.PathIndexEntry(pathname=_filename))
+                    new_entry.wallpaper = 0x64
+                except:
+                    picid_pathf.items.append(self.protocolclass.PathIndexEntry())
+            elif key in new_entry.getfields():
+                setattr (new_entry, key, pb_entry[key])
+
+        return new_entry
 
     def getcalendar(self,result):
         res={}
@@ -569,11 +634,126 @@ class Profile(parentprofile):
         ('ringtone', 'write', 'OVERWRITE'),
         ('sms', 'write', 'OVERWRITE'),        # all SMS list writing
         ('memo', 'write', 'OVERWRITE'),       # all memo list writing
-##        ('playlist', 'read', 'OVERWRITE'),
-##        ('playlist', 'write', 'OVERWRITE'),
         ('t9_udb', 'write', 'OVERWRITE'),
         )
     if __debug__:
         _supportedsyncs+=(
         ('t9_udb', 'read', 'OVERWRITE'),
         )
+
+
+    def convertphonebooktophone(self, helper, data):
+        """Converts the data to what will be used by the phone
+
+        @param data: contains the dict returned by getfundamentals
+                     as well as where the results go"""
+        results={}
+
+        self.normalisegroups(helper, data)
+
+        for pbentry in data['phonebook']:
+            if len(results)==self.protocolclass.NUMPHONEBOOKENTRIES:
+                break
+            e={} # entry out
+            entry=data['phonebook'][pbentry] # entry in
+            try:
+                # serials
+                serial1=helper.getserial(entry.get('serials', []), self.serialsname, data['uniqueserial'], 'serial1', 0)
+                serial2=helper.getserial(entry.get('serials', []), self.serialsname, data['uniqueserial'], 'serial2', serial1)
+
+                e['serial1']=serial1
+                e['serial2']=serial2
+                for ss in entry["serials"]:
+                    if ss["sourcetype"]=="bitpim":
+                        e['bitpimserial']=ss
+                assert e['bitpimserial']
+
+                # name
+                e['name']=helper.getfullname(entry.get('names', []),1,1,32)[0]
+
+                # ice
+                e['ice']=entry.get('ice', None)
+
+                # categories/groups
+                cat=helper.makeone(helper.getcategory(entry.get('categories', []),0,1,32), None)
+                if cat is None:
+                    e['group']=0
+                else:
+                    key,value=self._getgroup(cat, data['groups'])
+                    if key is not None:
+                        e['group']=key
+                    else:
+                        # sorry no space for this category
+                        e['group']=0
+
+                # email addresses
+                emails=helper.getemails(entry.get('emails', []) ,0,self.protocolclass.NUMEMAILS,48)
+                e['emails']=helper.filllist(emails, self.protocolclass.NUMEMAILS, "")
+
+                # phone numbers
+                # there must be at least one email address or phonenumber
+                minnumbers=1
+                if len(emails): minnumbers=0
+                numbers=helper.getnumbers(entry.get('numbers', []),minnumbers,self.protocolclass.NUMPHONENUMBERS)
+                e['numbertypes']=[]
+                e['numbers']=[]
+                e['speeddials']=[]
+                for numindex in range(len(numbers)):
+                    num=numbers[numindex]
+                    # deal with type
+                    b4=len(e['numbertypes'])
+                    type=num['type']
+                    for i,t in enumerate(self.protocolclass.numbertypetab):
+                        if type==t:
+                            # some voodoo to ensure the second home becomes home2
+                            if i in e['numbertypes'] and t[-1]!='2':
+                                type+='2'
+                                continue
+                            e['numbertypes'].append(i)
+                            break
+                        if t=='none': # conveniently last entry
+                            e['numbertypes'].append(i)
+                            break
+                    if len(e['numbertypes'])==b4:
+                        # we couldn't find a type for the number
+                        helper.add_error_message('Number %s (%s/%s) not supported and ignored.'%
+                                                 (num['number'], e['name'], num['type']))
+                        continue 
+                    # deal with number
+                    number=self.phonize(num['number'])
+                    if len(number)==0:
+                        # no actual digits in the number
+                        continue
+                    if len(number)>24: # get this number from somewhere sensible
+                        # ::TODO:: number is too long and we have to either truncate it or ignore it?
+                        number=number[:24] # truncate for moment
+                    e['numbers'].append(number)
+                    # deal with speed dial
+                    sd=num.get("speeddial", None)
+                    if sd is not None and \
+                       sd>=self.protocolclass.FIRSTSPEEDDIAL and \
+                       sd<=self.protocolclass.LASTSPEEDDIAL:
+                        e['speeddials'].append(sd)
+                    else:
+                        e['speeddials'].append(None)
+
+                if len(e['numbers'])<minnumbers:
+                    # we couldn't find any numbers
+                    # for this entry, so skip it, entries with no numbers cause error
+                    helper.add_error_message("Name: %s. No suitable numbers or emails found" % e['name'])
+                    continue 
+                e['numbertypes']=helper.filllist(e['numbertypes'], self.protocolclass.NUMPHONENUMBERS, 0)
+                e['numbers']=helper.filllist(e['numbers'], self.protocolclass.NUMPHONENUMBERS, "")
+                e['speeddials']=helper.filllist(e['speeddials'], self.protocolclass.NUMPHONENUMBERS, None)
+
+                # ringtones, wallpaper
+                e['ringtone']=helper.getringtone(entry.get('ringtones', []), 'call', None)
+                e['wallpaper']=helper.getwallpaper(entry.get('wallpapers', []), 'call', None)
+
+                results[pbentry]=e
+                
+            except helper.ConversionFailed:
+                continue
+
+        data['phonebook']=results
+        return data

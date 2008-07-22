@@ -145,11 +145,26 @@ class Phone(parentphone):
                         break
         return _res
 
+    def _build_ice_dict(self):
+        # Return an ICE dict for building phone entries
+        _res={}
+        _ice=self.readobject(self.protocolclass.pb_ice_file_name,
+                             self.protocolclass.iceentryfile,
+                             logtitle='Reading ICE entries')
+        for _item in _ice.items:
+            if _item.valid():
+                _res[_item.pb_index]=_item.entry_number
+        return _res
+
     def getphonebook (self, result):
         """Reads the phonebook data.  The L{getfundamentals} information will
         already be in result."""
         # Read speed dials first -- same file format as the VX-8100
         _speeds=self._get_speeddials()
+
+        # Read the emergency contacts list
+        self.log("Reading ICE entries")
+        _ices=self._build_ice_dict()
 
         self.log("Reading phonebook entries")
         pb_entries=self.readobject(self.protocolclass.pb_file_name,
@@ -177,7 +192,7 @@ class Phone(parentphone):
             try:
                 self.log("Parse entry "+`_cnt`+" - " + pb_entry.name)
                 pbook[_cnt]=self.extractphonebookentry(pb_entry, pb_numbers,
-                                                       _speeds, result,
+                                                       _speeds, _ices, result,
                                                        _rt_ids.get(ring_pathf.items[_cnt].pathname, None),
                                                        _wp_ids.get(picid_pathf.items[_cnt].pathname, None))
 
@@ -203,7 +218,7 @@ class Phone(parentphone):
         result['categories']=cats
         return pbook
 
-    def extractphonebookentry(self, entry, numbers, speeds, fundamentals,
+    def extractphonebookentry(self, entry, numbers, speeds, ices, fundamentals,
                               rt_name, wp_name):
         """Return a phonebook entry in BitPim format.  This is called from getphonebook."""
         res={}
@@ -252,6 +267,10 @@ class Phone(parentphone):
                 print "can't find ringtone for index",entry.ringtone
         # assume we are like the VX-8100 in this regard -- looks correct
         res=self._assignpbtypeandspeeddialsbytype(entry, numbers, speeds, res)
+
+        # assign the ICE entry to the associated contact to keep them in sync
+        res=self._assigniceentry(entry, numbers, ices, res)
+
         return res
                     
     def _assignpbtypeandspeeddialsbytype(self, entry, numbers, speeds, res):
@@ -274,6 +293,14 @@ class Phone(parentphone):
                 if speeds.has_key(entry.entry_number0) and \
                    speeds[entry.entry_number0].has_key(num_type):
                     res['numbers'][i]['speeddial']=speeds[entry.entry_number0][num_type]
+        return res
+
+    def _assigniceentry(self, entry, numbers, ices, res):
+        if ices.has_key(entry.entry_number0):
+            # this contact entry is an ICE entry
+            res['ice']=[ { 'iceindex': ices[entry.entry_number0] } ]
+            self.log('Entry %d is ICE %d'%(entry.entry_number0,
+                                           ices[entry.entry_number0]))
         return res
 
     def _get_next_pb_id(self):
@@ -306,9 +333,12 @@ class Phone(parentphone):
         entry_num1=self._get_next_pb_id()
         pb_entries = self.protocolclass.pbfile()
         pn_entries=self.protocolclass.pnfile()
+        ice_entries = self.protocolclass.iceentryfile()
+        for i in range(self.protocolclass.NUMEMERGENCYCONTACTS):
+            ice_entries.items.append (self.protocolclass.iceentry())
         speeddials={}
         for i in keys:
-            pb_entries.items.append(self.make_entry (pn_entries, speeddials,
+            pb_entries.items.append(self.make_entry (pn_entries, speeddials, ice_entries,
                                                      entry_num0, entry_num1,
                                                      pbook[i], data,
                                                      ring_pathf,_rt_index,
@@ -343,7 +373,12 @@ class Phone(parentphone):
         self.writeobject(self.protocolclass.WPPathIndexFile,
                          picid_pathf, logtitle='Writing wallpaper paths',
                          uselocalfs=DEBUG1)
-        # might need to update the ICE index as well
+        # write ICE index
+        self.log('Writing ICE entries')
+        self.writeobject(self.protocolclass.pb_ice_file_name,
+                         ice_entries, logtitle='Writing ICE entries',
+                         uselocalfs=DEBUG1)
+
         # update speed dials
         req=self.protocolclass.speeddials()
         # slot 0 is always unused
@@ -385,7 +420,17 @@ class Phone(parentphone):
 
         return new_entry
 
-    def make_entry (self, pn_entries, speeddials,
+    def make_ice_entry (self, ice_id, pb_id):
+        """ Create a iceentry from a pb_id and ice_id """
+        new_entry = self.protocolclass.iceentry()
+        
+        new_entry.entry_assigned = 1
+        new_entry.entry_number = ice_id
+        new_entry.pb_index = pb_id
+
+        return new_entry
+
+    def make_entry (self, pn_entries, speeddials, ice_entries,
                     entry_num0, entry_num1,
                     pb_entry, data, ring_pathf,
                     rt_index, picid_pathf, wp_index):
@@ -419,6 +464,12 @@ class Phone(parentphone):
                     if _sd is not None:
                         speeddials[_sd]={ 'entry': entry_num0,
                                           'type': _num_type }
+            elif key == 'ice':
+                # In Case of Emergency
+                _ice = pb_entry['ice']
+                if _ice is not None and len(_ice) > 0:
+                    _ice_entry = _ice[0]['iceindex']
+                    ice_entries.items[_ice_entry] = self.make_ice_entry (_ice_entry, entry_num0)
             elif key == 'ringtone':
                 new_entry.ringtone = self._findmediainindex(data['ringtone-index'], pb_entry['ringtone'], pb_entry['name'], 'ringtone')
                 try:
@@ -653,6 +704,9 @@ class Profile(parentprofile):
 
                 # name
                 e['name']=helper.getfullname(entry.get('names', []),1,1,32)[0]
+
+                # ice
+                e['ice']=entry.get('ice', None)
 
                 # categories/groups
                 cat=helper.makeone(helper.getcategory(entry.get('categories', []),0,1,32), None)
