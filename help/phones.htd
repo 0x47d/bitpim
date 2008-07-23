@@ -116,6 +116,11 @@ BEGIN_TOC
         TOCITEM_1(Notes,phone-lgvx8600-notes.htm)
         TOCITEM_1(Howtos,phone-lgvx8600-howtos.htm)
         ENDTOC_1
+    TOCITEM_0(LG VX-8610,phone-lgvx8610.htm)
+        TOC_1
+        TOCITEM_1(Notes,phone-lgvx8610-notes.htm)
+        TOCITEM_1(Howtos,phone-lgvx8610-howtos.htm)
+        ENDTOC_1
     TOCITEM_0(LG VX-8700,phone-lgvx8700.htm)
     TOCITEM_0(LG VX-8600,phone-lgvx8600.htm)
         TOC_1
