@@ -11,19 +11,20 @@
 
 """Various descriptions of data specific to LG VX8560/VX8610"""
 
-from p_lgvx9100 import *
-from p_lgvx8550 import textmemo,textmemofile
-from p_lgvx8800 import indexfile,indexentry
+# groups     - same as VX-8700
+# speeds     - same as VX-8550
+# sms        - same as VX-9100/VX-9700
+# calendar   - same as VX-8550
+from p_lgvx9700 import *
 
-%}
+# memo       - same as VX-8550
+from p_lgvx8550 import textmemo,textmemofile
 
 # indexentry - same as VX-8800
 # indexfile  - same as VX-8800
-# groups     - same as VX-8700
-# speeds     - same as VX-8550
-# memo       - same as VX-8550
-# sms        - same as VX-9100
+from p_lgvx8800 import indexfile,indexentry
 
+%}
 
 # Call history
 
@@ -45,32 +46,3 @@ PACKET callhistory:
     4 UINT numcalls
     1 UINT unk1
     * LIST {'elementclass': call} +calls
-
-# calendar
-# The event file format on the VX-8560 is almost identical to that of the VX-8700. The format is missing a packet size field.
-PACKET scheduleevent:
-    4  UINT { 'default': 0 } +pos "position within file, used as an event id"
-    33 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False, 'default': '' } +description
-    4  GPSDATE { 'default': GPSDATE.now() } +cdate      # creation date
-    4  GPSDATE { 'default': GPSDATE.now() } +mdate      # modification date
-    4  LGCALDATE { 'default': (0,0,0,0,0) } +start
-    4  LGCALDATE { 'default': (0,0,0,0,0) } +end_time
-    4  LGCALDATE { 'default': (0,0,0,0,0) } +end_date
-    4  LGCALREPEAT { 'default': (0,0,0,0,0) } +repeat # complicated bit mapped field
-    1  UINT { 'default': 0 } +alarmindex_vibrate #LSBit of this set vibrate ON(0)/OFF(1), the 7 MSBits are the alarm index
-                                                 #the alarmindex is the index into the amount of time in advance of the
-                                                 #event to notify the user. It is directly related to the alarmminutes
-                                                 #and alarmhours below, valid values are
-                                                 # 8=2days, 7=1day, 6=2hours, 5=1hour, 4=15mins, 3=10mins, 2=5mins, 1=0mins, 0=NoAlarm
-    1  UINT { 'default': 0 } +ringtone
-    1  UINT { 'default': 0 } +unknown1
-    1  UINT { 'default': 0xff } +alarmminutes  "a value of 0xFF indicates not set"
-    1  UINT { 'default': 0xff } +alarmhours    "a value of 0xFF indicates not set"
-    1  UINT { 'default': 0 } +unknown2
-    2  UINT { 'default': 0x01FA } +unknown3
-    4  UINT { 'default': 0 } +unknown4
-    65 USTRING { 'default': '000000ca-00000000-0000000000-VX856V04', 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False } +serial_number
-
-PACKET schedulefile:
-    2 UINT numactiveitems
-    * LIST { 'elementclass': scheduleevent, 'length': NUMCALENDARENTRIES, 'createdefault': True } +events

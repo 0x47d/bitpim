@@ -11,14 +11,15 @@
 
 """Various descriptions of data specific to LG VX9700"""
 
-from p_lgvx9100 import *
+# groups     - same as VX-8700
+# phonebook  - LG Phonebook v1.0 (same as VX-8550)
+# schedule   - same as VX-8550
+from p_lgvx8550 import *
+
+# sms        - same as VX-9100
+from p_lgvx9100 import msg_record,recipient_record,sms_saved,sms_out,SMSINBOXMSGFRAGMENT,sms_in
 
 %}
-
-# groups     - same as VX-8700
-# schedule   - same as VX-9100
-# sms        - same as VX-9100
-# phonebook  - LG Phonebook v1.0 (same as VX-8550)
 
 # Index files
 PACKET indexentry:
@@ -35,3 +36,25 @@ PACKET indexentry:
 PACKET indexfile:
     "Used for tracking wallpaper and ringtones"
     * LIST {'elementclass': indexentry, 'createdefault': True} +items
+
+# Call history
+PACKET call:
+    4 GPSDATE GPStime    # no. of seconds since 0h 1-6-80, based off local time.
+    4 UINT  unk0         # different for each call
+    4 UINT  duration     # seconds, not certain about length of this field
+    49 USTRING {'raiseonunterminatedread': False} number
+    36 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False} name
+    1 UINT  numberlength # length of phone number
+    1 UINT  status       # 0=outgoing, 1=incoming, 2=missed, etc
+    1 UINT  pbnumbertype # 1=cell, 2=home, 3=office, 4=cell2, 5=fax, 6=vmail, 0xFF=not in phone book
+    4 UINT  unk1         # always seems to be 0
+    4 UINT  pbentrynum   #entry number in phonebook
+    24 DATA unk2
+
+# same as the VX-8560 without the unknown entry at the beginning of the file
+PACKET callhistory:
+    4 UINT numcalls
+    1 UINT unk1
+    * LIST {'elementclass': call} +calls
+
+                                                    

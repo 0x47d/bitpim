@@ -51,7 +51,7 @@ class Phone(parentphone):
 
     # Calendar stuff------------------------------------------------------------
     def _scheduleextras(self, data, fwversion):
-        data.serial_number = '000000d1-00000000-00000000-' + fwversion
+        data.serial_number = '000000ca-00000000-00000000-' + fwversion
         data.unknown3 = 0x01fa
 
 #-------------------------------------------------------------------------------
