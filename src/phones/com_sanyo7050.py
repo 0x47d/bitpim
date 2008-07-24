@@ -101,6 +101,18 @@ class Profile(parentprofile):
     usbids=( ( 0x0474, 0x0743, 2),)  # VID=Sanyo,
     deviceclasses=("serial",)
 
+    _supportedsyncs=(
+        ('phonebook', 'read', None),  # all phonebook reading
+        #('calendar', 'read', None),   # all calendar reading
+        ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
+        #('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
+        ('wallpaper', 'read', None),  # all wallpaper reading
+        ('ringtone', 'read', None),   # all ringtone reading
+        ('call_history', 'read', None),# all call history list reading
+        ('sms', 'read', None), # Read sms messages
+        ('todo', 'read', None), # Read todos
+    )
+
     def __init__(self):
         parentprofile.__init__(self)
         com_sanyonewer.Profile.__init__(self)
