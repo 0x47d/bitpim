@@ -17,15 +17,19 @@ BREW_FILE_SYSTEM = 2
 BREW_READ_SIZE = 0x400
 BREW_WRITE_SIZE = 0x1A00
 
+MAX_PHONEBOOK_GROUPS=30
+
 # Phonebook stuff
 RTPathIndexFile='pim/pbRingIdSetAsPath.dat'
 WPPathIndexFile='pim/pbPictureIdSetAsPath.dat'
+
 pb_file_name='pim/pbentry.dat'
+pb_group_filename='pim/pbgroup.dat'
 
 T9USERDBFILENAME='t9udb/t9udb_eng.dat'
 
 class pbgroup(BaseProtogenClass):
-    __fields=['name', 'groupid', 'unknown0']
+    __fields=['name', 'groupid', 'user_added']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -58,12 +62,18 @@ class pbgroup(BaseProtogenClass):
     def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        self.__field_name.writetobuffer(buf)
-        self.__field_groupid.writetobuffer(buf)
-        try: self.__field_unknown0
+        try: self.__field_name
         except:
-            self.__field_unknown0=UINT(**{'sizeinbytes': 1, 'default': 0})
-        self.__field_unknown0.writetobuffer(buf)
+            self.__field_name=USTRING(**{'sizeinbytes': 33, 'encoding': PHONE_ENCODING,                'raiseonunterminatedread': False,                'raiseontruncate': False,                'default': '' })
+        self.__field_name.writetobuffer(buf)
+        try: self.__field_groupid
+        except:
+            self.__field_groupid=UINT(**{'sizeinbytes': 2,  'default': 0 })
+        self.__field_groupid.writetobuffer(buf)
+        try: self.__field_user_added
+        except:
+            self.__field_user_added=UINT(**{'sizeinbytes': 1, 'default': 0})
+        self.__field_user_added.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
@@ -72,56 +82,62 @@ class pbgroup(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_name=USTRING(**{'sizeinbytes': 33, 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False })
+        self.__field_name=USTRING(**{'sizeinbytes': 33, 'encoding': PHONE_ENCODING,                'raiseonunterminatedread': False,                'raiseontruncate': False,                'default': '' })
         self.__field_name.readfrombuffer(buf)
-        self.__field_groupid=UINT(**{'sizeinbytes': 2})
+        self.__field_groupid=UINT(**{'sizeinbytes': 2,  'default': 0 })
         self.__field_groupid.readfrombuffer(buf)
-        self.__field_unknown0=UINT(**{'sizeinbytes': 1, 'default': 0})
-        self.__field_unknown0.readfrombuffer(buf)
+        self.__field_user_added=UINT(**{'sizeinbytes': 1, 'default': 0})
+        self.__field_user_added.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
 
     def __getfield_name(self):
+        try: self.__field_name
+        except:
+            self.__field_name=USTRING(**{'sizeinbytes': 33, 'encoding': PHONE_ENCODING,                'raiseonunterminatedread': False,                'raiseontruncate': False,                'default': '' })
         return self.__field_name.getvalue()
 
     def __setfield_name(self, value):
         if isinstance(value,USTRING):
             self.__field_name=value
         else:
-            self.__field_name=USTRING(value,**{'sizeinbytes': 33, 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False })
+            self.__field_name=USTRING(value,**{'sizeinbytes': 33, 'encoding': PHONE_ENCODING,                'raiseonunterminatedread': False,                'raiseontruncate': False,                'default': '' })
 
     def __delfield_name(self): del self.__field_name
 
     name=property(__getfield_name, __setfield_name, __delfield_name, None)
 
     def __getfield_groupid(self):
+        try: self.__field_groupid
+        except:
+            self.__field_groupid=UINT(**{'sizeinbytes': 2,  'default': 0 })
         return self.__field_groupid.getvalue()
 
     def __setfield_groupid(self, value):
         if isinstance(value,UINT):
             self.__field_groupid=value
         else:
-            self.__field_groupid=UINT(value,**{'sizeinbytes': 2})
+            self.__field_groupid=UINT(value,**{'sizeinbytes': 2,  'default': 0 })
 
     def __delfield_groupid(self): del self.__field_groupid
 
     groupid=property(__getfield_groupid, __setfield_groupid, __delfield_groupid, None)
 
-    def __getfield_unknown0(self):
-        try: self.__field_unknown0
+    def __getfield_user_added(self):
+        try: self.__field_user_added
         except:
-            self.__field_unknown0=UINT(**{'sizeinbytes': 1, 'default': 0})
-        return self.__field_unknown0.getvalue()
+            self.__field_user_added=UINT(**{'sizeinbytes': 1, 'default': 0})
+        return self.__field_user_added.getvalue()
 
-    def __setfield_unknown0(self, value):
+    def __setfield_user_added(self, value):
         if isinstance(value,UINT):
-            self.__field_unknown0=value
+            self.__field_user_added=value
         else:
-            self.__field_unknown0=UINT(value,**{'sizeinbytes': 1, 'default': 0})
+            self.__field_user_added=UINT(value,**{'sizeinbytes': 1, 'default': 0})
 
-    def __delfield_unknown0(self): del self.__field_unknown0
+    def __delfield_user_added(self): del self.__field_user_added
 
-    unknown0=property(__getfield_unknown0, __setfield_unknown0, __delfield_unknown0, None)
+    user_added=property(__getfield_user_added, __setfield_user_added, __delfield_user_added, "=1 when was added by user")
 
     def iscontainer(self):
         return True
@@ -129,7 +145,7 @@ class pbgroup(BaseProtogenClass):
     def containerelements(self):
         yield ('name', self.__field_name, None)
         yield ('groupid', self.__field_groupid, None)
-        yield ('unknown0', self.__field_unknown0, None)
+        yield ('user_added', self.__field_user_added, "=1 when was added by user")
 
 
 
@@ -163,7 +179,7 @@ class pbgroups(BaseProtogenClass):
         if __debug__:
             self._complainaboutunusedargs(pbgroups,kwargs)
         if len(args):
-            dict2={'elementclass': pbgroup}
+            dict2={'elementclass': pbgroup,            'length': MAX_PHONEBOOK_GROUPS,            'createdefault': True}
             dict2.update(kwargs)
             kwargs=dict2
             self.__field_groups=LIST(*args,**dict2)
@@ -175,7 +191,7 @@ class pbgroups(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_groups
         except:
-            self.__field_groups=LIST(**{'elementclass': pbgroup})
+            self.__field_groups=LIST(**{'elementclass': pbgroup,            'length': MAX_PHONEBOOK_GROUPS,            'createdefault': True})
         self.__field_groups.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -185,7 +201,7 @@ class pbgroups(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_groups=LIST(**{'elementclass': pbgroup})
+        self.__field_groups=LIST(**{'elementclass': pbgroup,            'length': MAX_PHONEBOOK_GROUPS,            'createdefault': True})
         self.__field_groups.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -193,14 +209,14 @@ class pbgroups(BaseProtogenClass):
     def __getfield_groups(self):
         try: self.__field_groups
         except:
-            self.__field_groups=LIST(**{'elementclass': pbgroup})
+            self.__field_groups=LIST(**{'elementclass': pbgroup,            'length': MAX_PHONEBOOK_GROUPS,            'createdefault': True})
         return self.__field_groups.getvalue()
 
     def __setfield_groups(self, value):
         if isinstance(value,LIST):
             self.__field_groups=value
         else:
-            self.__field_groups=LIST(value,**{'elementclass': pbgroup})
+            self.__field_groups=LIST(value,**{'elementclass': pbgroup,            'length': MAX_PHONEBOOK_GROUPS,            'createdefault': True})
 
     def __delfield_groups(self): del self.__field_groups
 
