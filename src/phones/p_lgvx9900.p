@@ -76,7 +76,7 @@ PACKET recipient_record:
     4 LGCALDATE timesent
     4 LGCALDATE timereceived
     1 UINT unknown2 # 0 when not received, set to 1 when received
-    57 DATA unknown3
+    54 DATA unknown3
 
 PACKET sms_saved:
     P BOOL { 'default': True } +outboxmsg
@@ -97,7 +97,7 @@ PACKET sms_out:
 ##    16 UNKNOWN unknown5
     73 USTRING callback
     # Can't figure out the recipient record, so set just 1 for now
-    * LIST {'elementclass': recipient_record,'length': 1} +recipients
+    * LIST {'elementclass': recipient_record,'length': 9} +recipients
 
 PACKET SMSINBOXMSGFRAGMENT:
     * LIST {'length': 220} +msg: # this size could be wrong
