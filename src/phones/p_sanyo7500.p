@@ -37,3 +37,39 @@ HASRINGPICBUF=0
 
 %}
 
+PACKET messagesententry:
+    1 UINT slot
+    1 UINT read
+    1 UINT counter
+    3 UNKNOWN pad1
+    1 UINT dunno1
+    1 UINT dunno2
+    1 UINT dunno3
+    1 UNKNOWN pad2
+    1 UINT dunno4
+    1 UINT dunno5
+    1 UNKNOWN pad3
+    1 UINT message_len
+    255 USTRING message "Text of the notification"
+    2 UNKNOWN pad4
+    1 UINT year
+    1 UINT month
+    1 UINT day
+    1 UINT hour
+    1 UINT minute
+    1 UINT second
+    1 UINT callback_len
+    34 USTRING callback
+    1 UINT phonenum_len
+    37 USTRING phonenum
+    1 UINT dunno6
+    1 UINT priority
+    3 UNKNOWN pad6
+    1 UINT dunno7
+    1 UINT dunno8
+
+PACKET messagesentresponse:
+    * sanyoheader header
+    * messagesententry entry
+    * UNKNOWN pad
+
