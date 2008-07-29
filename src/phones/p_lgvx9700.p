@@ -19,6 +19,11 @@ from p_lgvx8550 import *
 # sms        - same as VX-9100
 from p_lgvx9100 import msg_record,recipient_record,sms_saved,sms_out,SMSINBOXMSGFRAGMENT,sms_in
 
+# SMS index files
+inbox_index     = "dload/inbox.dat"
+outbox_index    = "dload/outbox.dat"
+drafts_index    = "dload/drafts.dat"
+
 %}
 
 # Index files
