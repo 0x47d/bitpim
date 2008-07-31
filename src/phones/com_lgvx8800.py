@@ -55,10 +55,7 @@ class Phone(parentphone):
                 self.logdata("SMS message file " +item.filename, buf.getdata())
                 sf=self.protocolclass.sms_saved()
                 sf.readfrombuffer(buf, logtitle="SMS saved item")
-                if sf.outboxmsg:
-                    entry=self._getoutboxmessage(sf.outbox)
-                else:
-                    entry=self._getinboxmessage(sf.inbox)
+                entry=self._getoutboxmessage(sf.outbox)
                 entry.folder=entry.Folder_Saved
                 res[entry.id]=entry
         for item in self.getindex(self.protocolclass.inbox_index):
