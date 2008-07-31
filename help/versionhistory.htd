@@ -21,6 +21,7 @@
       <LI><P>New Phone support: <B>LG VX-8610</B> (Initial)
       <LI><P>Bug fix: LG VX-9900 SMS support.
       <li><p>Bug fix: Sanyo SCP-7500.  Correctly read date on Sent messages.
+      <LI><P>Maintenance: Upgrade build script.
     </ul>
 
    <h2><a name="1.0.5">Changes in 1.0.5</a></h2>

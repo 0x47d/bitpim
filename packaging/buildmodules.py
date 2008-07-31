@@ -12,7 +12,7 @@ topdir=os.getcwd()
 
 ALL=["usb", "strings", "bmp2avi"]
 
-args=sys.argv[1:]
+args=sys.argv[1:] if __name__=='__main__' else []
 if len(args)==1 and args[0]=="all":
     args=ALL
 elif len(args)==0:

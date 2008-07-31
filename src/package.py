@@ -297,6 +297,14 @@ def resourcefilter(srcfilename, destfilename):
         return srcfilename, destfilename
     return None
 
+def build_dependences():
+    # build modules
+    import buildmodules
+    # rebuild all the prototocol (*.p) files
+    import protogen
+    for f in glob.glob("src/phones/*.p"):
+        protogen.processfile(f, f+"y")
+
 def finalize(destdir):
     if sys.platform=='win32':
         for f in ("w9xpopen.exe",):
