@@ -248,6 +248,10 @@ def islikelyportscore(port, phonemodule):
             if v.find(str)>=0:
                 return score
 
+    # LG phones generall have ports named cu.name-BTDIAG-1 or cu.name-SerialPort-1 where name is the bluetooth id of the phone
+    if sys.platform=='darwin' and (port['name'].lower().find('btdiag') > 0 or port['name'].lower().find('serialport') > 0):
+        return score
+
     score+=10
     # did it have a usb id that didn't match?
     if port.has_key("libusb"):
