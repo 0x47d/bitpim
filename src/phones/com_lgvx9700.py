@@ -84,8 +84,8 @@ class Phone(parentphone):
     def _getinboxmessage(self, sf):
         entry=sms.SMSEntry()
         entry.folder=entry.Folder_Inbox
-        entry.datetime="%d%02d%02dT%02d%02d%02d" % (sf.gtimerecv)
-        entry._from=sf.sender_callback
+        entry.datetime="%d%02d%02dT%02d%02d%02d" % (sf.GPStime)
+        entry._from=sf.sender if sf.sender else sf.sender_name
         entry.subject=sf.subject
         entry.locked=sf.locked
         if sf.priority==0:
@@ -93,15 +93,15 @@ class Phone(parentphone):
         else:
             entry.priority=sms.SMSEntry.Priority_High
         entry.read=sf.read
-
-        # read message data
         txt=""
-        for msg in sf.msgs:
-            if msg.msg_length != 0:
-                txt += self._get_text_from_sms_msg_with_header(msg.msg_data.msg, msg.msg_length)
-
+        _decode_func=self._get_text_from_sms_msg_with_header if \
+                      sf.msgs[1].msg_length else \
+                      self._get_text_from_sms_msg_without_header
+        for _entry in sf.msgs:
+            if _entry.msg_length:
+                txt+=_decode_func(_entry.msg_data.msg, _entry.msg_length)
         entry.text=unicode(txt, errors='ignore')
-        entry.callback=sf.sender_callback
+        entry.callback=sf.callback
         return entry
 
 #-------------------------------------------------------------------------------
