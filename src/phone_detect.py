@@ -225,6 +225,8 @@ class DetectPhone(object):
         for model in models:
             self.log('Checking for model: '+model)
             module=common.importas(phones.module(model))
+            for x in coms:
+                self.log ('port ' + x['name'] + ' has score ' + str (comdiagnose.islikelyport(x, module)))
             # check for detectphone in module.Phone or
             # phone_model and phone_manufacturer in module.Profile
             if hasattr(module.Phone, 'detectphone'):
