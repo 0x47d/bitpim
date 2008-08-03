@@ -53,6 +53,7 @@ PACKET pbgroup:
 PACKET pbgroups:
     "Phonebook groups"
     * LIST {'elementclass': pbgroup,
+            'raiseonincompleteread': False,
             'length': MAX_PHONEBOOK_GROUPS,
             'createdefault': True} +groups
 

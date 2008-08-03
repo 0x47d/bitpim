@@ -179,7 +179,7 @@ class pbgroups(BaseProtogenClass):
         if __debug__:
             self._complainaboutunusedargs(pbgroups,kwargs)
         if len(args):
-            dict2={'elementclass': pbgroup,            'length': MAX_PHONEBOOK_GROUPS,            'createdefault': True}
+            dict2={'elementclass': pbgroup,            'raiseonincompleteread': False,            'length': MAX_PHONEBOOK_GROUPS,            'createdefault': True}
             dict2.update(kwargs)
             kwargs=dict2
             self.__field_groups=LIST(*args,**dict2)
@@ -191,7 +191,7 @@ class pbgroups(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_groups
         except:
-            self.__field_groups=LIST(**{'elementclass': pbgroup,            'length': MAX_PHONEBOOK_GROUPS,            'createdefault': True})
+            self.__field_groups=LIST(**{'elementclass': pbgroup,            'raiseonincompleteread': False,            'length': MAX_PHONEBOOK_GROUPS,            'createdefault': True})
         self.__field_groups.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -201,7 +201,7 @@ class pbgroups(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_groups=LIST(**{'elementclass': pbgroup,            'length': MAX_PHONEBOOK_GROUPS,            'createdefault': True})
+        self.__field_groups=LIST(**{'elementclass': pbgroup,            'raiseonincompleteread': False,            'length': MAX_PHONEBOOK_GROUPS,            'createdefault': True})
         self.__field_groups.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -209,14 +209,14 @@ class pbgroups(BaseProtogenClass):
     def __getfield_groups(self):
         try: self.__field_groups
         except:
-            self.__field_groups=LIST(**{'elementclass': pbgroup,            'length': MAX_PHONEBOOK_GROUPS,            'createdefault': True})
+            self.__field_groups=LIST(**{'elementclass': pbgroup,            'raiseonincompleteread': False,            'length': MAX_PHONEBOOK_GROUPS,            'createdefault': True})
         return self.__field_groups.getvalue()
 
     def __setfield_groups(self, value):
         if isinstance(value,LIST):
             self.__field_groups=value
         else:
-            self.__field_groups=LIST(value,**{'elementclass': pbgroup,            'length': MAX_PHONEBOOK_GROUPS,            'createdefault': True})
+            self.__field_groups=LIST(value,**{'elementclass': pbgroup,            'raiseonincompleteread': False,            'length': MAX_PHONEBOOK_GROUPS,            'createdefault': True})
 
     def __delfield_groups(self): del self.__field_groups
 
