@@ -1400,6 +1400,7 @@ class LIST(BaseProtogenClass):
         self._createdefault=False
         self._length=None
         self._raiseonbadlength=True
+        self._raiseonincompleteread=True
         self._elementclass=None
         self._elementinitkwargs={}
 
@@ -1408,7 +1409,7 @@ class LIST(BaseProtogenClass):
 
     def _update(self, args, kwargs):
         super(LIST,self)._update(args, kwargs)
-        self._consumekw(kwargs, ("createdefault","length","raiseonbadlength","elementclass","elementinitkwargs"))
+        self._consumekw(kwargs, ("createdefault","length","raiseonbadlength","elementclass","elementinitkwargs","raiseonincompleteread"))
         if kwargs.has_key("value"):
             self._thelist=list(kwargs['value'])
             del kwargs['value']
@@ -1436,7 +1437,11 @@ class LIST(BaseProtogenClass):
             for dummy in range(self._length):
                 # read specified number of items
                 x=self._makeitem()
-                x.readfrombuffer(buf)
+                try:
+                    x.readfrombuffer(buf)
+                except IndexError:
+                    if self._raiseonincompleteread:
+                        raise IndexError("tried to read too many list items")
                 self._thelist.append(x)
 
         self._bufferendoffset=buf.getcurrentoffset()
