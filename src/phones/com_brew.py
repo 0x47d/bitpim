@@ -1021,6 +1021,41 @@ class RealBrewProtocol2(RealBrewProtocol):
             file_cache.add(file, node.get('date', [0])[0], data)
         return data
 
+    def getfilecontents2(self, filename, start, size):
+        # read and return data a block of data from the specified file
+        try:
+            block_size = self.protocolclass.BREW_READ_SIZE
+        except AttributeError:
+            block_size = p_brew.BREW_READ_SIZE
+        self.log("Getting file contents2 '"+filename+"'")
+        desc="Reading "+filename
+        data=cStringIO.StringIO()
+        handle=self.openfile(filename, p_brew.new_fileopen_mode_read)
+        _readsize=start+size
+        try:
+            read=start
+            counter=0
+            while True:
+                counter+=1
+                if counter%5==0:
+                    self.progress(read, _readsize, desc)
+                req=p_brew.new_readfilerequest()
+                req.handle=handle
+                req.bytes=block_size
+                req.position=read
+                res=self.sendbrewcommand(req, p_brew.new_readfileresponse)
+                if res.bytes:
+                    data.write(res.data)
+                    read+=res.bytes
+                else:
+                    break
+                if read>=_readsize:
+                    break
+        finally: # MUST close handle to file
+            self.closefile(handle)
+        self.progress(1,1,desc)
+        return data.getvalue()[:size]
+
     def listfiles(self, dir=''):
         self.log("Listing files in dir: '"+dir+"'")
         return self.getfilesystem(dir, recurse=0, directories=0)
