@@ -129,3 +129,14 @@ PACKET pbgroup:
 PACKET pbgroups:
     "Phonebook groups"
     * LIST {'elementclass': pbgroup} +groups
+
+### Text Memos
+###
+PACKET textmemo:
+    1001 USTRING { 'encoding': PHONE_ENCODING,
+                   'raiseonunterminatedread': False,
+                   'raiseontruncate': False } text
+
+PACKET textmemofile:
+    4 UINT itemcount
+    * LIST { 'elementclass': textmemo } +items
