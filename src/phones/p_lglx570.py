@@ -26,6 +26,10 @@ SPEEDDIALINDEX=0
 numbertypetab=( 'cell', 'home', 'office', 'fax', 'pager' )
 
 PB_FILENAME='DB/SysDB/vCardSchema.vol'
+RT_MC_INDEX_FILENAME='setas/mcRingerIndex.map'
+RT_VM_INDEX_FILENAME='setas/voicememoRingerIndex.map'
+RT_MC_PATH='melodyComposer'
+RT_VM_PATH='VoiceDB/All/Memos'
 
 class indexentry(BaseProtogenClass):
     __fields=['index', 'mediatype', 'name']
@@ -563,20 +567,20 @@ class pbentry(BaseProtogenClass):
         self.__field_memo.writetobuffer(buf)
         try: self.__field_emails
         except:
-            self.__field_emails=LIST(**{'elementclass': _gen_p_lglx570_89, 'length': NUMEMAILS})
+            self.__field_emails=LIST(**{'elementclass': _gen_p_lglx570_93, 'length': NUMEMAILS})
         self.__field_emails.writetobuffer(buf)
         self.__field_url.writetobuffer(buf)
         try: self.__field_speeddials
         except:
-            self.__field_speeddials=LIST(**{'elementclass': _gen_p_lglx570_92,  'length': NUMPHONENUMBERS })
+            self.__field_speeddials=LIST(**{'elementclass': _gen_p_lglx570_96,  'length': NUMPHONENUMBERS })
         self.__field_speeddials.writetobuffer(buf)
         try: self.__field_numbertypes
         except:
-            self.__field_numbertypes=LIST(**{'elementclass': _gen_p_lglx570_94, 'length': NUMPHONENUMBERS})
+            self.__field_numbertypes=LIST(**{'elementclass': _gen_p_lglx570_98, 'length': NUMPHONENUMBERS})
         self.__field_numbertypes.writetobuffer(buf)
         try: self.__field_numbers
         except:
-            self.__field_numbers=LIST(**{'elementclass': _gen_p_lglx570_96, 'length': NUMPHONENUMBERS})
+            self.__field_numbers=LIST(**{'elementclass': _gen_p_lglx570_100, 'length': NUMPHONENUMBERS})
         self.__field_numbers.writetobuffer(buf)
         try: self.__field_dunno3
         except:
@@ -610,15 +614,15 @@ class pbentry(BaseProtogenClass):
         self.__field_dunno2.readfrombuffer(buf)
         self.__field_memo=USTRING(**{'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'sizeinbytes': MEMOLENGTH})
         self.__field_memo.readfrombuffer(buf)
-        self.__field_emails=LIST(**{'elementclass': _gen_p_lglx570_89, 'length': NUMEMAILS})
+        self.__field_emails=LIST(**{'elementclass': _gen_p_lglx570_93, 'length': NUMEMAILS})
         self.__field_emails.readfrombuffer(buf)
         self.__field_url=USTRING(**{'sizeinbytes': 73, 'raiseonunterminatedread': False})
         self.__field_url.readfrombuffer(buf)
-        self.__field_speeddials=LIST(**{'elementclass': _gen_p_lglx570_92,  'length': NUMPHONENUMBERS })
+        self.__field_speeddials=LIST(**{'elementclass': _gen_p_lglx570_96,  'length': NUMPHONENUMBERS })
         self.__field_speeddials.readfrombuffer(buf)
-        self.__field_numbertypes=LIST(**{'elementclass': _gen_p_lglx570_94, 'length': NUMPHONENUMBERS})
+        self.__field_numbertypes=LIST(**{'elementclass': _gen_p_lglx570_98, 'length': NUMPHONENUMBERS})
         self.__field_numbertypes.readfrombuffer(buf)
-        self.__field_numbers=LIST(**{'elementclass': _gen_p_lglx570_96, 'length': NUMPHONENUMBERS})
+        self.__field_numbers=LIST(**{'elementclass': _gen_p_lglx570_100, 'length': NUMPHONENUMBERS})
         self.__field_numbers.readfrombuffer(buf)
         self.__field_dunno3=UINT(**{'sizeinbytes': 2,  'default': 0 })
         self.__field_dunno3.readfrombuffer(buf)
@@ -767,14 +771,14 @@ class pbentry(BaseProtogenClass):
     def __getfield_emails(self):
         try: self.__field_emails
         except:
-            self.__field_emails=LIST(**{'elementclass': _gen_p_lglx570_89, 'length': NUMEMAILS})
+            self.__field_emails=LIST(**{'elementclass': _gen_p_lglx570_93, 'length': NUMEMAILS})
         return self.__field_emails.getvalue()
 
     def __setfield_emails(self, value):
         if isinstance(value,LIST):
             self.__field_emails=value
         else:
-            self.__field_emails=LIST(value,**{'elementclass': _gen_p_lglx570_89, 'length': NUMEMAILS})
+            self.__field_emails=LIST(value,**{'elementclass': _gen_p_lglx570_93, 'length': NUMEMAILS})
 
     def __delfield_emails(self): del self.__field_emails
 
@@ -796,14 +800,14 @@ class pbentry(BaseProtogenClass):
     def __getfield_speeddials(self):
         try: self.__field_speeddials
         except:
-            self.__field_speeddials=LIST(**{'elementclass': _gen_p_lglx570_92,  'length': NUMPHONENUMBERS })
+            self.__field_speeddials=LIST(**{'elementclass': _gen_p_lglx570_96,  'length': NUMPHONENUMBERS })
         return self.__field_speeddials.getvalue()
 
     def __setfield_speeddials(self, value):
         if isinstance(value,LIST):
             self.__field_speeddials=value
         else:
-            self.__field_speeddials=LIST(value,**{'elementclass': _gen_p_lglx570_92,  'length': NUMPHONENUMBERS })
+            self.__field_speeddials=LIST(value,**{'elementclass': _gen_p_lglx570_96,  'length': NUMPHONENUMBERS })
 
     def __delfield_speeddials(self): del self.__field_speeddials
 
@@ -812,14 +816,14 @@ class pbentry(BaseProtogenClass):
     def __getfield_numbertypes(self):
         try: self.__field_numbertypes
         except:
-            self.__field_numbertypes=LIST(**{'elementclass': _gen_p_lglx570_94, 'length': NUMPHONENUMBERS})
+            self.__field_numbertypes=LIST(**{'elementclass': _gen_p_lglx570_98, 'length': NUMPHONENUMBERS})
         return self.__field_numbertypes.getvalue()
 
     def __setfield_numbertypes(self, value):
         if isinstance(value,LIST):
             self.__field_numbertypes=value
         else:
-            self.__field_numbertypes=LIST(value,**{'elementclass': _gen_p_lglx570_94, 'length': NUMPHONENUMBERS})
+            self.__field_numbertypes=LIST(value,**{'elementclass': _gen_p_lglx570_98, 'length': NUMPHONENUMBERS})
 
     def __delfield_numbertypes(self): del self.__field_numbertypes
 
@@ -828,14 +832,14 @@ class pbentry(BaseProtogenClass):
     def __getfield_numbers(self):
         try: self.__field_numbers
         except:
-            self.__field_numbers=LIST(**{'elementclass': _gen_p_lglx570_96, 'length': NUMPHONENUMBERS})
+            self.__field_numbers=LIST(**{'elementclass': _gen_p_lglx570_100, 'length': NUMPHONENUMBERS})
         return self.__field_numbers.getvalue()
 
     def __setfield_numbers(self, value):
         if isinstance(value,LIST):
             self.__field_numbers=value
         else:
-            self.__field_numbers=LIST(value,**{'elementclass': _gen_p_lglx570_96, 'length': NUMPHONENUMBERS})
+            self.__field_numbers=LIST(value,**{'elementclass': _gen_p_lglx570_100, 'length': NUMPHONENUMBERS})
 
     def __delfield_numbers(self): del self.__field_numbers
 
@@ -898,7 +902,7 @@ class pbentry(BaseProtogenClass):
 
 
 
-class _gen_p_lglx570_89(BaseProtogenClass):
+class _gen_p_lglx570_93(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['email']
 
@@ -907,8 +911,8 @@ class _gen_p_lglx570_89(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_lglx570_89,self).__init__(**dict)
-        if self.__class__ is _gen_p_lglx570_89:
+        super(_gen_p_lglx570_93,self).__init__(**dict)
+        if self.__class__ is _gen_p_lglx570_93:
             self._update(args,dict)
 
 
@@ -917,7 +921,7 @@ class _gen_p_lglx570_89(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_lglx570_89,self)._update(args,kwargs)
+        super(_gen_p_lglx570_93,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -925,7 +929,7 @@ class _gen_p_lglx570_89(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_lglx570_89,kwargs)
+            self._complainaboutunusedargs(_gen_p_lglx570_93,kwargs)
         if len(args):
             dict2={'sizeinbytes': 73, 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False}
             dict2.update(kwargs)
@@ -973,7 +977,7 @@ class _gen_p_lglx570_89(BaseProtogenClass):
 
 
 
-class _gen_p_lglx570_92(BaseProtogenClass):
+class _gen_p_lglx570_96(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['speeddial']
 
@@ -982,8 +986,8 @@ class _gen_p_lglx570_92(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_lglx570_92,self).__init__(**dict)
-        if self.__class__ is _gen_p_lglx570_92:
+        super(_gen_p_lglx570_96,self).__init__(**dict)
+        if self.__class__ is _gen_p_lglx570_96:
             self._update(args,dict)
 
 
@@ -992,7 +996,7 @@ class _gen_p_lglx570_92(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_lglx570_92,self)._update(args,kwargs)
+        super(_gen_p_lglx570_96,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -1000,7 +1004,7 @@ class _gen_p_lglx570_92(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_lglx570_92,kwargs)
+            self._complainaboutunusedargs(_gen_p_lglx570_96,kwargs)
         if len(args):
             dict2={'sizeinbytes': 1,  'default': 0xff }
             dict2.update(kwargs)
@@ -1054,7 +1058,7 @@ class _gen_p_lglx570_92(BaseProtogenClass):
 
 
 
-class _gen_p_lglx570_94(BaseProtogenClass):
+class _gen_p_lglx570_98(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['numbertype']
 
@@ -1063,8 +1067,8 @@ class _gen_p_lglx570_94(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_lglx570_94,self).__init__(**dict)
-        if self.__class__ is _gen_p_lglx570_94:
+        super(_gen_p_lglx570_98,self).__init__(**dict)
+        if self.__class__ is _gen_p_lglx570_98:
             self._update(args,dict)
 
 
@@ -1073,7 +1077,7 @@ class _gen_p_lglx570_94(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_lglx570_94,self)._update(args,kwargs)
+        super(_gen_p_lglx570_98,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -1081,7 +1085,7 @@ class _gen_p_lglx570_94(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_lglx570_94,kwargs)
+            self._complainaboutunusedargs(_gen_p_lglx570_98,kwargs)
         if len(args):
             dict2={'sizeinbytes': 1}
             dict2.update(kwargs)
@@ -1129,7 +1133,7 @@ class _gen_p_lglx570_94(BaseProtogenClass):
 
 
 
-class _gen_p_lglx570_96(BaseProtogenClass):
+class _gen_p_lglx570_100(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['number']
 
@@ -1138,8 +1142,8 @@ class _gen_p_lglx570_96(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_lglx570_96,self).__init__(**dict)
-        if self.__class__ is _gen_p_lglx570_96:
+        super(_gen_p_lglx570_100,self).__init__(**dict)
+        if self.__class__ is _gen_p_lglx570_100:
             self._update(args,dict)
 
 
@@ -1148,7 +1152,7 @@ class _gen_p_lglx570_96(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_lglx570_96,self)._update(args,kwargs)
+        super(_gen_p_lglx570_100,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -1156,7 +1160,7 @@ class _gen_p_lglx570_96(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_lglx570_96,kwargs)
+            self._complainaboutunusedargs(_gen_p_lglx570_100,kwargs)
         if len(args):
             dict2={'sizeinbytes': 49, 'raiseonunterminatedread': False}
             dict2.update(kwargs)

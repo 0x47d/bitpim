@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <anthemion-project version="1.0.0.0" xmlns="http://www.anthemion.co.uk">
   <header>
-    <long name="name_counter">427</long>
+    <long name="name_counter">430</long>
     <string name="html_path">""</string>
     <string name="title">"BitPim"</string>
     <string name="author">"Roger Binns"</string>
@@ -1703,6 +1703,42 @@
               <long name="title-mode">0</long>
               <long name="locked">0</long>
               <string name="created">"16/11/2005"</string>
+              <long name="is-folder">0</long>
+              <long name="link-icon-to-page">1</long>
+              <long name="is-visible-in-contents">1</long>
+              <long name="is-default-page">0</long>
+              <string name="topic-name">""</string>
+              <long name="use-header-footer">1</long>
+              <long name="page-break">1</long>
+            </document>
+          </document>
+          <document>
+            <string name="title">"LG LX-570"</string>
+            <string name="type">"text-editor-document"</string>
+            <string name="filename">"phone-lglx570.htd"</string>
+            <string name="icon-name">"htmlfolder"</string>
+            <long name="is-transient">0</long>
+            <long name="owns-file">1</long>
+            <long name="title-mode">0</long>
+            <long name="locked">0</long>
+            <string name="created">"8/8/2008"</string>
+            <long name="is-folder">1</long>
+            <long name="link-icon-to-page">1</long>
+            <long name="is-visible-in-contents">1</long>
+            <long name="is-default-page">0</long>
+            <string name="topic-name">"ID_PHONE_LGLX570"</string>
+            <long name="use-header-footer">1</long>
+            <long name="page-break">1</long>
+            <document>
+              <string name="title">"Notes"</string>
+              <string name="type">"text-editor-document"</string>
+              <string name="filename">"phone-lglx570-notes.htd"</string>
+              <string name="icon-name">"htmldoc"</string>
+              <long name="is-transient">0</long>
+              <long name="owns-file">1</long>
+              <long name="title-mode">0</long>
+              <long name="locked">0</long>
+              <string name="created">"8/8/2008"</string>
               <long name="is-folder">0</long>
               <long name="link-icon-to-page">1</long>
               <long name="is-visible-in-contents">1</long>

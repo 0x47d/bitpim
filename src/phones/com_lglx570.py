@@ -23,7 +23,7 @@ class Phone(com_brew.RealBrewProtocol2, parentphone):
     "Talk to the LG LX570 (Musiq) cell phone"
 
     desc="LG-LX50"
-    helpid=None
+    helpid=helpids.ID_PHONE_LGLX570
     protocolclass=p_lglx570
     serialsname='lglx570'
     my_model='LX570'
@@ -93,6 +93,72 @@ class Phone(com_brew.RealBrewProtocol2, parentphone):
                                   self.ringtonelocations,
                                   results, 'ringtone-index')
 
+    def _fix_melodies_filename(self, name):
+        # the "My Melodies" file name must have '.mid' extension and
+        # no other '.' character.
+        if name[-4:]=='.mid':
+            # name already has the correct extenstion
+            _new_name=name[:-4]
+        else:
+            _new_name=name
+        return _new_name.replace('.', '_')+'.mid'
+
+    def _update_media_file(self, name, data):
+        # Check the if the size of the media file is different than the data
+        # and rewrite the file if necessary.
+        self.log('Updating media file: %s'%name)
+        _filename='%s/%s'%(self.protocolclass.RT_MC_PATH, name)
+        try:
+            _stat=self.statfile(_filename)
+        except com_brew.BrewNoSuchFileException:
+            _stat=None
+        if _stat and _stat.get('size', None)==len(data):
+            # file size and data size are the same, bail
+            self.log('File %s is unchanged'%_filename)
+            return
+        self.writefile(_filename, data)
+
+    def saveringtones(self, results, merge):
+        # Saving My Melodies media files to be used as ringtones
+        _media_index=results.get('ringtone-index', {})
+        _media=results.get('ringtone', {})
+        # build a dict of my "my melodies" (file) name and data
+        _melodies_data={}
+        for _item in _media.values():
+            if _item.get('origin', None)=='my melodies':
+                _melodies_data[self._fix_melodies_filename(_item['name'])]=_item['data']
+        # read the existing index file
+        _indexfile=self.readobject(self.protocolclass.RT_MC_INDEX_FILENAME,
+                                   self.protocolclass.indexfile,
+                                   logtitle='Reading MC Index File',
+                                   uselocalfs=False)
+        # go through the index file and rewrite media files as needed
+        self.log('Updating media files')
+        for _idx in range(_indexfile.numactiveitems):
+            _item=_indexfile.items[_idx]
+            if _item.name and _melodies_data.has_key(_item.name):
+                # check the file size and rewrite the file as needed
+                self._update_media_file(_item.name, _melodies_data[_item.name])
+                # remove the entry from the dict
+                del _melodies_data[_item.name]
+        # go through the index file and add new items
+        _empty_index=range(_indexfile.numactiveitems, len(_indexfile.items))
+        _available_media=_melodies_data.keys()
+        self.log('Adding new media files')
+        for _idx, _name in zip(_empty_index, _available_media):
+            # update the index entry
+            _indexfile.items[_idx].name=_name
+            # write out the media file
+            self._update_media_file(_name, _melodies_data[_name])
+            # update the count
+            _indexfile.numactiveitems+=1
+        # write the new index file
+        self.writeobject(self.protocolclass.RT_MC_INDEX_FILENAME,
+                         _indexfile, logtitle='Writing new MC Index file',
+                         uselocalfs=False)
+        # and re-read the index file
+        self.getringtoneindices(results)
+        return results
 
     # Phonebook stuff-----------------------------------------------------------
     def _assignpbtypeandspeeddialsbyposition(self, entry, speeds, res):
@@ -446,7 +512,7 @@ class Profile(parentprofile):
 ##        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
 ##        ('wallpaper', 'write', 'MERGE'),      # merge and overwrite wallpaper
 ##        ('wallpaper', 'write', 'OVERWRITE'),
-##        ('ringtone', 'write', 'MERGE'),       # merge and overwrite ringtone
+        ('ringtone', 'write', 'MERGE'),       # merge and overwrite ringtone
 ##        ('ringtone', 'write', 'OVERWRITE'),
 ##        ('sms', 'write', 'OVERWRITE'),        # all SMS list writing
 ##        ('memo', 'write', 'OVERWRITE'),       # all memo list writing

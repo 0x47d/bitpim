@@ -1,0 +1,25 @@
+#include "pagestart.h"
+<H3>Firmware Version</H3>
+<UL>
+<li><p>The firmware version of the phone used for development & test is <B>LX570V05</B>.
+</UL>
+
+<H3>Phonebook</H3>
+<UL>
+<LI><P>BitPim supports all phonebook features of this phone except for contact ringtone and contact wallpaper.
+<LI><P>For each contact, BitPim does not set its ringtone or wallpaper.  The contact ringtone will always be set to <B>Default</B>.
+</UL>
+
+<H3>Ringtones</H3>
+<UL>
+<LI><P>BitPim can retrieve <B>Voice Memo</B> and <B>My Melodies</B> files from the phone.
+<LI><P>BitPim can add new <B>My Melodies</B> files to the phone.
+<LI><P>BitPim does not delete <B>My Melodies</B> files on the phone.  They must be deleted manually from the phone.
+</UL>
+
+<H3>Pictues</H3>
+<UL>
+<LI><P>BitPim can retrieve <B>My Albums</B> pictures stored on the phone.  BitPim does not retrieve pictures stored on the microSD card.
+</UL>
+
+#include "pageend.h"

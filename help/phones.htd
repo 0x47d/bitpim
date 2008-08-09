@@ -33,6 +33,10 @@ BEGIN_TOC
         TOCITEM_1(Notes,lgg4015-notes.htm)
         TOCITEM_1(Howtos,lgg4015-howtos.htm)
         ENDTOC_1
+    TOCITEM_0(LG LX570,phone-lglx570.htm)
+        TOC_1
+        TOCITEM_1(Notes,phone-lglx570-notes.htm)
+        ENDTOC_1
     TOCITEM_0(LG PM225,phone-lgpm225.htm)
         TOC_1
         TOCITEM_1(Notes,phone-lgpm225-notes.htm)

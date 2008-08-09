@@ -35,6 +35,10 @@ SPEEDDIALINDEX=0
 numbertypetab=( 'cell', 'home', 'office', 'fax', 'pager' )
 
 PB_FILENAME='DB/SysDB/vCardSchema.vol'
+RT_MC_INDEX_FILENAME='setas/mcRingerIndex.map'
+RT_VM_INDEX_FILENAME='setas/voicememoRingerIndex.map'
+RT_MC_PATH='melodyComposer'
+RT_VM_PATH='VoiceDB/All/Memos'
 
 %}
 
