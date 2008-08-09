@@ -558,6 +558,11 @@ if __debug__:
                                       'brand': b_samsung,
                                       'helpid': helpids.ID_PHONE_SAMSUNGOTHERS,
                                       },
+                        'LG-LX260 (Rumor)': {  'module': 'com_lglx260',
+                                       'carrier': [c_sprint],
+                                       'brand': b_lg,
+                                       'helpid': None,
+                                       }, 
                         })
 
 # update the module path
