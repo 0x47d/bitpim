@@ -13,7 +13,11 @@
 <H3>Ringtones</H3>
 <UL>
 <LI><P>BitPim can retrieve <B>Voice Memo</B> and <B>My Melodies</B> files from the phone.
-<LI><P>BitPim can add new <B>My Melodies</B> files to the phone.
+<LI><P>BitPim can add new <B>My Melodies</B> files to the phone:
+<UL>
+<LI><P><B>My Melodies</B> file format can be either <B>MIDI</B> or <B>MP3</B>.
+<LI><P>The file name extension must be <B>".mid"</B>
+</UL>
 <LI><P>BitPim does not delete <B>My Melodies</B> files on the phone.  They must be deleted manually from the phone.
 </UL>
 
