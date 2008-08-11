@@ -16,6 +16,7 @@ import com_lgvx4400
 import p_lglx570
 import prototypes
 import helpids
+import sms
 
 #-------------------------------------------------------------------------------
 parentphone=com_lgvx4400.Phone
@@ -341,6 +342,92 @@ class Phone(com_brew.RealBrewProtocol2, parentphone):
                 setattr(e,k,entry[k])
         return e
 
+    # SMS Stuff ----------------------------------------------------------------
+    def _getquicktext(self):
+        quicks=[]
+        try:
+            sf=self.readobject(self.protocolclass.SMS_CANNED_FILENAME,
+                               self.protocolclass.sms_canned_file,
+                               logtitle="SMS quicktext file sms/mediacan000.dat",
+                               uselocalfs=False)
+            for rec in sf.msgs:
+                if rec.msg:
+                    quicks.append({ 'text': rec.msg,
+                                    'type': sms.CannedMsgEntry.user_type })
+        except com_brew.BrewNoSuchFileException:
+            pass # do nothing if file doesn't exist
+        return quicks
+
+    def _getinboxmessage(self, sf):
+        entry=sms.SMSEntry()
+        entry.folder=entry.Folder_Inbox
+        entry.datetime="%d%02d%02dT%02d%02d%02d" % (sf.GPStime)
+        entry._from=self._getsender(sf.sender, sf.sender_length)
+        entry.subject=sf.subject
+        entry.locked=sf.locked
+        entry.priority=sms.SMSEntry.Priority_Normal
+        entry.read=sf.read
+        entry.text=sf.msg
+        entry.callback=sf.callback
+        return entry
+
+    def _getoutboxmessage(self, sf):
+        entry=sms.SMSEntry()
+        entry.folder=entry.Folder_Saved if sf.saved \
+                      else entry.Folder_Sent
+        entry.datetime="%d%02d%02dT%02d%02d00" % ((sf.timesent))
+        # add all the recipients
+        for r in sf.recipients:
+            if r.number:
+                confirmed=(r.status==2)
+                confirmed_date=None
+                if confirmed:
+                    confirmed_date="%d%02d%02dT%02d%02d00" % r.time
+                entry.add_recipient(r.number, confirmed, confirmed_date)
+        entry.subject=sf.msg[:28]
+        entry.text=sf.msg
+        entry.priority=entry.Priority_High if sf.priority else \
+                        entry.Priority_Normal
+        entry.locked=sf.locked
+        entry.callback=sf.callback
+        return entry
+
+    def _readsms(self):
+        res={}
+        # go through the sms directory looking for messages
+        for item in self.listfiles("sms").values():
+            folder=None
+            for f,pat in self.protocolclass.SMS_PATTERNS.items():
+                if pat.match(item['name']):
+                    folder=f
+                    break
+            if folder:
+                buf=prototypes.buffer(self.getfilecontents(item['name'], True))
+                self.logdata("SMS message file " +item['name'], buf.getdata())
+            if folder=='Inbox':
+                sf=self.protocolclass.sms_in()
+                sf.readfrombuffer(buf, logtitle="SMS inbox item")
+                entry=self._getinboxmessage(sf)
+                res[entry.id]=entry
+            elif folder=='Sent':
+                sf=self.protocolclass.sms_out()
+                sf.readfrombuffer(buf, logtitle="SMS sent item")
+                entry=self._getoutboxmessage(sf)
+                res[entry.id]=entry
+
+        return res 
+
+    def _setquicktext(self, result):
+        sf=self.protocolclass.sms_canned_file()
+        quicktext=result.get('canned_msg', [])[:self.protocolclass.SMS_CANNED_MAX_ITEMS]
+        if quicktext:
+            for entry in quicktext:
+                msg_entry=self.protocolclass.sms_quick_text()
+                msg_entry.msg=entry['text'][:self.protocolclass.SMS_CANNED_MAX_LENGTH-1]
+                sf.msgs.append(msg_entry)
+            self.writeobject(self.protocolclass.SMS_CANNED_FILENAME,
+                             sf, logtitle="Writing quicktext",
+                             uselocalfs=False)
 
 #-------------------------------------------------------------------------------
 parentprofile=com_lgvx4400.Profile
@@ -506,7 +593,7 @@ class Profile(parentprofile):
         ('wallpaper', 'read', None),   # all wallpaper reading
         ('ringtone', 'read', None),    # all ringtone reading
 ##        ('call_history', 'read', None),# all call history list reading
-##        ('sms', 'read', None),         # all SMS list reading
+        ('sms', 'read', None),         # all SMS list reading
         ('memo', 'read', None),        # all memo list reading
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
 ##        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
@@ -514,7 +601,7 @@ class Profile(parentprofile):
 ##        ('wallpaper', 'write', 'OVERWRITE'),
         ('ringtone', 'write', 'MERGE'),       # merge and overwrite ringtone
 ##        ('ringtone', 'write', 'OVERWRITE'),
-##        ('sms', 'write', 'OVERWRITE'),        # all SMS list writing
+        ('sms', 'write', 'OVERWRITE'),        # all SMS list writing
         ('memo', 'write', 'OVERWRITE'),       # all memo list writing
 ##        ('playlist', 'read', 'OVERWRITE'),
 ##        ('playlist', 'write', 'OVERWRITE'),

@@ -40,6 +40,13 @@ RT_VM_INDEX_FILENAME='setas/voicememoRingerIndex.map'
 RT_MC_PATH='melodyComposer'
 RT_VM_PATH='VoiceDB/All/Memos'
 
+SMS_CANNED_MAX_ITEMS=40
+SMS_CANNED_MAX_LENGTH=101
+SMS_CANNED_FILENAME="sms/canned_msg.dat"
+SMS_PATTERNS={'Inbox': re.compile(r"^.*/inbox[0-9][0-9][0-9]\.dat$"),
+             'Sent': re.compile(r"^.*/outbox[0-9][0-9][0-9]\.dat$"),
+             }
+
 %}
 
 # Media stuff
@@ -140,3 +147,79 @@ PACKET textmemo:
 PACKET textmemofile:
     4 UINT itemcount
     * LIST { 'elementclass': textmemo } +items
+
+###
+### SMS 
+###
+#
+#   There are 3 types of SMS records, The inbox, outbox and unsent (pending)
+#   Unlike other records in the phone each message is stored in a separate file
+#   All messages are in the 'sms' directory in the root of the phone
+#   Inbox messages are in files called 'inbox000.dat', the number 000 varies for
+#   each message, typically there are no gaps in the numbering, but gaps can appear
+#   if a message is deleted.
+#   Outbox and draft message are named 'outbox000.dat'.
+#   Messages in the outbox get updated when the message is received by the recipient,
+#   they contain a delivery flag and a delivery time for all the possible 10 recipients.
+#   The pm225 stores SMS in plain text (unlike some other LG phones)
+
+PACKET recipient_record:
+    8 UINT unknown1
+    33 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False} name
+    73 USTRING number
+    1 UINT status   # 1 when sent, 2 when received
+    1 UINT unknown3 
+    4 LGCALDATE time # sent if status=1, received when status=2
+    12 DATA unknown2
+
+PACKET sms_out:
+    4 UINT index # starting from 1, unique
+    1 UINT locked # 1=locked
+    3 UINT unknown1 # zero
+    4 LGCALDATE timesent # time the message was sent
+    2 DATA dunno1
+    1 UINT saved # 0 for outbox, 1 for draft
+    5 DATA dunno2
+    1 UINT priority "0=normal, 1=urgent"
+    15 DATA dunno2
+    20 USTRING callback 
+    160 USTRING {'encoding': PHONE_ENCODING} msg
+    * LIST {'elementclass': recipient_record, 'length': 10} +recipients 
+
+PACKET SMSINBOXMSGFRAGMENT:
+    * LIST {'length': 181} +msg: # this size could be wrong
+        1 UINT byte "individual byte of message"
+
+PACKET sms_in:
+    4 UINT unknown1 # all zeros
+    4 UINT msg_index2 
+    2 UINT unknown2 # set to 0 
+    6 SMSDATE timesent
+    3 UINT unknown
+    1 UINT callback_length # 0 for no callback number
+    42 USTRING callback
+    1 UINT sender_length
+    * LIST {'length': 38} +sender:
+        1 UINT byte "individual byte of senders phone number"
+    15 DATA unknown4 # set to zeros
+    4 LGCALDATE lg_time # time the message was sent
+    4 GPSDATE GPStime # num seconds since 0h 1-6-80, time message received by phone
+    5 DATA dunno1
+    1 UINT read # 1 if message has been read, 0 otherwise (kind of a guess, not enough data to be sure)
+    1 UINT locked # 1 if the message is locked, 0 otherwise
+    7 DATA unknown5 # these are flags, not enough data to decode
+    #1 UINT priority # 1 if the message is high priority, 0 otherwise
+    74 USTRING {'encoding': PHONE_ENCODING} subject 
+    2 UINT msglength
+    1030 USTRING {'encoding': PHONE_ENCODING} msg
+
+
+PACKET sms_quick_text:
+    101 USTRING {'encoding': PHONE_ENCODING,
+                 'default': ""} +msg # include terminating NULL
+
+PACKET sms_canned_file:
+    2 UINT { 'default': len(self.msgs) } +num_active
+    * LIST {'length': SMS_CANNED_MAX_ITEMS,
+            'createdefault': True,
+            'elementclass': sms_quick_text} +msgs

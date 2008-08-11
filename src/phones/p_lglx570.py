@@ -31,6 +31,13 @@ RT_VM_INDEX_FILENAME='setas/voicememoRingerIndex.map'
 RT_MC_PATH='melodyComposer'
 RT_VM_PATH='VoiceDB/All/Memos'
 
+SMS_CANNED_MAX_ITEMS=40
+SMS_CANNED_MAX_LENGTH=101
+SMS_CANNED_FILENAME="sms/canned_msg.dat"
+SMS_PATTERNS={'Inbox': re.compile(r"^.*/inbox[0-9][0-9][0-9]\.dat$"),
+             'Sent': re.compile(r"^.*/outbox[0-9][0-9][0-9]\.dat$"),
+             }
+
 class indexentry(BaseProtogenClass):
     __fields=['index', 'mediatype', 'name']
 
@@ -567,20 +574,20 @@ class pbentry(BaseProtogenClass):
         self.__field_memo.writetobuffer(buf)
         try: self.__field_emails
         except:
-            self.__field_emails=LIST(**{'elementclass': _gen_p_lglx570_93, 'length': NUMEMAILS})
+            self.__field_emails=LIST(**{'elementclass': _gen_p_lglx570_100, 'length': NUMEMAILS})
         self.__field_emails.writetobuffer(buf)
         self.__field_url.writetobuffer(buf)
         try: self.__field_speeddials
         except:
-            self.__field_speeddials=LIST(**{'elementclass': _gen_p_lglx570_96,  'length': NUMPHONENUMBERS })
+            self.__field_speeddials=LIST(**{'elementclass': _gen_p_lglx570_103,  'length': NUMPHONENUMBERS })
         self.__field_speeddials.writetobuffer(buf)
         try: self.__field_numbertypes
         except:
-            self.__field_numbertypes=LIST(**{'elementclass': _gen_p_lglx570_98, 'length': NUMPHONENUMBERS})
+            self.__field_numbertypes=LIST(**{'elementclass': _gen_p_lglx570_105, 'length': NUMPHONENUMBERS})
         self.__field_numbertypes.writetobuffer(buf)
         try: self.__field_numbers
         except:
-            self.__field_numbers=LIST(**{'elementclass': _gen_p_lglx570_100, 'length': NUMPHONENUMBERS})
+            self.__field_numbers=LIST(**{'elementclass': _gen_p_lglx570_107, 'length': NUMPHONENUMBERS})
         self.__field_numbers.writetobuffer(buf)
         try: self.__field_dunno3
         except:
@@ -614,15 +621,15 @@ class pbentry(BaseProtogenClass):
         self.__field_dunno2.readfrombuffer(buf)
         self.__field_memo=USTRING(**{'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'sizeinbytes': MEMOLENGTH})
         self.__field_memo.readfrombuffer(buf)
-        self.__field_emails=LIST(**{'elementclass': _gen_p_lglx570_93, 'length': NUMEMAILS})
+        self.__field_emails=LIST(**{'elementclass': _gen_p_lglx570_100, 'length': NUMEMAILS})
         self.__field_emails.readfrombuffer(buf)
         self.__field_url=USTRING(**{'sizeinbytes': 73, 'raiseonunterminatedread': False})
         self.__field_url.readfrombuffer(buf)
-        self.__field_speeddials=LIST(**{'elementclass': _gen_p_lglx570_96,  'length': NUMPHONENUMBERS })
+        self.__field_speeddials=LIST(**{'elementclass': _gen_p_lglx570_103,  'length': NUMPHONENUMBERS })
         self.__field_speeddials.readfrombuffer(buf)
-        self.__field_numbertypes=LIST(**{'elementclass': _gen_p_lglx570_98, 'length': NUMPHONENUMBERS})
+        self.__field_numbertypes=LIST(**{'elementclass': _gen_p_lglx570_105, 'length': NUMPHONENUMBERS})
         self.__field_numbertypes.readfrombuffer(buf)
-        self.__field_numbers=LIST(**{'elementclass': _gen_p_lglx570_100, 'length': NUMPHONENUMBERS})
+        self.__field_numbers=LIST(**{'elementclass': _gen_p_lglx570_107, 'length': NUMPHONENUMBERS})
         self.__field_numbers.readfrombuffer(buf)
         self.__field_dunno3=UINT(**{'sizeinbytes': 2,  'default': 0 })
         self.__field_dunno3.readfrombuffer(buf)
@@ -771,14 +778,14 @@ class pbentry(BaseProtogenClass):
     def __getfield_emails(self):
         try: self.__field_emails
         except:
-            self.__field_emails=LIST(**{'elementclass': _gen_p_lglx570_93, 'length': NUMEMAILS})
+            self.__field_emails=LIST(**{'elementclass': _gen_p_lglx570_100, 'length': NUMEMAILS})
         return self.__field_emails.getvalue()
 
     def __setfield_emails(self, value):
         if isinstance(value,LIST):
             self.__field_emails=value
         else:
-            self.__field_emails=LIST(value,**{'elementclass': _gen_p_lglx570_93, 'length': NUMEMAILS})
+            self.__field_emails=LIST(value,**{'elementclass': _gen_p_lglx570_100, 'length': NUMEMAILS})
 
     def __delfield_emails(self): del self.__field_emails
 
@@ -800,14 +807,14 @@ class pbentry(BaseProtogenClass):
     def __getfield_speeddials(self):
         try: self.__field_speeddials
         except:
-            self.__field_speeddials=LIST(**{'elementclass': _gen_p_lglx570_96,  'length': NUMPHONENUMBERS })
+            self.__field_speeddials=LIST(**{'elementclass': _gen_p_lglx570_103,  'length': NUMPHONENUMBERS })
         return self.__field_speeddials.getvalue()
 
     def __setfield_speeddials(self, value):
         if isinstance(value,LIST):
             self.__field_speeddials=value
         else:
-            self.__field_speeddials=LIST(value,**{'elementclass': _gen_p_lglx570_96,  'length': NUMPHONENUMBERS })
+            self.__field_speeddials=LIST(value,**{'elementclass': _gen_p_lglx570_103,  'length': NUMPHONENUMBERS })
 
     def __delfield_speeddials(self): del self.__field_speeddials
 
@@ -816,14 +823,14 @@ class pbentry(BaseProtogenClass):
     def __getfield_numbertypes(self):
         try: self.__field_numbertypes
         except:
-            self.__field_numbertypes=LIST(**{'elementclass': _gen_p_lglx570_98, 'length': NUMPHONENUMBERS})
+            self.__field_numbertypes=LIST(**{'elementclass': _gen_p_lglx570_105, 'length': NUMPHONENUMBERS})
         return self.__field_numbertypes.getvalue()
 
     def __setfield_numbertypes(self, value):
         if isinstance(value,LIST):
             self.__field_numbertypes=value
         else:
-            self.__field_numbertypes=LIST(value,**{'elementclass': _gen_p_lglx570_98, 'length': NUMPHONENUMBERS})
+            self.__field_numbertypes=LIST(value,**{'elementclass': _gen_p_lglx570_105, 'length': NUMPHONENUMBERS})
 
     def __delfield_numbertypes(self): del self.__field_numbertypes
 
@@ -832,14 +839,14 @@ class pbentry(BaseProtogenClass):
     def __getfield_numbers(self):
         try: self.__field_numbers
         except:
-            self.__field_numbers=LIST(**{'elementclass': _gen_p_lglx570_100, 'length': NUMPHONENUMBERS})
+            self.__field_numbers=LIST(**{'elementclass': _gen_p_lglx570_107, 'length': NUMPHONENUMBERS})
         return self.__field_numbers.getvalue()
 
     def __setfield_numbers(self, value):
         if isinstance(value,LIST):
             self.__field_numbers=value
         else:
-            self.__field_numbers=LIST(value,**{'elementclass': _gen_p_lglx570_100, 'length': NUMPHONENUMBERS})
+            self.__field_numbers=LIST(value,**{'elementclass': _gen_p_lglx570_107, 'length': NUMPHONENUMBERS})
 
     def __delfield_numbers(self): del self.__field_numbers
 
@@ -902,7 +909,7 @@ class pbentry(BaseProtogenClass):
 
 
 
-class _gen_p_lglx570_93(BaseProtogenClass):
+class _gen_p_lglx570_100(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['email']
 
@@ -911,8 +918,8 @@ class _gen_p_lglx570_93(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_lglx570_93,self).__init__(**dict)
-        if self.__class__ is _gen_p_lglx570_93:
+        super(_gen_p_lglx570_100,self).__init__(**dict)
+        if self.__class__ is _gen_p_lglx570_100:
             self._update(args,dict)
 
 
@@ -921,7 +928,7 @@ class _gen_p_lglx570_93(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_lglx570_93,self)._update(args,kwargs)
+        super(_gen_p_lglx570_100,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -929,7 +936,7 @@ class _gen_p_lglx570_93(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_lglx570_93,kwargs)
+            self._complainaboutunusedargs(_gen_p_lglx570_100,kwargs)
         if len(args):
             dict2={'sizeinbytes': 73, 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False}
             dict2.update(kwargs)
@@ -977,7 +984,7 @@ class _gen_p_lglx570_93(BaseProtogenClass):
 
 
 
-class _gen_p_lglx570_96(BaseProtogenClass):
+class _gen_p_lglx570_103(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['speeddial']
 
@@ -986,8 +993,8 @@ class _gen_p_lglx570_96(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_lglx570_96,self).__init__(**dict)
-        if self.__class__ is _gen_p_lglx570_96:
+        super(_gen_p_lglx570_103,self).__init__(**dict)
+        if self.__class__ is _gen_p_lglx570_103:
             self._update(args,dict)
 
 
@@ -996,7 +1003,7 @@ class _gen_p_lglx570_96(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_lglx570_96,self)._update(args,kwargs)
+        super(_gen_p_lglx570_103,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -1004,7 +1011,7 @@ class _gen_p_lglx570_96(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_lglx570_96,kwargs)
+            self._complainaboutunusedargs(_gen_p_lglx570_103,kwargs)
         if len(args):
             dict2={'sizeinbytes': 1,  'default': 0xff }
             dict2.update(kwargs)
@@ -1058,7 +1065,7 @@ class _gen_p_lglx570_96(BaseProtogenClass):
 
 
 
-class _gen_p_lglx570_98(BaseProtogenClass):
+class _gen_p_lglx570_105(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['numbertype']
 
@@ -1067,8 +1074,8 @@ class _gen_p_lglx570_98(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_lglx570_98,self).__init__(**dict)
-        if self.__class__ is _gen_p_lglx570_98:
+        super(_gen_p_lglx570_105,self).__init__(**dict)
+        if self.__class__ is _gen_p_lglx570_105:
             self._update(args,dict)
 
 
@@ -1077,7 +1084,7 @@ class _gen_p_lglx570_98(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_lglx570_98,self)._update(args,kwargs)
+        super(_gen_p_lglx570_105,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -1085,7 +1092,7 @@ class _gen_p_lglx570_98(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_lglx570_98,kwargs)
+            self._complainaboutunusedargs(_gen_p_lglx570_105,kwargs)
         if len(args):
             dict2={'sizeinbytes': 1}
             dict2.update(kwargs)
@@ -1133,7 +1140,7 @@ class _gen_p_lglx570_98(BaseProtogenClass):
 
 
 
-class _gen_p_lglx570_100(BaseProtogenClass):
+class _gen_p_lglx570_107(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['number']
 
@@ -1142,8 +1149,8 @@ class _gen_p_lglx570_100(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_lglx570_100,self).__init__(**dict)
-        if self.__class__ is _gen_p_lglx570_100:
+        super(_gen_p_lglx570_107,self).__init__(**dict)
+        if self.__class__ is _gen_p_lglx570_107:
             self._update(args,dict)
 
 
@@ -1152,7 +1159,7 @@ class _gen_p_lglx570_100(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_lglx570_100,self)._update(args,kwargs)
+        super(_gen_p_lglx570_107,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -1160,7 +1167,7 @@ class _gen_p_lglx570_100(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_lglx570_100,kwargs)
+            self._complainaboutunusedargs(_gen_p_lglx570_107,kwargs)
         if len(args):
             dict2={'sizeinbytes': 49, 'raiseonunterminatedread': False}
             dict2.update(kwargs)
@@ -1624,6 +1631,1232 @@ class textmemofile(BaseProtogenClass):
     def containerelements(self):
         yield ('itemcount', self.__field_itemcount, None)
         yield ('items', self.__field_items, None)
+
+
+
+
+class recipient_record(BaseProtogenClass):
+    __fields=['unknown1', 'name', 'number', 'status', 'unknown3', 'time', 'unknown2']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(recipient_record,self).__init__(**dict)
+        if self.__class__ is recipient_record:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(recipient_record,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(recipient_record,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_unknown1.writetobuffer(buf)
+        self.__field_name.writetobuffer(buf)
+        self.__field_number.writetobuffer(buf)
+        self.__field_status.writetobuffer(buf)
+        self.__field_unknown3.writetobuffer(buf)
+        self.__field_time.writetobuffer(buf)
+        self.__field_unknown2.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_unknown1=UINT(**{'sizeinbytes': 8})
+        self.__field_unknown1.readfrombuffer(buf)
+        self.__field_name=USTRING(**{'sizeinbytes': 33, 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False})
+        self.__field_name.readfrombuffer(buf)
+        self.__field_number=USTRING(**{'sizeinbytes': 73})
+        self.__field_number.readfrombuffer(buf)
+        self.__field_status=UINT(**{'sizeinbytes': 1})
+        self.__field_status.readfrombuffer(buf)
+        self.__field_unknown3=UINT(**{'sizeinbytes': 1})
+        self.__field_unknown3.readfrombuffer(buf)
+        self.__field_time=LGCALDATE(**{'sizeinbytes': 4})
+        self.__field_time.readfrombuffer(buf)
+        self.__field_unknown2=DATA(**{'sizeinbytes': 12})
+        self.__field_unknown2.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_unknown1(self):
+        return self.__field_unknown1.getvalue()
+
+    def __setfield_unknown1(self, value):
+        if isinstance(value,UINT):
+            self.__field_unknown1=value
+        else:
+            self.__field_unknown1=UINT(value,**{'sizeinbytes': 8})
+
+    def __delfield_unknown1(self): del self.__field_unknown1
+
+    unknown1=property(__getfield_unknown1, __setfield_unknown1, __delfield_unknown1, None)
+
+    def __getfield_name(self):
+        return self.__field_name.getvalue()
+
+    def __setfield_name(self, value):
+        if isinstance(value,USTRING):
+            self.__field_name=value
+        else:
+            self.__field_name=USTRING(value,**{'sizeinbytes': 33, 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False})
+
+    def __delfield_name(self): del self.__field_name
+
+    name=property(__getfield_name, __setfield_name, __delfield_name, None)
+
+    def __getfield_number(self):
+        return self.__field_number.getvalue()
+
+    def __setfield_number(self, value):
+        if isinstance(value,USTRING):
+            self.__field_number=value
+        else:
+            self.__field_number=USTRING(value,**{'sizeinbytes': 73})
+
+    def __delfield_number(self): del self.__field_number
+
+    number=property(__getfield_number, __setfield_number, __delfield_number, None)
+
+    def __getfield_status(self):
+        return self.__field_status.getvalue()
+
+    def __setfield_status(self, value):
+        if isinstance(value,UINT):
+            self.__field_status=value
+        else:
+            self.__field_status=UINT(value,**{'sizeinbytes': 1})
+
+    def __delfield_status(self): del self.__field_status
+
+    status=property(__getfield_status, __setfield_status, __delfield_status, None)
+
+    def __getfield_unknown3(self):
+        return self.__field_unknown3.getvalue()
+
+    def __setfield_unknown3(self, value):
+        if isinstance(value,UINT):
+            self.__field_unknown3=value
+        else:
+            self.__field_unknown3=UINT(value,**{'sizeinbytes': 1})
+
+    def __delfield_unknown3(self): del self.__field_unknown3
+
+    unknown3=property(__getfield_unknown3, __setfield_unknown3, __delfield_unknown3, None)
+
+    def __getfield_time(self):
+        return self.__field_time.getvalue()
+
+    def __setfield_time(self, value):
+        if isinstance(value,LGCALDATE):
+            self.__field_time=value
+        else:
+            self.__field_time=LGCALDATE(value,**{'sizeinbytes': 4})
+
+    def __delfield_time(self): del self.__field_time
+
+    time=property(__getfield_time, __setfield_time, __delfield_time, None)
+
+    def __getfield_unknown2(self):
+        return self.__field_unknown2.getvalue()
+
+    def __setfield_unknown2(self, value):
+        if isinstance(value,DATA):
+            self.__field_unknown2=value
+        else:
+            self.__field_unknown2=DATA(value,**{'sizeinbytes': 12})
+
+    def __delfield_unknown2(self): del self.__field_unknown2
+
+    unknown2=property(__getfield_unknown2, __setfield_unknown2, __delfield_unknown2, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('unknown1', self.__field_unknown1, None)
+        yield ('name', self.__field_name, None)
+        yield ('number', self.__field_number, None)
+        yield ('status', self.__field_status, None)
+        yield ('unknown3', self.__field_unknown3, None)
+        yield ('time', self.__field_time, None)
+        yield ('unknown2', self.__field_unknown2, None)
+
+
+
+
+class sms_out(BaseProtogenClass):
+    __fields=['index', 'locked', 'unknown1', 'timesent', 'dunno1', 'saved', 'dunno2', 'priority', 'dunno2', 'callback', 'msg', 'recipients']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(sms_out,self).__init__(**dict)
+        if self.__class__ is sms_out:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(sms_out,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(sms_out,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_index.writetobuffer(buf)
+        self.__field_locked.writetobuffer(buf)
+        self.__field_unknown1.writetobuffer(buf)
+        self.__field_timesent.writetobuffer(buf)
+        self.__field_dunno1.writetobuffer(buf)
+        self.__field_saved.writetobuffer(buf)
+        self.__field_dunno2.writetobuffer(buf)
+        self.__field_priority.writetobuffer(buf)
+        self.__field_dunno2.writetobuffer(buf)
+        self.__field_callback.writetobuffer(buf)
+        self.__field_msg.writetobuffer(buf)
+        try: self.__field_recipients
+        except:
+            self.__field_recipients=LIST(**{'elementclass': recipient_record, 'length': 10})
+        self.__field_recipients.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_index=UINT(**{'sizeinbytes': 4})
+        self.__field_index.readfrombuffer(buf)
+        self.__field_locked=UINT(**{'sizeinbytes': 1})
+        self.__field_locked.readfrombuffer(buf)
+        self.__field_unknown1=UINT(**{'sizeinbytes': 3})
+        self.__field_unknown1.readfrombuffer(buf)
+        self.__field_timesent=LGCALDATE(**{'sizeinbytes': 4})
+        self.__field_timesent.readfrombuffer(buf)
+        self.__field_dunno1=DATA(**{'sizeinbytes': 2})
+        self.__field_dunno1.readfrombuffer(buf)
+        self.__field_saved=UINT(**{'sizeinbytes': 1})
+        self.__field_saved.readfrombuffer(buf)
+        self.__field_dunno2=DATA(**{'sizeinbytes': 5})
+        self.__field_dunno2.readfrombuffer(buf)
+        self.__field_priority=UINT(**{'sizeinbytes': 1})
+        self.__field_priority.readfrombuffer(buf)
+        self.__field_dunno2=DATA(**{'sizeinbytes': 15})
+        self.__field_dunno2.readfrombuffer(buf)
+        self.__field_callback=USTRING(**{'sizeinbytes': 20})
+        self.__field_callback.readfrombuffer(buf)
+        self.__field_msg=USTRING(**{'sizeinbytes': 160, 'encoding': PHONE_ENCODING})
+        self.__field_msg.readfrombuffer(buf)
+        self.__field_recipients=LIST(**{'elementclass': recipient_record, 'length': 10})
+        self.__field_recipients.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_index(self):
+        return self.__field_index.getvalue()
+
+    def __setfield_index(self, value):
+        if isinstance(value,UINT):
+            self.__field_index=value
+        else:
+            self.__field_index=UINT(value,**{'sizeinbytes': 4})
+
+    def __delfield_index(self): del self.__field_index
+
+    index=property(__getfield_index, __setfield_index, __delfield_index, None)
+
+    def __getfield_locked(self):
+        return self.__field_locked.getvalue()
+
+    def __setfield_locked(self, value):
+        if isinstance(value,UINT):
+            self.__field_locked=value
+        else:
+            self.__field_locked=UINT(value,**{'sizeinbytes': 1})
+
+    def __delfield_locked(self): del self.__field_locked
+
+    locked=property(__getfield_locked, __setfield_locked, __delfield_locked, None)
+
+    def __getfield_unknown1(self):
+        return self.__field_unknown1.getvalue()
+
+    def __setfield_unknown1(self, value):
+        if isinstance(value,UINT):
+            self.__field_unknown1=value
+        else:
+            self.__field_unknown1=UINT(value,**{'sizeinbytes': 3})
+
+    def __delfield_unknown1(self): del self.__field_unknown1
+
+    unknown1=property(__getfield_unknown1, __setfield_unknown1, __delfield_unknown1, None)
+
+    def __getfield_timesent(self):
+        return self.__field_timesent.getvalue()
+
+    def __setfield_timesent(self, value):
+        if isinstance(value,LGCALDATE):
+            self.__field_timesent=value
+        else:
+            self.__field_timesent=LGCALDATE(value,**{'sizeinbytes': 4})
+
+    def __delfield_timesent(self): del self.__field_timesent
+
+    timesent=property(__getfield_timesent, __setfield_timesent, __delfield_timesent, None)
+
+    def __getfield_dunno1(self):
+        return self.__field_dunno1.getvalue()
+
+    def __setfield_dunno1(self, value):
+        if isinstance(value,DATA):
+            self.__field_dunno1=value
+        else:
+            self.__field_dunno1=DATA(value,**{'sizeinbytes': 2})
+
+    def __delfield_dunno1(self): del self.__field_dunno1
+
+    dunno1=property(__getfield_dunno1, __setfield_dunno1, __delfield_dunno1, None)
+
+    def __getfield_saved(self):
+        return self.__field_saved.getvalue()
+
+    def __setfield_saved(self, value):
+        if isinstance(value,UINT):
+            self.__field_saved=value
+        else:
+            self.__field_saved=UINT(value,**{'sizeinbytes': 1})
+
+    def __delfield_saved(self): del self.__field_saved
+
+    saved=property(__getfield_saved, __setfield_saved, __delfield_saved, None)
+
+    def __getfield_dunno2(self):
+        return self.__field_dunno2.getvalue()
+
+    def __setfield_dunno2(self, value):
+        if isinstance(value,DATA):
+            self.__field_dunno2=value
+        else:
+            self.__field_dunno2=DATA(value,**{'sizeinbytes': 5})
+
+    def __delfield_dunno2(self): del self.__field_dunno2
+
+    dunno2=property(__getfield_dunno2, __setfield_dunno2, __delfield_dunno2, None)
+
+    def __getfield_priority(self):
+        return self.__field_priority.getvalue()
+
+    def __setfield_priority(self, value):
+        if isinstance(value,UINT):
+            self.__field_priority=value
+        else:
+            self.__field_priority=UINT(value,**{'sizeinbytes': 1})
+
+    def __delfield_priority(self): del self.__field_priority
+
+    priority=property(__getfield_priority, __setfield_priority, __delfield_priority, "0=normal, 1=urgent")
+
+    def __getfield_dunno2(self):
+        return self.__field_dunno2.getvalue()
+
+    def __setfield_dunno2(self, value):
+        if isinstance(value,DATA):
+            self.__field_dunno2=value
+        else:
+            self.__field_dunno2=DATA(value,**{'sizeinbytes': 15})
+
+    def __delfield_dunno2(self): del self.__field_dunno2
+
+    dunno2=property(__getfield_dunno2, __setfield_dunno2, __delfield_dunno2, None)
+
+    def __getfield_callback(self):
+        return self.__field_callback.getvalue()
+
+    def __setfield_callback(self, value):
+        if isinstance(value,USTRING):
+            self.__field_callback=value
+        else:
+            self.__field_callback=USTRING(value,**{'sizeinbytes': 20})
+
+    def __delfield_callback(self): del self.__field_callback
+
+    callback=property(__getfield_callback, __setfield_callback, __delfield_callback, None)
+
+    def __getfield_msg(self):
+        return self.__field_msg.getvalue()
+
+    def __setfield_msg(self, value):
+        if isinstance(value,USTRING):
+            self.__field_msg=value
+        else:
+            self.__field_msg=USTRING(value,**{'sizeinbytes': 160, 'encoding': PHONE_ENCODING})
+
+    def __delfield_msg(self): del self.__field_msg
+
+    msg=property(__getfield_msg, __setfield_msg, __delfield_msg, None)
+
+    def __getfield_recipients(self):
+        try: self.__field_recipients
+        except:
+            self.__field_recipients=LIST(**{'elementclass': recipient_record, 'length': 10})
+        return self.__field_recipients.getvalue()
+
+    def __setfield_recipients(self, value):
+        if isinstance(value,LIST):
+            self.__field_recipients=value
+        else:
+            self.__field_recipients=LIST(value,**{'elementclass': recipient_record, 'length': 10})
+
+    def __delfield_recipients(self): del self.__field_recipients
+
+    recipients=property(__getfield_recipients, __setfield_recipients, __delfield_recipients, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('index', self.__field_index, None)
+        yield ('locked', self.__field_locked, None)
+        yield ('unknown1', self.__field_unknown1, None)
+        yield ('timesent', self.__field_timesent, None)
+        yield ('dunno1', self.__field_dunno1, None)
+        yield ('saved', self.__field_saved, None)
+        yield ('dunno2', self.__field_dunno2, None)
+        yield ('priority', self.__field_priority, "0=normal, 1=urgent")
+        yield ('dunno2', self.__field_dunno2, None)
+        yield ('callback', self.__field_callback, None)
+        yield ('msg', self.__field_msg, None)
+        yield ('recipients', self.__field_recipients, None)
+
+
+
+
+class SMSINBOXMSGFRAGMENT(BaseProtogenClass):
+    __fields=['msg']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(SMSINBOXMSGFRAGMENT,self).__init__(**dict)
+        if self.__class__ is SMSINBOXMSGFRAGMENT:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(SMSINBOXMSGFRAGMENT,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(SMSINBOXMSGFRAGMENT,kwargs)
+        if len(args):
+            dict2={'elementclass': _gen_p_lglx570_191, 'length': 181}
+            dict2.update(kwargs)
+            kwargs=dict2
+            self.__field_msg=LIST(*args,**dict2)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_msg
+        except:
+            self.__field_msg=LIST(**{'elementclass': _gen_p_lglx570_191, 'length': 181})
+        self.__field_msg.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_msg=LIST(**{'elementclass': _gen_p_lglx570_191, 'length': 181})
+        self.__field_msg.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_msg(self):
+        try: self.__field_msg
+        except:
+            self.__field_msg=LIST(**{'elementclass': _gen_p_lglx570_191, 'length': 181})
+        return self.__field_msg.getvalue()
+
+    def __setfield_msg(self, value):
+        if isinstance(value,LIST):
+            self.__field_msg=value
+        else:
+            self.__field_msg=LIST(value,**{'elementclass': _gen_p_lglx570_191, 'length': 181})
+
+    def __delfield_msg(self): del self.__field_msg
+
+    msg=property(__getfield_msg, __setfield_msg, __delfield_msg, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('msg', self.__field_msg, None)
+
+
+
+
+class _gen_p_lglx570_191(BaseProtogenClass):
+    'Anonymous inner class'
+    __fields=['byte']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(_gen_p_lglx570_191,self).__init__(**dict)
+        if self.__class__ is _gen_p_lglx570_191:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(_gen_p_lglx570_191,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(_gen_p_lglx570_191,kwargs)
+        if len(args):
+            dict2={'sizeinbytes': 1}
+            dict2.update(kwargs)
+            kwargs=dict2
+            self.__field_byte=UINT(*args,**dict2)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_byte.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_byte=UINT(**{'sizeinbytes': 1})
+        self.__field_byte.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_byte(self):
+        return self.__field_byte.getvalue()
+
+    def __setfield_byte(self, value):
+        if isinstance(value,UINT):
+            self.__field_byte=value
+        else:
+            self.__field_byte=UINT(value,**{'sizeinbytes': 1})
+
+    def __delfield_byte(self): del self.__field_byte
+
+    byte=property(__getfield_byte, __setfield_byte, __delfield_byte, "individual byte of message")
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('byte', self.__field_byte, "individual byte of message")
+
+
+
+
+class sms_in(BaseProtogenClass):
+    __fields=['unknown1', 'msg_index2', 'unknown2', 'timesent', 'unknown', 'callback_length', 'callback', 'sender_length', 'sender', 'unknown4', 'lg_time', 'GPStime', 'dunno1', 'read', 'locked', 'unknown5', 'subject', 'msglength', 'msg']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(sms_in,self).__init__(**dict)
+        if self.__class__ is sms_in:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(sms_in,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(sms_in,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_unknown1.writetobuffer(buf)
+        self.__field_msg_index2.writetobuffer(buf)
+        self.__field_unknown2.writetobuffer(buf)
+        self.__field_timesent.writetobuffer(buf)
+        self.__field_unknown.writetobuffer(buf)
+        self.__field_callback_length.writetobuffer(buf)
+        self.__field_callback.writetobuffer(buf)
+        self.__field_sender_length.writetobuffer(buf)
+        try: self.__field_sender
+        except:
+            self.__field_sender=LIST(**{'elementclass': _gen_p_lglx570_203, 'length': 38})
+        self.__field_sender.writetobuffer(buf)
+        self.__field_unknown4.writetobuffer(buf)
+        self.__field_lg_time.writetobuffer(buf)
+        self.__field_GPStime.writetobuffer(buf)
+        self.__field_dunno1.writetobuffer(buf)
+        self.__field_read.writetobuffer(buf)
+        self.__field_locked.writetobuffer(buf)
+        self.__field_unknown5.writetobuffer(buf)
+        self.__field_subject.writetobuffer(buf)
+        self.__field_msglength.writetobuffer(buf)
+        self.__field_msg.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_unknown1=UINT(**{'sizeinbytes': 4})
+        self.__field_unknown1.readfrombuffer(buf)
+        self.__field_msg_index2=UINT(**{'sizeinbytes': 4})
+        self.__field_msg_index2.readfrombuffer(buf)
+        self.__field_unknown2=UINT(**{'sizeinbytes': 2})
+        self.__field_unknown2.readfrombuffer(buf)
+        self.__field_timesent=SMSDATE(**{'sizeinbytes': 6})
+        self.__field_timesent.readfrombuffer(buf)
+        self.__field_unknown=UINT(**{'sizeinbytes': 3})
+        self.__field_unknown.readfrombuffer(buf)
+        self.__field_callback_length=UINT(**{'sizeinbytes': 1})
+        self.__field_callback_length.readfrombuffer(buf)
+        self.__field_callback=USTRING(**{'sizeinbytes': 42})
+        self.__field_callback.readfrombuffer(buf)
+        self.__field_sender_length=UINT(**{'sizeinbytes': 1})
+        self.__field_sender_length.readfrombuffer(buf)
+        self.__field_sender=LIST(**{'elementclass': _gen_p_lglx570_203, 'length': 38})
+        self.__field_sender.readfrombuffer(buf)
+        self.__field_unknown4=DATA(**{'sizeinbytes': 15})
+        self.__field_unknown4.readfrombuffer(buf)
+        self.__field_lg_time=LGCALDATE(**{'sizeinbytes': 4})
+        self.__field_lg_time.readfrombuffer(buf)
+        self.__field_GPStime=GPSDATE(**{'sizeinbytes': 4})
+        self.__field_GPStime.readfrombuffer(buf)
+        self.__field_dunno1=DATA(**{'sizeinbytes': 5})
+        self.__field_dunno1.readfrombuffer(buf)
+        self.__field_read=UINT(**{'sizeinbytes': 1})
+        self.__field_read.readfrombuffer(buf)
+        self.__field_locked=UINT(**{'sizeinbytes': 1})
+        self.__field_locked.readfrombuffer(buf)
+        self.__field_unknown5=DATA(**{'sizeinbytes': 7})
+        self.__field_unknown5.readfrombuffer(buf)
+        self.__field_subject=USTRING(**{'sizeinbytes': 74, 'encoding': PHONE_ENCODING})
+        self.__field_subject.readfrombuffer(buf)
+        self.__field_msglength=UINT(**{'sizeinbytes': 2})
+        self.__field_msglength.readfrombuffer(buf)
+        self.__field_msg=USTRING(**{'sizeinbytes': 1030, 'encoding': PHONE_ENCODING})
+        self.__field_msg.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_unknown1(self):
+        return self.__field_unknown1.getvalue()
+
+    def __setfield_unknown1(self, value):
+        if isinstance(value,UINT):
+            self.__field_unknown1=value
+        else:
+            self.__field_unknown1=UINT(value,**{'sizeinbytes': 4})
+
+    def __delfield_unknown1(self): del self.__field_unknown1
+
+    unknown1=property(__getfield_unknown1, __setfield_unknown1, __delfield_unknown1, None)
+
+    def __getfield_msg_index2(self):
+        return self.__field_msg_index2.getvalue()
+
+    def __setfield_msg_index2(self, value):
+        if isinstance(value,UINT):
+            self.__field_msg_index2=value
+        else:
+            self.__field_msg_index2=UINT(value,**{'sizeinbytes': 4})
+
+    def __delfield_msg_index2(self): del self.__field_msg_index2
+
+    msg_index2=property(__getfield_msg_index2, __setfield_msg_index2, __delfield_msg_index2, None)
+
+    def __getfield_unknown2(self):
+        return self.__field_unknown2.getvalue()
+
+    def __setfield_unknown2(self, value):
+        if isinstance(value,UINT):
+            self.__field_unknown2=value
+        else:
+            self.__field_unknown2=UINT(value,**{'sizeinbytes': 2})
+
+    def __delfield_unknown2(self): del self.__field_unknown2
+
+    unknown2=property(__getfield_unknown2, __setfield_unknown2, __delfield_unknown2, None)
+
+    def __getfield_timesent(self):
+        return self.__field_timesent.getvalue()
+
+    def __setfield_timesent(self, value):
+        if isinstance(value,SMSDATE):
+            self.__field_timesent=value
+        else:
+            self.__field_timesent=SMSDATE(value,**{'sizeinbytes': 6})
+
+    def __delfield_timesent(self): del self.__field_timesent
+
+    timesent=property(__getfield_timesent, __setfield_timesent, __delfield_timesent, None)
+
+    def __getfield_unknown(self):
+        return self.__field_unknown.getvalue()
+
+    def __setfield_unknown(self, value):
+        if isinstance(value,UINT):
+            self.__field_unknown=value
+        else:
+            self.__field_unknown=UINT(value,**{'sizeinbytes': 3})
+
+    def __delfield_unknown(self): del self.__field_unknown
+
+    unknown=property(__getfield_unknown, __setfield_unknown, __delfield_unknown, None)
+
+    def __getfield_callback_length(self):
+        return self.__field_callback_length.getvalue()
+
+    def __setfield_callback_length(self, value):
+        if isinstance(value,UINT):
+            self.__field_callback_length=value
+        else:
+            self.__field_callback_length=UINT(value,**{'sizeinbytes': 1})
+
+    def __delfield_callback_length(self): del self.__field_callback_length
+
+    callback_length=property(__getfield_callback_length, __setfield_callback_length, __delfield_callback_length, None)
+
+    def __getfield_callback(self):
+        return self.__field_callback.getvalue()
+
+    def __setfield_callback(self, value):
+        if isinstance(value,USTRING):
+            self.__field_callback=value
+        else:
+            self.__field_callback=USTRING(value,**{'sizeinbytes': 42})
+
+    def __delfield_callback(self): del self.__field_callback
+
+    callback=property(__getfield_callback, __setfield_callback, __delfield_callback, None)
+
+    def __getfield_sender_length(self):
+        return self.__field_sender_length.getvalue()
+
+    def __setfield_sender_length(self, value):
+        if isinstance(value,UINT):
+            self.__field_sender_length=value
+        else:
+            self.__field_sender_length=UINT(value,**{'sizeinbytes': 1})
+
+    def __delfield_sender_length(self): del self.__field_sender_length
+
+    sender_length=property(__getfield_sender_length, __setfield_sender_length, __delfield_sender_length, None)
+
+    def __getfield_sender(self):
+        try: self.__field_sender
+        except:
+            self.__field_sender=LIST(**{'elementclass': _gen_p_lglx570_203, 'length': 38})
+        return self.__field_sender.getvalue()
+
+    def __setfield_sender(self, value):
+        if isinstance(value,LIST):
+            self.__field_sender=value
+        else:
+            self.__field_sender=LIST(value,**{'elementclass': _gen_p_lglx570_203, 'length': 38})
+
+    def __delfield_sender(self): del self.__field_sender
+
+    sender=property(__getfield_sender, __setfield_sender, __delfield_sender, None)
+
+    def __getfield_unknown4(self):
+        return self.__field_unknown4.getvalue()
+
+    def __setfield_unknown4(self, value):
+        if isinstance(value,DATA):
+            self.__field_unknown4=value
+        else:
+            self.__field_unknown4=DATA(value,**{'sizeinbytes': 15})
+
+    def __delfield_unknown4(self): del self.__field_unknown4
+
+    unknown4=property(__getfield_unknown4, __setfield_unknown4, __delfield_unknown4, None)
+
+    def __getfield_lg_time(self):
+        return self.__field_lg_time.getvalue()
+
+    def __setfield_lg_time(self, value):
+        if isinstance(value,LGCALDATE):
+            self.__field_lg_time=value
+        else:
+            self.__field_lg_time=LGCALDATE(value,**{'sizeinbytes': 4})
+
+    def __delfield_lg_time(self): del self.__field_lg_time
+
+    lg_time=property(__getfield_lg_time, __setfield_lg_time, __delfield_lg_time, None)
+
+    def __getfield_GPStime(self):
+        return self.__field_GPStime.getvalue()
+
+    def __setfield_GPStime(self, value):
+        if isinstance(value,GPSDATE):
+            self.__field_GPStime=value
+        else:
+            self.__field_GPStime=GPSDATE(value,**{'sizeinbytes': 4})
+
+    def __delfield_GPStime(self): del self.__field_GPStime
+
+    GPStime=property(__getfield_GPStime, __setfield_GPStime, __delfield_GPStime, None)
+
+    def __getfield_dunno1(self):
+        return self.__field_dunno1.getvalue()
+
+    def __setfield_dunno1(self, value):
+        if isinstance(value,DATA):
+            self.__field_dunno1=value
+        else:
+            self.__field_dunno1=DATA(value,**{'sizeinbytes': 5})
+
+    def __delfield_dunno1(self): del self.__field_dunno1
+
+    dunno1=property(__getfield_dunno1, __setfield_dunno1, __delfield_dunno1, None)
+
+    def __getfield_read(self):
+        return self.__field_read.getvalue()
+
+    def __setfield_read(self, value):
+        if isinstance(value,UINT):
+            self.__field_read=value
+        else:
+            self.__field_read=UINT(value,**{'sizeinbytes': 1})
+
+    def __delfield_read(self): del self.__field_read
+
+    read=property(__getfield_read, __setfield_read, __delfield_read, None)
+
+    def __getfield_locked(self):
+        return self.__field_locked.getvalue()
+
+    def __setfield_locked(self, value):
+        if isinstance(value,UINT):
+            self.__field_locked=value
+        else:
+            self.__field_locked=UINT(value,**{'sizeinbytes': 1})
+
+    def __delfield_locked(self): del self.__field_locked
+
+    locked=property(__getfield_locked, __setfield_locked, __delfield_locked, None)
+
+    def __getfield_unknown5(self):
+        return self.__field_unknown5.getvalue()
+
+    def __setfield_unknown5(self, value):
+        if isinstance(value,DATA):
+            self.__field_unknown5=value
+        else:
+            self.__field_unknown5=DATA(value,**{'sizeinbytes': 7})
+
+    def __delfield_unknown5(self): del self.__field_unknown5
+
+    unknown5=property(__getfield_unknown5, __setfield_unknown5, __delfield_unknown5, None)
+
+    def __getfield_subject(self):
+        return self.__field_subject.getvalue()
+
+    def __setfield_subject(self, value):
+        if isinstance(value,USTRING):
+            self.__field_subject=value
+        else:
+            self.__field_subject=USTRING(value,**{'sizeinbytes': 74, 'encoding': PHONE_ENCODING})
+
+    def __delfield_subject(self): del self.__field_subject
+
+    subject=property(__getfield_subject, __setfield_subject, __delfield_subject, None)
+
+    def __getfield_msglength(self):
+        return self.__field_msglength.getvalue()
+
+    def __setfield_msglength(self, value):
+        if isinstance(value,UINT):
+            self.__field_msglength=value
+        else:
+            self.__field_msglength=UINT(value,**{'sizeinbytes': 2})
+
+    def __delfield_msglength(self): del self.__field_msglength
+
+    msglength=property(__getfield_msglength, __setfield_msglength, __delfield_msglength, None)
+
+    def __getfield_msg(self):
+        return self.__field_msg.getvalue()
+
+    def __setfield_msg(self, value):
+        if isinstance(value,USTRING):
+            self.__field_msg=value
+        else:
+            self.__field_msg=USTRING(value,**{'sizeinbytes': 1030, 'encoding': PHONE_ENCODING})
+
+    def __delfield_msg(self): del self.__field_msg
+
+    msg=property(__getfield_msg, __setfield_msg, __delfield_msg, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('unknown1', self.__field_unknown1, None)
+        yield ('msg_index2', self.__field_msg_index2, None)
+        yield ('unknown2', self.__field_unknown2, None)
+        yield ('timesent', self.__field_timesent, None)
+        yield ('unknown', self.__field_unknown, None)
+        yield ('callback_length', self.__field_callback_length, None)
+        yield ('callback', self.__field_callback, None)
+        yield ('sender_length', self.__field_sender_length, None)
+        yield ('sender', self.__field_sender, None)
+        yield ('unknown4', self.__field_unknown4, None)
+        yield ('lg_time', self.__field_lg_time, None)
+        yield ('GPStime', self.__field_GPStime, None)
+        yield ('dunno1', self.__field_dunno1, None)
+        yield ('read', self.__field_read, None)
+        yield ('locked', self.__field_locked, None)
+        yield ('unknown5', self.__field_unknown5, None)
+        yield ('subject', self.__field_subject, None)
+        yield ('msglength', self.__field_msglength, None)
+        yield ('msg', self.__field_msg, None)
+
+
+
+
+class _gen_p_lglx570_203(BaseProtogenClass):
+    'Anonymous inner class'
+    __fields=['byte']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(_gen_p_lglx570_203,self).__init__(**dict)
+        if self.__class__ is _gen_p_lglx570_203:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(_gen_p_lglx570_203,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(_gen_p_lglx570_203,kwargs)
+        if len(args):
+            dict2={'sizeinbytes': 1}
+            dict2.update(kwargs)
+            kwargs=dict2
+            self.__field_byte=UINT(*args,**dict2)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        self.__field_byte.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_byte=UINT(**{'sizeinbytes': 1})
+        self.__field_byte.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_byte(self):
+        return self.__field_byte.getvalue()
+
+    def __setfield_byte(self, value):
+        if isinstance(value,UINT):
+            self.__field_byte=value
+        else:
+            self.__field_byte=UINT(value,**{'sizeinbytes': 1})
+
+    def __delfield_byte(self): del self.__field_byte
+
+    byte=property(__getfield_byte, __setfield_byte, __delfield_byte, "individual byte of senders phone number")
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('byte', self.__field_byte, "individual byte of senders phone number")
+
+
+
+
+class sms_quick_text(BaseProtogenClass):
+    __fields=['msg']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(sms_quick_text,self).__init__(**dict)
+        if self.__class__ is sms_quick_text:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(sms_quick_text,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(sms_quick_text,kwargs)
+        if len(args):
+            dict2={'sizeinbytes': 101, 'encoding': PHONE_ENCODING,                 'default': ""}
+            dict2.update(kwargs)
+            kwargs=dict2
+            self.__field_msg=USTRING(*args,**dict2)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_msg
+        except:
+            self.__field_msg=USTRING(**{'sizeinbytes': 101, 'encoding': PHONE_ENCODING,                 'default': ""})
+        self.__field_msg.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_msg=USTRING(**{'sizeinbytes': 101, 'encoding': PHONE_ENCODING,                 'default': ""})
+        self.__field_msg.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_msg(self):
+        try: self.__field_msg
+        except:
+            self.__field_msg=USTRING(**{'sizeinbytes': 101, 'encoding': PHONE_ENCODING,                 'default': ""})
+        return self.__field_msg.getvalue()
+
+    def __setfield_msg(self, value):
+        if isinstance(value,USTRING):
+            self.__field_msg=value
+        else:
+            self.__field_msg=USTRING(value,**{'sizeinbytes': 101, 'encoding': PHONE_ENCODING,                 'default': ""})
+
+    def __delfield_msg(self): del self.__field_msg
+
+    msg=property(__getfield_msg, __setfield_msg, __delfield_msg, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('msg', self.__field_msg, None)
+
+
+
+
+class sms_canned_file(BaseProtogenClass):
+    __fields=['num_active', 'msgs']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(sms_canned_file,self).__init__(**dict)
+        if self.__class__ is sms_canned_file:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(sms_canned_file,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(sms_canned_file,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_num_active
+        except:
+            self.__field_num_active=UINT(**{'sizeinbytes': 2,  'default': len(self.msgs) })
+        self.__field_num_active.writetobuffer(buf)
+        try: self.__field_msgs
+        except:
+            self.__field_msgs=LIST(**{'length': SMS_CANNED_MAX_ITEMS,            'createdefault': True,            'elementclass': sms_quick_text})
+        self.__field_msgs.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_num_active=UINT(**{'sizeinbytes': 2,  'default': len(self.msgs) })
+        self.__field_num_active.readfrombuffer(buf)
+        self.__field_msgs=LIST(**{'length': SMS_CANNED_MAX_ITEMS,            'createdefault': True,            'elementclass': sms_quick_text})
+        self.__field_msgs.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_num_active(self):
+        try: self.__field_num_active
+        except:
+            self.__field_num_active=UINT(**{'sizeinbytes': 2,  'default': len(self.msgs) })
+        return self.__field_num_active.getvalue()
+
+    def __setfield_num_active(self, value):
+        if isinstance(value,UINT):
+            self.__field_num_active=value
+        else:
+            self.__field_num_active=UINT(value,**{'sizeinbytes': 2,  'default': len(self.msgs) })
+
+    def __delfield_num_active(self): del self.__field_num_active
+
+    num_active=property(__getfield_num_active, __setfield_num_active, __delfield_num_active, None)
+
+    def __getfield_msgs(self):
+        try: self.__field_msgs
+        except:
+            self.__field_msgs=LIST(**{'length': SMS_CANNED_MAX_ITEMS,            'createdefault': True,            'elementclass': sms_quick_text})
+        return self.__field_msgs.getvalue()
+
+    def __setfield_msgs(self, value):
+        if isinstance(value,LIST):
+            self.__field_msgs=value
+        else:
+            self.__field_msgs=LIST(value,**{'length': SMS_CANNED_MAX_ITEMS,            'createdefault': True,            'elementclass': sms_quick_text})
+
+    def __delfield_msgs(self): del self.__field_msgs
+
+    msgs=property(__getfield_msgs, __setfield_msgs, __delfield_msgs, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('num_active', self.__field_num_active, None)
+        yield ('msgs', self.__field_msgs, None)
 
 
 
