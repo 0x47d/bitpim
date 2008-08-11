@@ -13,16 +13,17 @@
              that filesystem view will work for Samsung SPHA-900.  May break
              filesystem view for other phones.
       <li><p>New phone support: <b>Sanyo SCP-8400</b>
-      <LI><P>New phone support: <B>LG VX-9100 (enV2)</B> (Initial)
+      <LI><P>New phone support: <B>LG VX-9100 (enV2)</B>
       <LI><P>Bug fix: Can't view Data Recording files on non-Intel Mac.
       <LI><P>Bug fix: Correctly process BREW special files.
-      <LI><P>New phone support: <B>LG VX-8560</B> (Initial)
-      <LI><P>New Phone support: <B>LG VX-9700</B> (Initial)
-      <LI><P>New Phone support: <B>LG VX-8610</B> (Initial)
+      <LI><P>New phone support: <B>LG VX-8560</B>
+      <LI><P>New Phone support: <B>LG VX-9700</B>
+      <LI><P>New Phone support: <B>LG VX-8610</B>
       <LI><P>Bug fix: LG VX-9900 SMS support.
       <li><p>Bug fix: Sanyo SCP-7500.  Correctly read date on Sent messages.
       <LI><P>Maintenance: Upgrade build script.
       <LI><P>New phone support: <B>LG LX-570 (Musiq)</B> (Initial)
+      <LI><P>Bug fix: Support for the <B>LG VX-8800 V4</B>.
     </ul>
 
    <h2><a name="1.0.5">Changes in 1.0.5</a></h2>

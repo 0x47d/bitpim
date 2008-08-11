@@ -62,7 +62,11 @@ def generate_phone_features():
                     d[f]['w']=True
         for f in misc_features:
             d[f]={ 'x': req_attrs[f](module) }
-        r[model]=d
+        if hasattr(module.Phone, 'helpid') and module.Phone.helpid:
+            _model_name='<a href="%s">%s</a>'%( module.Phone.helpid, model)
+        else:
+            _model_name=model
+        r[_model_name]=d
     return r
 
 def html_results(r):

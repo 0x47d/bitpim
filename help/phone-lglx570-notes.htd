@@ -21,9 +21,17 @@
 <LI><P>BitPim does not delete <B>My Melodies</B> files on the phone.  They must be deleted manually from the phone.
 </UL>
 
-<H3>Pictues</H3>
+<H3>Pictures/Wallpapers</H3>
 <UL>
-<LI><P>BitPim can retrieve <B>My Albums</B> pictures stored on the phone.  BitPim does not retrieve pictures stored on the microSD card.
+<LI><P>BitPim can retrieve <B>My Albums</B> pictures stored on the phone.
+<LI><P>BitPim does not retrieve pictures stored on the microSD card.
+</UL>
+
+<H3>SMS</H3>
+<UL>
+<LI><P>BitPim can retrieve <B>SMS Inbox</B>, <B>Outbox</B>, and <B>Draft</B> messages from the phone.
+<LI><P>BitPim does not save/restore SMS messages to the phone.
+<LI><P>BitPim can retrive and save SMS <B>Preset Messages</B> from/to the phone.  These <B>Preset Messages</B> are managed in BitPim as <B>Canned Messages</B>.
 </UL>
 
 #include "pageend.h"

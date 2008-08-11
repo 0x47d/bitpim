@@ -573,11 +573,7 @@ class Profile(parentprofile):
 
                 # ringtones, wallpaper
                 e['ringtone']=helper.getringtone(entry.get('ringtones', []), 'call', None)
-##                e['msgringtone']=helper.getringtone(entry.get('ringtones', []), 'message', None)
-##                e['wallpaper']=helper.getwallpaper(entry.get('wallpapers', []), 'call', None)
 
-                # flags
-##                e['secret']=helper.getflag(entry.get('flags',[]), 'secret', False)
 
                 results[pbentry]=e
                 
@@ -606,3 +602,57 @@ class Profile(parentprofile):
 ##        ('playlist', 'read', 'OVERWRITE'),
 ##        ('playlist', 'write', 'OVERWRITE'),
         )
+
+    field_color_data={
+        'phonebook': {
+            'name': {
+                'first': 1, 'middle': 1, 'last': 1, 'full': 1,
+                'nickname': 0, 'details': 1 },
+            'number': {
+                'type': 5, 'speeddial': 5, 'number': 5,
+                'details': 5,
+                'ringtone': False, 'wallpaper': False },
+            'email': 3,
+            'email_details': {
+                'emailspeeddial': False, 'emailringtone': False,
+                'emailwallpaper': False },
+            'address': {
+                'type': 0, 'company': 0, 'street': 0, 'street2': 0,
+                'city': 0, 'state': 0, 'postalcode': 0, 'country': 0,
+                'details': 0 },
+            'url': 1,
+            'memo': 1,
+            'category': 1,
+            'wallpaper': 0,
+            'ringtone': 0,
+            'storage': 0,
+            },
+        'calendar': {
+            'description': False, 'location': False, 'allday': False,
+            'start': False, 'end': False, 'priority': False,
+            'alarm': False, 'vibrate': False,
+            'repeat': False,
+            'memo': False,
+            'category': False,
+            'wallpaper': False,
+            'ringtone': False,
+            },
+        'memo': {
+            'subject': False,
+            'date': False,
+            'secret': False,
+            'category': False,
+            'memo': True,
+            },
+        'todo': {
+            'summary': False,
+            'status': False,
+            'due_date': False,
+            'percent_complete': False,
+            'completion_date': False,
+            'private': False,
+            'priority': False,
+            'category': False,
+            'memo': False,
+            },
+        }
