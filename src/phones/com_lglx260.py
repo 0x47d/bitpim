@@ -112,13 +112,16 @@ class Phone(com_lgvx4400.Phone):
 
     def eval_detect_data(self, res):
 	found=False
-        s=self.getfilecontents('brew/version.txt')
-	if s[:5]==self.my_model:
-	    found=True
-            res['model']=self.my_model
-            res['manufacturer']='LG Electronics Inc'
-	    res['esn'] = self.get_brew_esn()
-
+        try:
+            s=self.getfilecontents('brew/version.txt')
+            if s[:5]==self.my_model:
+                found=True
+                res['model']=self.my_model
+                res['manufacturer']='LG Electronics Inc'
+                res['esn'] = self.get_brew_esn()
+        except:
+            pass
+        return
 
     my_model='LX260'
 
