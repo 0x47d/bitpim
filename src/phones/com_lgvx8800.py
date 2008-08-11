@@ -36,7 +36,8 @@ class Phone(parentphone):
                       ('No Ring',)
 
     def setDMversion(self):
-        self._DMv5=True
+        self._DMv6=True
+        self._DMv5=False
         self._timeout=5 # The Voyager/Venus time out fast
 
     # Fundamentals:
