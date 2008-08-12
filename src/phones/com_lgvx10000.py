@@ -31,16 +31,12 @@ class Phone(parentphone):
 
     my_model='VX10000'
 
-    def setDMversion(self):
-        self._DMv5=True
-        self._timeout=5 # The Voyager/Venus times out fast
-
     # Fundamentals:
     #  - get_esn             - same as LG VX-8300
     #  - getgroups           - same as LG VX-8700
     #  - getwallpaperindices - LGUncountedIndexedMedia
     #  - getringtoneindices  - LGUncountedIndexedMedia
-    #  - DM Version          - 5
+    #  - DM Version          - 5 or 6
     #  - phonebook           - same as LG VX-8550
 
 #-------------------------------------------------------------------------------
