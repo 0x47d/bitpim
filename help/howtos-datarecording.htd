@@ -8,7 +8,7 @@
 </OL>
 <p>To turn on BitPim Data Recording, perform the following steps:
 <OL>
-	<li><p>Main menu <B>View</B>&nbsp;<IMG SRC="nextitem.png">&nbsp;<B>Data Recording</B>, which would then bring up the DR Panel.
+	<li><p>Main menu <B>Debug</B>&nbsp;<IMG SRC="nextitem.png">&nbsp;<B>Data Recording</B>, which would then bring up the DR Panel.
 
 SCREENSHOT(howto-datarecording1.png,)
 
@@ -18,7 +18,7 @@ SCREENSHOT(howto-datarecording1.png,)
 </OL>
 <p><P>To turn off BitPim Data Recording, perform the following steps:
 <OL>
-	<li><p>Main menu <B>View</B>&nbsp;<IMG SRC="nextitem.png">&nbsp;<B>Data Recording</B>, which would then bring up the DR Panel.
+	<li><p>Main menu <B>Debug</B>&nbsp;<IMG SRC="nextitem.png">&nbsp;<B>Data Recording</B>, which would then bring up the DR Panel.
 SCREENSHOT(howto-datarecording2.png,)
 
 	<li><p>Click on <B>Stop</B> to stop recording.
