@@ -226,9 +226,11 @@ class GetPhoneDialog(wx.Dialog):
                 else:
                     style=0
                 _rb=wx.RadioButton(self, -1, "", style=style)
-                if not self._dowesupport(source, self.actions[0][1], tval):
-                    _rb.Enable(False)
+                if self._dowesupport(source, self.actions[0][1], tval):
+                    wx.EVT_RADIOBUTTON(self, _rb.GetId(), self.OnOptionSelected)
+                else:
                     _rb.SetValue(False)
+                    _rb.Enable(False)
                 gs.Add(_rb, 0, wx.ALIGN_CENTRE)
                 self._widgets[source]['rb'][tval]=_rb
 
@@ -349,6 +351,17 @@ class GetPhoneDialog(wx.Dialog):
                 if _w['cb'] is not w and \
                    _w['cb'].exclusive:
                     _w['cb'].SetValue(False)
+
+    def OnOptionSelected(self, evt):
+        # User clicked on an option
+        # Turn on the row to which this option belongs
+        _rb=evt.GetEventObject()
+        for _w1 in self._widgets.values():
+            if _rb in _w1['rb'].values():
+                _w1['cb'].SetValue(True)
+                # and turn on the OK button
+                self.DoOkStatus()
+                return
 
     def DoOkStatus(self, evt=None):
         # ensure the OK button is in the right state

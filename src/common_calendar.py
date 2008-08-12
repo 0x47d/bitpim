@@ -312,14 +312,18 @@ class FilterDialogBase(wx.Dialog):
         wx.EVT_CHECKBOX(self, self._end_date_chkbox.GetId(), self.OnCheckBox)
         wx.EVT_CHECKBOX(self, self.__cat_chkbox.GetId(), self.OnCheckBox)
         wx.EVT_RADIOBOX(self, self.__alarm_setting.GetId(), self.OnAlarmSetting)
+        # Listen to changes in ringtones list
+        pubsub.subscribe(self.OnRingtoneUpdates, pubsub.ALL_RINGTONES)
         # all done
         self.SetSizer(bs)
         self.SetAutoLayout(True)
         bs.Fit(self)
 
+    def __del__(self):
+        pubsub.unsubscribe(self.OnRingtoneUpdates)
+
     def ShowModal(self):
         # request ringtones from 
-        pubsub.subscribe(self.OnRingtoneUpdates, pubsub.ALL_RINGTONES)
         wx.CallAfter(pubsub.publish, pubsub.REQUEST_RINGTONES) # make the call once we are onscreen
         return wx.Dialog.ShowModal(self)
 
