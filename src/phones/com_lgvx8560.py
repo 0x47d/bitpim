@@ -28,7 +28,8 @@ class Phone(parentphone):
     desc="LG-VX8560 (Chocolate 3)"
     protocolclass=p_lgvx8560
     serialsname='lgvx8560'
-
+    helpid=helpids.ID_PHONE_LGVX8560
+    
     my_model='VX8560'
 
     builtinringtones= ('Low Beep Once', 'Low Beeps', 'Loud Beep Once', 'Loud Beeps', 'Door Bell', 'VZW Default Ringtone') + \

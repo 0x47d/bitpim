@@ -23,7 +23,7 @@ parentphone=com_lgvx4400.Phone
 class Phone(com_brew.RealBrewProtocol2, parentphone):
     "Talk to the LG LX570 (Musiq) cell phone"
 
-    desc="LG-LX50"
+    desc="LG-LX570"
     helpid=helpids.ID_PHONE_LGLX570
     protocolclass=p_lglx570
     serialsname='lglx570'

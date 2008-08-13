@@ -28,7 +28,7 @@ import sms
 parentphone=com_lgvx10000.Phone
 class Phone(parentphone):
     desc="LG-VX9700 (Dare)"
-
+    helpid=helpids.ID_PHONE_LGVX9700
     protocolclass=p_lgvx9700
     serialsname='lgvx9700'
 
