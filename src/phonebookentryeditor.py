@@ -1218,13 +1218,14 @@ class NameEditor(DirtyUIBase):
 class MiscEditor(DirtyUIBase):
     def __init__(self, parent, _, navtoolbar=False):
         super(MiscEditor, self).__init__(parent)
+        _fc_dict=field_color.build_field_info(self, 'phonebook')
         vs=wx.StaticBoxSizer(wx.StaticBox(self, -1, "Misc Details"),
                              wx.VERTICAL)
         # storage field
         hs=wx.BoxSizer(wx.HORIZONTAL)
         hs.Add(field_color.build_color_field(self, wx.StaticText,
                                              (self, -1, "Storage Option:"),
-                                             'storage'),
+                                             'storage', _fc_dict),
                0, wx.ALIGN_CENTRE|wx.ALL, 5)
         self._storage=wx.ComboBox(self, -1, 'Phone', choices=["Phone", "SIM"],
                                   style=wx.CB_READONLY)
@@ -1235,7 +1236,7 @@ class MiscEditor(DirtyUIBase):
         self._secret=field_color.build_color_field(self, wx.CheckBox,
                                                    (self, -1,
                                                     'This entry is private/secret'),
-                                                   'secret')
+                                                   'secret', _fc_dict)
 
         wx.EVT_CHECKBOX(self, self._secret.GetId(), self.OnDirtyUI)
         vs.Add(self._secret, 0, wx.EXPAND|wx.ALL, 5)
@@ -1253,6 +1254,46 @@ class MiscEditor(DirtyUIBase):
             _res['sim']=True
         if self._secret.GetValue():
             _res['secret']=True
+        return _res
+
+#  ICEEditor-----------------------------------------------------------------
+class ICEEditor(DirtyUIBase):
+    def __init__(self, parent, _, navtoolbar=False):
+        super(ICEEditor, self).__init__(parent)
+        _fc_dict=field_color.build_field_info(self, 'phonebook')
+        vs=wx.StaticBoxSizer(field_color.build_color_field(self,
+                                                           wx.StaticBox,
+                                                           (self, -1, "ICE Details"),
+                                                           'ICE', _fc_dict),
+                             wx.VERTICAL)
+        # ICE field
+        hs=wx.BoxSizer(wx.HORIZONTAL)
+        hs.Add(field_color.build_color_field(self, wx.StaticText,
+                                             (self, -1, "Assign this contact as:"),
+                                             'ICE', _fc_dict),
+               0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        self._ice=wx.ComboBox(self, -1, 'None',
+                                  choices=['None', 'ICE 1', 'ICE 2', 'ICE 3'],
+                                  style=wx.CB_READONLY)
+        wx.EVT_COMBOBOX(self, self._ice.GetId(), self.OnDirtyUI)
+        hs.Add(self._ice, 0, wx.EXPAND|wx.LEFT, 5)
+        vs.Add(hs, 0, wx.EXPAND|wx.ALL, 5)
+        # all done
+        self.SetSizer(vs)
+        vs.Fit(self)
+
+    def Set(self, data):
+        if data.has_key('iceindex'):
+            _val=data['iceindex']+1
+        else:
+            _val=0
+        self._ice.SetSelection(_val)
+
+    def Get(self):
+        _res={}
+        _val=self._ice.GetSelection()
+        if _val:
+            _res['iceindex']=_val-1
         return _res
 
 # EditorManager-----------------------------------------------------------------
@@ -1572,6 +1613,7 @@ class Editor(wx.Dialog):
         ("Categories", "categories", CategoryEditor),
         ("Wallpapers", "wallpapers", WallpaperEditor),
         ("Ringtones", "ringtones", RingtoneEditor),
+        ("ICE", 'ice', ICEEditor),
         ("Misc", 'flags', MiscEditor),
         ]
 

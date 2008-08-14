@@ -791,3 +791,54 @@ class Profile(parentprofile):
 
         data['phonebook']=results
         return data
+    # applicable fields for this model
+    field_color_data={
+        'phonebook': {
+            'name': {
+                'first': 1, 'middle': 1, 'last': 1, 'full': 1,
+                'nickname': 0, 'details': 1 },
+            'number': {
+                'type': 5, 'speeddial': 5, 'number': 5, 'details': 5 },
+            'email': 2,
+            'address': {
+                'type': 0, 'company': 0, 'street': 0, 'street2': 0,
+                'city': 0, 'state': 0, 'postalcode': 0, 'country': 0,
+                'details': 0 },
+            'url': 0,
+            'memo': 0,
+            'category': 1,
+            'wallpaper': 1,
+            'ringtone': 2,
+            'storage': 0,
+            'secret': 0,
+            'ICE': 1,
+            },
+        'calendar': {
+            'description': True, 'location': False, 'allday': False,
+            'start': True, 'end': True, 'priority': False,
+            'alarm': True, 'vibrate': True,
+            'repeat': True,
+            'memo': False,
+            'category': False,
+            'wallpaper': False,
+            'ringtone': True,
+            },
+        'memo': {
+            'subject': True,
+            'date': True,
+            'secret': False,
+            'category': False,
+            'memo': True,
+            },
+        'todo': {
+            'summary': False,
+            'status': False,
+            'due_date': False,
+            'percent_complete': False,
+            'completion_date': False,
+            'private': False,
+            'priority': False,
+            'category': False,
+            'memo': False,
+            },
+        }

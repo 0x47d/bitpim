@@ -23,9 +23,11 @@
       <li><p>Bug fix: Sanyo SCP-7500.  Correctly read date on Sent messages.
       <LI><P>Maintenance: Upgrade build script.
       <LI><P>New phone support: <B>LG LX-570 (Musiq)</B> (Initial)
-      <LI><P>Bug fix: Support for the <B>LG VX-8800 V4</B>.
+      <LI><P>Bug fix: Support for the <B>LG VX-8800 V4</B>, <B>LG VX-8550 V4</B>, and <B>LG VX-10000 V9</B>.
       <LI><P>Bug fix: Calendar Import Filter dialog raised exception.
       <LI><P>Improvement: In the <B>Get Data from Phone</B> and <B>Send Data to Phone</B> dialog, clicking on either the <B>Add</B> or <B>Replace All</B> selection of a row will also enable that row.
+      <LI><P>Improvement: <B>Edit PhoneBook Entry</B> dialog: add/edit ICE setting.
+      <LI><P>Bug fix: <B>LG VX-8350</B>, <B>LG VX-8550</B>: failed to read/write large files.
     </ul>
 
    <h2><a name="1.0.5">Changes in 1.0.5</a></h2>

@@ -54,6 +54,8 @@ default_field_info={
         'wallpaper': None,
         'ringtone': None,
         'storage': None,
+        'secret': None,
+        'ICE': None,
         },
     'calendar': {
         'description': None, 'location': None, 'allday': None,

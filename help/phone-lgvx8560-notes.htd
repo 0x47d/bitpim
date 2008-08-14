@@ -1,5 +1,10 @@
 #include "pagestart.h"
 
+<H3>Firmware Version</H3>
+<UL>
+<li><p>The firmware version of the phone used for development & test is <B>VX856V02</B>.
+</UL>
+
 <H3>Phonebook</H3>
 <UL>
 <li><p>BitPim supports all phonebook features of this phone.
