@@ -41,14 +41,22 @@ class Phone(parentphone):
     calendarringerlocation='sch/toolsRinger.dat'
 
     def setDMversion(self):
-        self._DMv5=True
+        _fw_version=self.get_firmware_version()[-1]
+        if self.my_model=='VX8550' and _fw_version>'3':
+            # VX855V04
+            self._DMv5 = False
+            self._DMv6 = True
+        else:
+            self._DMv5 = True
+            self._DMv6 = False
+
 
     # Fundamentals:
     #  - get_esn             - same as LG VX-8300
     #  - getgroups           - same as LG VX-8700
     #  - getwallpaperindices - LGUncountedIndexedMedia
     #  - getringtoneindices  - LGUncountedIndexedMedia
-    #  - DM Version          - 5
+    #  - DM Version          - 5 (VX855V03 or older), 6 (VX855V04)
 
     def _get_speeddials(self):
         """Return the speed dials dict"""
