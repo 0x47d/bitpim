@@ -10,6 +10,7 @@
 
 """Phonebook conversations with LG phones"""
 
+import functools
 import threading
 
 import com_brew
@@ -1688,8 +1689,6 @@ class LGDMPhone:
         except:
             self.log('Failed to transition to DM')
             self._in_DM=False
-##            if __debug__:
-##                raise
             return
 
     def _OnTimer(self):
@@ -1699,17 +1698,22 @@ class LGDMPhone:
         del self._timer
         self._timer=None
 
-    def _getfilecontents(self, name, use_cache=False):
+    def _filefunc(self, func, *args, **kwargs):
         self.enter_DM()
-        return self._real_getfilecontents(name, use_cache)
+        return func(*args, **kwargs)
 
-    def _writefile(self, name, contents):
+    def _sendbrewcommand(self, func, *args, **kwargs):
+        # A wrapper function to address the issue of DM timing out in a
+        # middle of a file read or write (usually of a large file).
+        # Not quite happy with this hack, but couldn't figure out a better way!
+        # If you have a better solution, feel free to share.
+        try:
+            return func(*args, **kwargs)
+        except com_brew.BrewAccessDeniedException:
+            # DM may have timed out, retry.
+            pass
         self.enter_DM()
-        return self._real_writefile(name, contents)
-                            
-    def _statfile(self, name):
-        self.enter_DM()
-        return self._real_statfile(name)
+        return func(*args, **kwargs)
 
     def setDMversion(self):
         """Define the DM version required for this phone, default to DMv5"""
@@ -1723,14 +1727,15 @@ class LGDMPhone:
         self._DMv6=None
         self._timeout=None
         self._shift=None
-        if not hasattr(self, '_real_getfilecontents'):
-            (self._real_getfilecontents,
-             self.getfilecontents)=(self.getfilecontents,
-                                   self._getfilecontents)
-            (self._real_writefile,
-             self.writefile)=(self.writefile, self._writefile)
-            (self._real_statfile,
-             self.statfile)=(self.statfile, self._statfile)
+        # wrap our functions
+        self.getfilecontents=functools.partial(self._filefunc,
+                                               self.getfilecontents)
+        self.writefile=functools.partial(self._filefunc,
+                                         self.writefile)
+        self.statfile=functools.partial(self._filefunc,
+                                        self.statfile)
+        self.sendbrewcommand=functools.partial(self._sendbrewcommand,
+                                               self.sendbrewcommand)
 
     def __del__(self):
         if self._timer:
