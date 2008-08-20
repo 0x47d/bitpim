@@ -7,7 +7,7 @@
 ###
 ### $Id$
 
-"""Communicate with the LG LX570 (Musiq) cell phone"""
+"""Communicate with the LG LX570 (Muziq) cell phone"""
 
 import common
 import com_brew
@@ -21,7 +21,7 @@ import sms
 #-------------------------------------------------------------------------------
 parentphone=com_lgvx4400.Phone
 class Phone(com_brew.RealBrewProtocol2, parentphone):
-    "Talk to the LG LX570 (Musiq) cell phone"
+    "Talk to the LG LX570 (Muziq) cell phone"
 
     desc="LG-LX570"
     helpid=helpids.ID_PHONE_LGLX570
