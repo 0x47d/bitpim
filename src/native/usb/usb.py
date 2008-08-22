@@ -172,11 +172,18 @@ class USBInterface:
             raise USBException()
 
         # set the alt setting
-        print "alt setting", self.altnumber()
         res=usb.usb_set_altinterface(self.device.handle, self.altnumber())
         if TRACE: print "usb_set_alt_interface(%s, %d)=%d" % (self.device.handle, self.altnumber(), res)
         if res<0:
-            raise USBException()
+            # Setting the alternate interface causes problems with some phones (VX-10000)
+            # reset the device and reclaim the interface if there was problem setting the
+            # alternate interface.
+            usb.usb_reset(self.device.handle)
+            usb.usb_release_interface (self.device.handle, self.number())
+
+            res=usb.usb_claim_interface(self.device.handle, self.number())
+            if res<0:
+                raise USBException()
 
         # we now have the file
         return USBFile(self, epin, epout)
