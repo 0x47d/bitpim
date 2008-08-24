@@ -653,7 +653,8 @@ class Database:
         schema=self.getcolumns(tablename)
         
         res=[]
-        for row in self.sqlmany("select * from %s where __rowid__=?" % (idquote(tablename),), [(int(r),) for r in rows.split(',') if len(r)]):
+        for row in self.sqlmany("select * from %s where __rowid__=?" %
+                                (idquote(tablename),), [(int(long(r)),) for r in rows.split(',') if len(r)]):
             record={}
             for colnum,name,type in schema:
                 if name.startswith("__") or type not in ("valueBLOB", "indirectBLOB", "indirectdictBLOB") or row[colnum] is None:

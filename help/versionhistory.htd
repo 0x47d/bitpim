@@ -1,7 +1,7 @@
 #include "pagestart.h"
    <H2><a name="1.0.7">Changes in 1.0.7</a></h2>
     <UL>
-      <LI><P>
+      <LI><P>Maintenacne: Upgrade to Sqlite-3.6.1 and APSW-3.5.9r2.
     </UL>
    </H2>
    <h2><a name="1.0.6">Changes in 1.0.6</a></h2>

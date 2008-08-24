@@ -802,8 +802,8 @@ class NumberEditor(DirtyUIBase):
     def Set(self, data):
         self.Ignore()
         sd=data.get("speeddial", "")
-        if isinstance(sd,int):
-            sd=`sd`
+        if isinstance(sd,(int, long)):
+            sd='%d'%sd
         self.speeddial.SetValue(sd)
         self.number.SetValue(data.get("number", ""))
         # ringtone & wallpaper
