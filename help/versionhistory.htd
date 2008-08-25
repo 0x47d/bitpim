@@ -5,6 +5,7 @@
       <LI><P>Maintenance: Upgrade to pySerial-2.4.
       <LI><P>Maintenance: Upgrade to paramiko-1.7.4 (Desmond).
       <LI><P>Maintenance: Upgrade to PyWin32 Build 212.
+      <LI><P>New phone support: <B>Motorola V3m (Sprint)</B> (Initial)
     </UL>
    </H2>
    <h2><a name="1.0.6">Changes in 1.0.6</a></h2>
