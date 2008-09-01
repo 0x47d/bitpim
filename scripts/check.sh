@@ -46,7 +46,7 @@ copytowebsite() {
     if [ ! -d "$1" ]
     then
 	echo "$1 doesn't exist and cant be copied!"
-	exit 1
+	return # can't do it
     fi
 
     # this is how we detect the website - look for a website checkout alongside this
@@ -111,6 +111,11 @@ then
     cd "$PYXRDIR"
     $PYTHON buildWeb.py
     cd "$oldpwd"
+    if $cygwin
+    then
+        mv /cygdrive/c/pyxrc /cygdrive/c/pyxr/c
+        mv /cygdrive/c/pyxr .
+    fi
     copytowebsite pyxr pyxr
 fi
 
