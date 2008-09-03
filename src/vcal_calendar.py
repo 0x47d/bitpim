@@ -68,8 +68,19 @@ class vCalendarFile(object):
                         _params[_l[0]]=None
                     else:
                         _params[_l[0]]=_l[1]
-                d[n[0]]={ 'value': l,
-                          'params': _params }
+                # Some statement, i.e. EXDATE, may occur more than once,
+                # in such cases, place the values into the list
+                # This may break existing cases, but we'll fix them as
+                # users report them
+                _val={ 'value': l, 'params': _params }
+                if d.has_key(n[0]):
+                    # multiple statements
+                    if isinstance(d[n[0]], dict):
+                        d[n[0]]=[d[n[0]], _val]
+                    else:
+                        d[n[0]].append(_val)
+                else:
+                    d[n[0]]=_val
         if module_debug:
             print d,'\n'
         return d
@@ -428,10 +439,11 @@ class VCalendarImportData(object):
         return func_dict.get(c, lambda *arg: False)(v, dd)
     def _conv_exceptions(self, v, _):
         try:
-            l=v['value'].split(';')
+            _val=v if isinstance(v, (list, tuple)) else [v]
             r=[]
-            for n in l:
-                r.append(bptime.BPTime(n).get())
+            for _item in _val:
+                for n in _item['value'].split(';'):
+                    r.append(bptime.BPTime(n).get())
             return r
         except:
             if __debug__:

@@ -219,11 +219,12 @@ class iCalendarImportData(parentclass):
         return _rep
 
     def _conv_exceptions(self, v, _):
+        r=[]
         try:
-            l=v['value'].split(',')
-            r=[]
-            for n in l:
-                r.append(bptime.BPTime(n).get())
+            _val=v if isinstance(v, (list, tuple)) else [v]
+            for _item in _val:
+                for n in _item['value'].split(','):
+                    r.append(bptime.BPTime(n).get())
             return r
         except:
             if __debug__:

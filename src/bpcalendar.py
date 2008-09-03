@@ -502,8 +502,8 @@ class RepeatEntry(object):
     def _set_dow(self, dow):
         if self._type==self.yearly:
             raise AttributeError
-        if isinstance(dow, int):
-            self._data[self._dow]=dow
+        if isinstance(dow, (int, long)):
+            self._data[self._dow]=int(dow)
         elif isinstance(dow, (list, tuple)):
             self._data[self._dow]=1<<(datetime.date(*dow[:3]).isoweekday()%7)
         else:
@@ -525,9 +525,9 @@ class RepeatEntry(object):
     def _get_wkstart(self):
         return self._wkstart
     def _set_wkstart(self, wkstart):
-        if isinstance(wkstart, int):
+        if isinstance(wkstart, (int, long)):
             if wkstart in range(1, 8):
-                self._wkstart=wkstart
+                self._wkstart=int(wkstart)
             else:
                 raise ValueError('Must be between 1-7')
         elif isinstance(wkstart, (str, unicode)):
