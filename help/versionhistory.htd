@@ -8,6 +8,7 @@
       <LI><P>Maintenance; Upgrade to wxPython-2.8.8.1.
       <LI><P>New phone support: <B>Motorola V3m (Sprint)</B> (Initial)
       <LI><P>Bug fix: iCalendar import does not process all exception dates.
+      <LI><P>Bug fix: <B>LG LX-570</B>: BitPim failed to read all contact entries.
     </UL>
    </H2>
    <h2><a name="1.0.6">Changes in 1.0.6</a></h2>

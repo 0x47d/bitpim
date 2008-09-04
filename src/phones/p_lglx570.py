@@ -23,7 +23,7 @@ FIRSTSPEEDDIAL=1
 LASTSPEEDDIAL=99
 SPEEDDIALINDEX=0
 
-numbertypetab=( 'cell', 'home', 'office', 'fax', 'pager' )
+numbertypetab=( 'cell', 'home', 'office', 'fax', 'pager', 'none' )
 
 PB_FILENAME='DB/SysDB/vCardSchema.vol'
 RT_MC_INDEX_FILENAME='setas/mcRingerIndex.map'
