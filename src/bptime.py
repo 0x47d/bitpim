@@ -13,6 +13,8 @@ import calendar
 import datetime
 import time
 
+timedelta=datetime.timedelta
+
 class BPTime(object):
     def __init__(self, v=None):
         self._date=self._time=None
@@ -32,9 +34,18 @@ class BPTime(object):
     time=property(fget=_get_time)
 
     def __sub__(self, rhs):
-        if not isinstance(rhs, BPTime):
+        if isinstance(rhs, BPTime):
+            # return the delta between 2 dates
+            return datetime.datetime(*self.get())-datetime.datetime(*rhs.get())
+        elif isinstance(rhs, (int, timedelta)):
+            # return the new date based on delta time
+            _delta=rhs if isinstance(rhs, timedelta) else \
+                    timedelta(seconds=rhs)
+            dt=datetime.datetime(*self.get())-_delta
+            return BPTime((dt.year, dt.month, dt.day, dt.hour, dt.minute))
+        else:
             raise TypeError
-        return datetime.datetime(*self.get())-datetime.datetime(*rhs.get())
+
     def __add__(self, rhs):
         if isinstance(rhs, int):
             dt=datetime.datetime(*self.get())+datetime.timedelta(seconds=rhs)

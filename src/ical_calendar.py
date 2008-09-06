@@ -344,6 +344,7 @@ class ExportDialog(ExportDialogParent):
             _params=('VALUE=DATE',)
             _res=out_line('DTSTART', _params,
                           _start.iso_str(no_time=True), None)
+            _end+=bptime.timedelta(days=1)
             _res+=out_line('DTEND', _params,
                            _end.iso_str(no_time=True), None)
         else:
@@ -357,10 +358,12 @@ class ExportDialog(ExportDialogParent):
         _end=bptime.BPTime(event.end)
         if event.allday:
             # all day event, can only handle sameday allday event (for now)
-            _date_str=_start.iso_str(no_time=True)
             _params=('VALUE=DATE',)
-            _res=out_line('DTSTART', _params, _date_str, None)
-            _res+=out_line('DTEND', _params, _date_str, None)
+            _res=out_line('DTSTART', _params,
+                          _start.iso_str(no_time=True), None)
+            _end+=bptime.timedelta(days=1)
+            _res+=out_line('DTEND', _params,
+                           _end.iso_str(no_time=True), None)
         else:
             # can only handle 24hr-long event (for now)
             _new_end=_start+(_end-_start).seconds

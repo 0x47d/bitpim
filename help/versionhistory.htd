@@ -9,6 +9,8 @@
       <LI><P>New phone support: <B>Motorola V3m (Sprint)</B> (Initial)
       <LI><P>Bug fix: iCalendar import does not process all exception dates.
       <LI><P>Bug fix: <B>LG LX-570</B>: BitPim failed to read all contact entries.
+      <LI><P>Bug fix: iCalendar Import/Export: BitPim did not process all-day events properly.
+      <LI><P>Bug fix: iCalendar Import: BitPim failed to import monthly events.
     </UL>
    </H2>
    <h2><a name="1.0.6">Changes in 1.0.6</a></h2>

@@ -194,10 +194,7 @@ class VCalendarImportData(object):
             rp.repeat_type=rp_type
             rp.interval=rp_interval
             rp.interval2=rp_interval2
-            if rp_dow:
-                rp.dow=rp_dow
-            else:
-                rp.dow=ce.start
+            rp.dow=rp_dow
         elif rp_type==rp.yearly:
             rp.repeat_type=rp.yearly
         else:
@@ -481,6 +478,11 @@ class VCalendarImportData(object):
                     dd['start']=dd['end']
                 elif dd['end'] is None:
                     dd['end']=dd['start']
+                if dd.get('allday', False) and dd['end']>dd['start']:
+                    # All day event, adjust the end time as necessary
+                    dd['end']=(bptime.BPTime(dd['end'])-\
+                               bptime.timedelta(days=1)).get()[:3]+(0, 0)
+
                 if module_debug: print dd
                 d.append(dd)
             except:

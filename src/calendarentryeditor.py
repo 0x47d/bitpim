@@ -1092,7 +1092,7 @@ class DVIntControl(wx.lib.intctrl.IntCtrl):
     def SetValue(self, v):
         if v is None:
             v=-1
-        wx.lib.intctrl.IntCtrl.SetValue(self,v)
+        wx.lib.intctrl.IntCtrl.SetValue(self,int(v))
         
 #------------------------------------------------------------------------------    
 class DVTextControl(wx.TextCtrl):
