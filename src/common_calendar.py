@@ -406,7 +406,7 @@ class FilterDialogBase(wx.Dialog):
             self.__ringtone.SetStringSelection(self.unnamed)
         value=data.get('vibrate', False);
         self.__vibrate.SetValue(value)
-        self.__alarm_value.SetValue(data.get('alarm_value', 0))
+        self.__alarm_value.SetValue(int(data.get('alarm_value', 0)))
         self.__set_cats(self.__cat_chkbox, self.__cats, data.get('categories', None))
 
     def get_base(self, r):
