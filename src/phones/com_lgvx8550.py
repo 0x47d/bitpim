@@ -732,9 +732,9 @@ class Profile(parentprofile):
                     if len(number)==0:
                         # no actual digits in the number
                         continue
-                    if len(number)>24: # get this number from somewhere sensible
+                    if len(number) > 48: # get this number from somewhere sensible
                         # ::TODO:: number is too long and we have to either truncate it or ignore it?
-                        number=number[:24] # truncate for moment
+                        number=number[:48] # truncate for moment
                     e['numbers'].append(number)
                     # deal with speed dial
                     sd=num.get("speeddial", None)
