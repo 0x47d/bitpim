@@ -545,3 +545,13 @@ class MemoWidget(wx.Panel, widgets.BitPimWidget):
             pass
     def CanPrint(self):
         return True
+
+    def get_keys(self):
+        """Return the list of keys as being displayed"""
+        return [ self._item_list.GetClientData(x) \
+                 for x in range(self._item_list.GetCount()) ]
+
+    def get_selected_keys(self):
+        """Return the list of keys of selected items being displayed"""
+        return [ self._item_list.GetClientData(x) \
+                 for x in self._item_list.GetSelections() ]
