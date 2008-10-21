@@ -209,9 +209,12 @@ class GPSDATE(prototypes.UINTlsb):
         """A date/time as used in the LG call history files,
         @keyword unique: (True/False, Optional) Ensure that each GSPDATE instance
                           is unique.
+        @keyword raiseonbadvalue: (default False) raise L{ValueError} if the
+                        GPSDATE value is bad.
         """
         super(GPSDATE, self).__init__(*args, **kwargs)
         self._unique=False
+        self._raiseonbadvalue=False
         dict={'sizeinbytes': 4}
         dict.update(kwargs)
 
@@ -219,7 +222,7 @@ class GPSDATE(prototypes.UINTlsb):
             self._update(args, dict)
 
     def _update(self, args, kwargs):
-        self._consumekw(kwargs, ('unique',))
+        self._consumekw(kwargs, ('unique', 'raiseonbadvalue'))
         for k in 'constant', 'default', 'value':
             if kwargs.has_key(k):
                 kwargs[k]=self._converttoint(kwargs[k])
@@ -241,7 +244,12 @@ class GPSDATE(prototypes.UINTlsb):
         @rtype: tuple
         @return: (year, month, day, hour, minute, sec)
         """
-        return time.gmtime(self._time_t_ofs+super(GPSDATE, self).getvalue())[:6]
+        try:
+            return time.gmtime(self._time_t_ofs+super(GPSDATE, self).getvalue())[:6]
+        except ValueError:
+            if self._raiseonbadvalue:
+                raise
+            return (1980, 1, 6, 0, 0, 0)
 
     def _converttoint(self, date):
         assert len(date)==6
