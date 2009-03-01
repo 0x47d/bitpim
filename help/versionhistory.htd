@@ -13,6 +13,7 @@
       <LI><P>Bug fix: iCalendar Import: BitPim failed to import monthly events.
       <LI><P>Bug fix: BitPim failed to print <B>Memo</B> data.
       <LI><P>Bug fix: <B>LG VX-9100</B>: BitPim failed to read media index file.
+      <LI><P>New phone support: <B>LG VX-9600 (Versa)</B> (Initial)
     </UL>
    </H2>
    <h2><a name="1.0.6">Changes in 1.0.6</a></h2>

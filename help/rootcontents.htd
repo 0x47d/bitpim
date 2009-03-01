@@ -222,6 +222,10 @@ BEGIN_TOC
             TOCITEM_2(Notes,phone-lgvx9100-notes.htm)
             TOCITEM_2(Howtos,phone-lgvx9100-howtos.htm)
             ENDTOC_2
+        TOCITEM_1(LG VX-9600,phone-lgvx9600.htm)
+            TOC_2
+            TOCITEM_2(Notes,phone-lgvx9600-notes.htm)
+            ENDTOC_2
         TOCITEM_1(LG VX-9700,phone-lgvx9700.htm)
             TOC_2
             TOCITEM_2(Notes,phone-lgvx9700-notes.htm)
