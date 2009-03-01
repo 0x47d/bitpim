@@ -60,6 +60,6 @@ PACKET call:
 PACKET callhistory:
     4 UINT numcalls
     1 UINT unk1
-    * LIST {'elementclass': call} +calls
+    * LIST {'elementclass': call, 'length': self.numcalls} +calls
 
                                                     

@@ -570,7 +570,7 @@ class callhistory(BaseProtogenClass):
         self.__field_unk1.writetobuffer(buf)
         try: self.__field_calls
         except:
-            self.__field_calls=LIST(**{'elementclass': call})
+            self.__field_calls=LIST(**{'elementclass': call, 'length': self.numcalls})
         self.__field_calls.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -584,7 +584,7 @@ class callhistory(BaseProtogenClass):
         self.__field_numcalls.readfrombuffer(buf)
         self.__field_unk1=UINT(**{'sizeinbytes': 1})
         self.__field_unk1.readfrombuffer(buf)
-        self.__field_calls=LIST(**{'elementclass': call})
+        self.__field_calls=LIST(**{'elementclass': call, 'length': self.numcalls})
         self.__field_calls.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -618,14 +618,14 @@ class callhistory(BaseProtogenClass):
     def __getfield_calls(self):
         try: self.__field_calls
         except:
-            self.__field_calls=LIST(**{'elementclass': call})
+            self.__field_calls=LIST(**{'elementclass': call, 'length': self.numcalls})
         return self.__field_calls.getvalue()
 
     def __setfield_calls(self, value):
         if isinstance(value,LIST):
             self.__field_calls=value
         else:
-            self.__field_calls=LIST(value,**{'elementclass': call})
+            self.__field_calls=LIST(value,**{'elementclass': call, 'length': self.numcalls})
 
     def __delfield_calls(self): del self.__field_calls
 
