@@ -5,7 +5,7 @@
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
 ###
-### $Id: p_lgvx9700.p 4650 2008-07-29 03:08:29Z hjelmn $
+### $Id$
 
 %{
 
