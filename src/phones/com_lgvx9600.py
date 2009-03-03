@@ -32,11 +32,22 @@ class Phone(parentphone):
     serialsname='lgvx9600'
 
     my_model='VX9600'
+
+    # built-in ringtones are represented by mp3 files that don't appear in /dload/myringtone.dat
     builtinringtones= ('Low Beep Once', 'Low Beeps', 'Loud Beep Once', 'Loud Beeps', 'Door Bell', 'VZW Default Ringtone',
                        'Telephone Ring', 'Simple Alert', 'Business Ring', 'Low Bell', 'Move Bell', 'Bubble Ring',
                        'Timeless', 'Voice of the Nature', 'Calling Trip', 'Latin Fever', 'Ride a Tiger', 'Allure',
                        'Limousine Blues', 'Surf the Groove', 'This Time', 'Under Cover of Darkness', 'Morning Call', 'Bee',
                        'Deep Blue Calling', 'East of Rain', 'No Ring',)
+
+    ringtonelocations= (
+        #  type          index file            default dir        external dir    max  type Index
+        ( 'ringers',    'dload/myringtone.dat','brew/mod/10889/ringtones','mmc1/ringers', 100, 0x01,  100),
+        ( 'sounds',     'dload/mysound.dat',   'brew/mod/18067',          '',             100, 0x02,  None),
+        ( 'sounds(sd)', 'dload/sd_sound.dat',  'mmc1/my_sounds',          '',             100, 0x02,  None),
+        ( 'music',      'dload/efs_music.dat', 'my_music',                '',             100, 0x104, None),
+        ( 'music(sd)',  'dload/sd_music.dat',  'mmc1/my_music',           '',             100, 0x14,  None),
+        )
 
     def setDMversion(self):
         self._DMv5=False
