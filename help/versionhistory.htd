@@ -14,9 +14,9 @@
       <LI><P>Bug fix: BitPim failed to print <B>Memo</B> data.
       <LI><P>Bug fix: <B>LG VX-9100</B>: BitPim failed to read media index file.
       <LI><P>New phone support: <B>LG VX-9600 (Versa)</B> (Initial)
-      <LI><B>Bug fix: <B>LG VX-9400</B>: BitPim failed to write phonebook data.
-      <LI><B>Improvement: Users can now edit phone owner's name.
-      <LI><B>Maintenance: Upgrade to zlib-1.2.3
+      <LI><P>Bug fix: <B>LG VX-9400</B>: BitPim failed to write phonebook data.
+      <LI><P>Improvement: Users can now edit phone owner's name.
+      <LI><P>Maintenance: Upgrade to zlib-1.2.3
     </UL>
    </H2>
    <h2><a name="1.0.6">Changes in 1.0.6</a></h2>
