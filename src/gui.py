@@ -1202,21 +1202,14 @@ class MainWindow(wx.Frame):
             return None
         # esn is found, check if we detected this phone before
         phone_id='phones/'+sha.new(esn).hexdigest()
-        phone_name=self.config.Read(phone_id, '<None/>')
-        s=None
-        if phone_name=='<None/>':
-            # not seen before
-            with guihelper.WXDialogWrapper(guiwidgets.AskPhoneNameDialog(self, 'A new phone has been detected,\n'
-                                                                         "Would you like to enter the owner's name:", style=style),
-                                           True) as (dlg, r):
-                if r==wx.ID_OK:
-                    # user gave a name
-                    s=dlg.GetValue()
-                elif r==wx.ID_CANCEL:
-                    s=''
-                if s is not None:
-                    self.config.Write(phone_id, s)
-                return s
+        phone_name=self.config.Read(phone_id, '')
+        with guihelper.WXDialogWrapper(wx.TextEntryDialog(self, "Owner's name:" ,
+                                                          "Enter Phone Owner's Name", phone_name),
+                                       True) as (dlg, r):
+            if r==wx.ID_OK:
+                # user gave a name
+                phone_name=dlg.GetValue()
+                self.config.Write(phone_id, phone_name)
         return phone_name
         
     def OnDetectPhoneReturn(self, check_auto_sync, silent_fail, exception, r):
