@@ -5,7 +5,7 @@
       <LI><P>Maintenance: Upgrade to pySerial-2.4.
       <LI><P>Maintenance: Upgrade to paramiko-1.7.4 (Desmond).
       <LI><P>Maintenance: Upgrade to PyWin32 Build 212.
-      <LI><P>Maintenance; Upgrade to wxPython-2.8.8.1.
+      <LI><P>Maintenance: Upgrade to wxPython-2.8.8.1.
       <LI><P>New phone support: <B>Motorola V3m (Sprint)</B> (Initial)
       <LI><P>Bug fix: iCalendar import does not process all exception dates.
       <LI><P>Bug fix: <B>LG LX-570</B>: BitPim failed to read all contact entries.
@@ -16,6 +16,7 @@
       <LI><P>New phone support: <B>LG VX-9600 (Versa)</B> (Initial)
       <LI><B>Bug fix: <B>LG VX-9400</B>: BitPim failed to write phonebook data.
       <LI><B>Improvement: Users can now edit phone owner's name.
+      <LI><B>Maintenance: Upgrade to zlib-1.2.3
     </UL>
    </H2>
    <h2><a name="1.0.6">Changes in 1.0.6</a></h2>
