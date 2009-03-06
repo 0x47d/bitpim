@@ -1049,6 +1049,7 @@ class FileView(wx.Panel, widgets.BitPimWidget):
             degraded_fname=stripext(degraded_fname)
         media_name="".join([x for x in degraded_fname if x in self.filenamechars])
         media_name=media_name.replace("  "," ").replace("  ", " ")  # remove double spaces
+        media_name=media_name.replace(".m4a",".mp4") # change file extension of mpeg4 files
         if len(newext):
             media_name+='.'+newext
         if len(media_name)>self.maxlen:
