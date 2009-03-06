@@ -16,6 +16,7 @@ import common
 
 import midifile
 import wma_file
+import mp4_file
 
 class FailedFile:
     data=""
@@ -485,6 +486,10 @@ def getmp3fileinfo(filename):
     f=SafeFileWrapper(filename)
     return idaudio_zzMP3(f, True)
 
+def getmp4fileinfo(filename):
+    f=SafeFileWrapper(filename)
+    return idaudio_MP4(f)
+
 
 twooheightzeros="\x00"*208
 # want to make sure this gets evaluated last
@@ -867,6 +872,44 @@ def fmt_WMA(afi):
     if afi.genre:
         res.append('Genre: %s'%afi.genre)
     return '\n'.join(res)
+
+# MPEG4 file support
+def idaudio_MP4(f):
+    "Identify a MP4 file"
+    try:
+        _mp4=mp4_file.MP4_File(f)
+        if not _mp4.valid:
+            return None
+        d={ 'format': 'MP4',
+            'mimetypes': ['audio/mpeg4'],
+            'duration': _mp4.duration,
+            'title':    _mp4.title,
+            'artist':   _mp4.artist,
+            'album':    _mp4.album,
+            'bitrate':  _mp4.bitrate,
+            'samplerate': _mp4.samplerate,
+            '_longdescription': fmt_MP4,
+            }
+        return AudioFileInfo(f, **d)
+    except:
+        if __debug__:
+            raise
+
+
+def fmt_MP4(afi):
+    res=[]
+    res.append("MPEG4")
+    res.append("%.1f Khz %0.1f seconds" % (afi.samplerate/1000.0, afi.duration,))
+    if afi.bitrate:
+        res.append(`afi.bitrate`+" kbps")
+    if afi.title:
+        res.append('Title: %s'%afi.title)
+    if afi.artist:
+        res.append('Artist: %s'%afi.artist)
+    if afi.album:
+        res.append('Album: %s'%afi.album)
+                                        
+    return "\n".join(res)
 
 audioids=[globals()[f] for f in dir() if f.startswith("idaudio_")]
 def identify_audiofile(filename):
