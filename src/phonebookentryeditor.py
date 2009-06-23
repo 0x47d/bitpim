@@ -1296,6 +1296,47 @@ class ICEEditor(DirtyUIBase):
             _res['iceindex']=_val-1
         return _res
 
+
+#  FavoriteEditor-----------------------------------------------------------------
+class FavoriteEditor(DirtyUIBase):
+    def __init__(self, parent, _, navtoolbar=False):
+        super(FavoriteEditor, self).__init__(parent)
+        _fc_dict=field_color.build_field_info(self, 'phonebook')
+        vs=wx.StaticBoxSizer(field_color.build_color_field(self,
+                                                           wx.StaticBox,
+                                                           (self, -1, "Favorite Details"),
+                                                           'Favorite', _fc_dict),
+                             wx.VERTICAL)
+        # Favorite field
+        hs=wx.BoxSizer(wx.HORIZONTAL)
+        hs.Add(field_color.build_color_field(self, wx.StaticText,
+                                             (self, -1, "Assign this contact as:"),
+                                             'Favorite', _fc_dict),
+               0, wx.ALIGN_CENTRE|wx.ALL, 5)
+        self._favorite=wx.ComboBox(self, -1, 'None',
+                                  choices=['None'] + ['Favorite ' + `n` for n in range(1,10)],
+                                  style=wx.CB_READONLY)
+        wx.EVT_COMBOBOX(self, self._favorite.GetId(), self.OnDirtyUI)
+        hs.Add(self._favorite, 0, wx.EXPAND|wx.LEFT, 5)
+        vs.Add(hs, 0, wx.EXPAND|wx.ALL, 5)
+        # all done
+        self.SetSizer(vs)
+        vs.Fit(self)
+
+    def Set(self, data):
+        if data.has_key('favoriteindex'):
+            _val=data['favoriteindex']+1
+        else:
+            _val=0
+        self._favorite.SetSelection(_val)
+
+    def Get(self):
+        _res={}
+        _val=self._favorite.GetSelection()
+        if _val:
+            _res['favoriteindex']=_val-1
+        return _res
+
 # EditorManager-----------------------------------------------------------------
 class EditorManager(fixedscrolledpanel.wxScrolledPanel):
 
@@ -1614,6 +1655,7 @@ class Editor(wx.Dialog):
         ("Wallpapers", "wallpapers", WallpaperEditor),
         ("Ringtones", "ringtones", RingtoneEditor),
         ("ICE", 'ice', ICEEditor),
+        ("Favorite", "favorite", FavoriteEditor),
         ("Misc", 'flags', MiscEditor),
         ]
 
@@ -1631,7 +1673,7 @@ class Editor(wx.Dialog):
         @param readonly: Indicates read-only data.
         """
         global _ringtone_list, _wallpaper_list        
-        wx.Dialog.__init__(self, parent, -1, title, size=(740,580), style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+        wx.Dialog.__init__(self, parent, -1, title, size=(900,580), style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
         field_color.get_color_info_from_profile(self)
         _ringtone_list=None
         _wallpaper_list=None
