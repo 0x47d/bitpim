@@ -24,4 +24,20 @@ inbox_index     = "dload/inbox.dat"
 outbox_index    = "dload/outbox.dat"
 drafts_index    = "dload/drafts.dat"
 
+# Phonebook favorites
+favorites_file_name  = "pim/pbFavorite.dat"
+NUMFAVORITES=10
+
 %}
+
+PACKET favorite:
+    2 UINT { 'default': 0xffff } +pb_index  # contact or group id
+    1 UINT { 'default': 0xff }   +fav_type  # 1 - contact, 2 - group
+    %{
+    def has_pbentry(self):
+        return self.pb_index != 0xffff and self.fav_type == 1
+    %}
+
+# Favorites -- added on the Versa (LG VX-9600)
+PACKET favorites:
+    * LIST { 'elementclass': favorite, 'length': NUMFAVORITES } +items

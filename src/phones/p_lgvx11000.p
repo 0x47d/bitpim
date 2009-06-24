@@ -17,21 +17,16 @@
 # memos      - same as VX-8550
 # sms        - same as VX-9100
 # index file - same as VX-9700
-from p_lgvx9700 import *
+from p_lgvx9600 import *
 
 # SMS index files
 inbox_index     = "dload/inbox.dat"
 outbox_index    = "dload/outbox.dat"
 drafts_index    = "dload/drafts.dat"
 
-# Phonebook favorites
-favorites_file_name  = "pim/pbFavorite.dat"
-
 # Phonebook addresses
 pa_file_name = "pim/pbaddress.dat"
 
-NUMPHONEBOOKENTRIES=1000
-NUMFAVORITES=10
 PHONEBOOKENTRYSIZE=512
 
 PA_ENTRY_SOR = "<PA>"
@@ -58,18 +53,6 @@ PACKET callhistory:
     4 UINT numcalls
     1 UINT unk1
     * LIST {'elementclass': call, 'length': self.numcalls} +calls
-
-PACKET favorite:
-    2 UINT { 'default': 0xffff } +pb_index  # contact or group id
-    1 UINT { 'default': 0xff }   +fav_type  # 1 - contact, 2 - group
-    %{
-    def has_pbentry(self):
-        return self.pb_index != 0xffff and self.fav_type == 1
-    %}
-
-# Favorites -- added on the Versa (LG VX-9600)
-PACKET favorites:
-    * LIST { 'elementclass': favorite, 'length': NUMFAVORITES } +items
 
 # /pim/pbentry.dat format
 PACKET pbfileentry:
@@ -147,3 +130,19 @@ PACKET pafile:
     * LIST { 'elementclass': pafileentry,
              'length': NUMPHONEBOOKENTRIES,
              'createdefault': True } +items
+
+PACKET pbgroup:
+    33 USTRING {'encoding': PHONE_ENCODING,
+                'raiseonunterminatedread': False,
+                'raiseontruncate': False,
+                'default': '' } +name
+    2  UINT { 'default': 0 } +groupid
+    1  UINT { 'default': 0 } +user_added "=1 when was added by user"
+    2  UINT { 'default': 0 } +pad
+
+PACKET pbgroups:
+    "Phonebook groups"
+    * LIST {'elementclass': pbgroup,
+            'raiseonincompleteread': False,
+            'length': MAX_PHONEBOOK_GROUPS,
+            'createdefault': True} +groups
