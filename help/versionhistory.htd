@@ -17,6 +17,7 @@
       <LI><P>Bug fix: <B>LG VX-9400</B>: BitPim failed to write phonebook data.
       <LI><P>Improvement: Users can now edit phone owner's name.
       <LI><P>Maintenance: Upgrade to zlib-1.2.3
+      <LI><P>New phone support: <B>LG VX-11000</B> (Initial)
     </UL>
    </H2>
    <h2><a name="1.0.6">Changes in 1.0.6</a></h2>
