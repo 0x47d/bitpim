@@ -30,6 +30,7 @@ NUMFAVORITES=10
 
 %}
 
+# Favorites -- added on the Versa (LG VX-9600)
 PACKET favorite:
     2 UINT { 'default': 0xffff } +pb_index  # contact or group id
     1 UINT { 'default': 0xff }   +fav_type  # 1 - contact, 2 - group
@@ -38,6 +39,24 @@ PACKET favorite:
         return self.pb_index != 0xffff and self.fav_type == 1
     %}
 
-# Favorites -- added on the Versa (LG VX-9600)
 PACKET favorites:
     * LIST { 'elementclass': favorite, 'length': NUMFAVORITES } +items
+
+# Call history
+PACKET call:
+    4 GPSDATE GPStime    # no. of seconds since 0h 1-6-80, based off local time.
+    4 UINT  unk0         # different for each call
+    4 UINT  duration     # seconds, not certain about length of this field
+    49 USTRING {'raiseonunterminatedread': False} number
+    36 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False} name
+    1 UINT  numberlength # length of phone number
+    1 UINT  status       # 0=outgoing, 1=incoming, 2=missed, etc
+    1 UINT  pbnumbertype # 1=cell, 2=home, 3=office, 4=cell2, 5=fax, 6=vmail, 0xFF=not in phone book
+    4 UINT  unk1         # always seems to be 0
+    2 UINT  pbentrynum   #entry number in phonebook
+    27 DATA unk2
+
+PACKET callhistory:
+    4 UINT numcalls
+    1 UINT unk1
+    * LIST {'elementclass': call} +calls
