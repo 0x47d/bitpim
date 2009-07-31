@@ -94,13 +94,16 @@ class Phone(parentphone):
                                    self.protocolclass.pnfile,
                                    logtitle='Reading phonebook numbers')
 
-        # check for addresses support
-        if hasattr(self.protocolclass, 'pafile'):
-            self.log("Reading addresses")
-            pb_addresses = self.readobject(self.protocolclass.pa_file_name,
-                                           self.protocolclass.pafile,
-                                           logtitle='Reading addresses')
-        else:
+        try:
+            # check for addresses support
+            if hasattr(self.protocolclass, 'pafile'):
+                self.log("Reading addresses")
+                pb_addresses = self.readobject(self.protocolclass.pa_file_name,
+                                               self.protocolclass.pafile,
+                                               logtitle='Reading addresses')
+            else:
+                pb_addresses = None
+        except:
             pb_addresses = None
 
         self.log("Reading Ringtone IDs")
