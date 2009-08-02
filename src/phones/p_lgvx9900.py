@@ -534,7 +534,7 @@ class recipient_record(BaseProtogenClass):
         self.__field_timereceived.readfrombuffer(buf)
         self.__field_unknown2=UINT(**{'sizeinbytes': 1})
         self.__field_unknown2.readfrombuffer(buf)
-        self.__field_unknown3=DATA(**{'sizeinbytes': 57})
+        self.__field_unknown3=DATA(**{'sizeinbytes': 54})
         self.__field_unknown3.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -624,7 +624,7 @@ class recipient_record(BaseProtogenClass):
         if isinstance(value,DATA):
             self.__field_unknown3=value
         else:
-            self.__field_unknown3=DATA(value,**{'sizeinbytes': 57})
+            self.__field_unknown3=DATA(value,**{'sizeinbytes': 54})
 
     def __delfield_unknown3(self): del self.__field_unknown3
 
@@ -803,7 +803,7 @@ class sms_out(BaseProtogenClass):
         self.__field_callback.writetobuffer(buf)
         try: self.__field_recipients
         except:
-            self.__field_recipients=LIST(**{'elementclass': recipient_record,'length': 1})
+            self.__field_recipients=LIST(**{'elementclass': recipient_record,'length': 9})
         self.__field_recipients.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -831,7 +831,7 @@ class sms_out(BaseProtogenClass):
         self.__field_unknown1.readfrombuffer(buf)
         self.__field_callback=USTRING(**{'sizeinbytes': 73})
         self.__field_callback.readfrombuffer(buf)
-        self.__field_recipients=LIST(**{'elementclass': recipient_record,'length': 1})
+        self.__field_recipients=LIST(**{'elementclass': recipient_record,'length': 9})
         self.__field_recipients.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -975,14 +975,14 @@ class sms_out(BaseProtogenClass):
     def __getfield_recipients(self):
         try: self.__field_recipients
         except:
-            self.__field_recipients=LIST(**{'elementclass': recipient_record,'length': 1})
+            self.__field_recipients=LIST(**{'elementclass': recipient_record,'length': 9})
         return self.__field_recipients.getvalue()
 
     def __setfield_recipients(self, value):
         if isinstance(value,LIST):
             self.__field_recipients=value
         else:
-            self.__field_recipients=LIST(value,**{'elementclass': recipient_record,'length': 1})
+            self.__field_recipients=LIST(value,**{'elementclass': recipient_record,'length': 9})
 
     def __delfield_recipients(self): del self.__field_recipients
 

@@ -1967,3 +1967,193 @@ class pbgroups(BaseProtogenClass):
 
 
 
+class favorite(BaseProtogenClass):
+    __fields=['pb_index', 'fav_type']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(favorite,self).__init__(**dict)
+        if self.__class__ is favorite:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(favorite,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(favorite,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_pb_index
+        except:
+            self.__field_pb_index=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+        self.__field_pb_index.writetobuffer(buf)
+        try: self.__field_fav_type
+        except:
+            self.__field_fav_type=UINT(**{'sizeinbytes': 1,  'default': 0xff })
+        self.__field_fav_type.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_pb_index=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+        self.__field_pb_index.readfrombuffer(buf)
+        self.__field_fav_type=UINT(**{'sizeinbytes': 1,  'default': 0xff })
+        self.__field_fav_type.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_pb_index(self):
+        try: self.__field_pb_index
+        except:
+            self.__field_pb_index=UINT(**{'sizeinbytes': 2,  'default': 0xffff })
+        return self.__field_pb_index.getvalue()
+
+    def __setfield_pb_index(self, value):
+        if isinstance(value,UINT):
+            self.__field_pb_index=value
+        else:
+            self.__field_pb_index=UINT(value,**{'sizeinbytes': 2,  'default': 0xffff })
+
+    def __delfield_pb_index(self): del self.__field_pb_index
+
+    pb_index=property(__getfield_pb_index, __setfield_pb_index, __delfield_pb_index, None)
+
+    def __getfield_fav_type(self):
+        try: self.__field_fav_type
+        except:
+            self.__field_fav_type=UINT(**{'sizeinbytes': 1,  'default': 0xff })
+        return self.__field_fav_type.getvalue()
+
+    def __setfield_fav_type(self, value):
+        if isinstance(value,UINT):
+            self.__field_fav_type=value
+        else:
+            self.__field_fav_type=UINT(value,**{'sizeinbytes': 1,  'default': 0xff })
+
+    def __delfield_fav_type(self): del self.__field_fav_type
+
+    fav_type=property(__getfield_fav_type, __setfield_fav_type, __delfield_fav_type, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('pb_index', self.__field_pb_index, None)
+        yield ('fav_type', self.__field_fav_type, None)
+
+    def has_pbentry(self):
+        return self.pb_index != 0xffff and self.fav_type == 1
+
+
+
+
+class favorites(BaseProtogenClass):
+    __fields=['items']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(favorites,self).__init__(**dict)
+        if self.__class__ is favorites:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(favorites,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(favorites,kwargs)
+        if len(args):
+            dict2={ 'elementclass': favorite, 'length': NUMFAVORITES }
+            dict2.update(kwargs)
+            kwargs=dict2
+            self.__field_items=LIST(*args,**dict2)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_items
+        except:
+            self.__field_items=LIST(**{ 'elementclass': favorite, 'length': NUMFAVORITES })
+        self.__field_items.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_items=LIST(**{ 'elementclass': favorite, 'length': NUMFAVORITES })
+        self.__field_items.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_items(self):
+        try: self.__field_items
+        except:
+            self.__field_items=LIST(**{ 'elementclass': favorite, 'length': NUMFAVORITES })
+        return self.__field_items.getvalue()
+
+    def __setfield_items(self, value):
+        if isinstance(value,LIST):
+            self.__field_items=value
+        else:
+            self.__field_items=LIST(value,**{ 'elementclass': favorite, 'length': NUMFAVORITES })
+
+    def __delfield_items(self): del self.__field_items
+
+    items=property(__getfield_items, __setfield_items, __delfield_items, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('items', self.__field_items, None)
+
+    def set_favorite(self, index, entity_index, ispbentry):
+        if index < NUMFAVORITES:
+            self.items[index].pb_index = entity_index
+            if ispbentry:
+                self.items[index].fav_type = 1
+            else:
+                self.items[index].fav_type = 2
+
+
+
+
