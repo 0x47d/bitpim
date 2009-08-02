@@ -469,7 +469,7 @@ class Profile(parentprofile):
     imagetargets.update(common.getkv(parentprofile.stockimagetargets, "wallpaper",
                                       {'width': 800, 'height': 480, 'format': "JPEG"}))
     imagetargets.update(common.getkv(parentprofile.stockimagetargets, "pictureid",
-                                      {'width': 120, 'height': 100, 'format': "JPEG"}))
+                                      {'width': 320, 'height': 240, 'format': "JPEG"}))
 
     _supportedsyncs=(
         ('phonebook', 'read', None),  # all phonebook reading

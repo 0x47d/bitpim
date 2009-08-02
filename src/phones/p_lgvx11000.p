@@ -146,3 +146,24 @@ PACKET pbgroups:
             'raiseonincompleteread': False,
             'length': MAX_PHONEBOOK_GROUPS,
             'createdefault': True} +groups
+
+# Favorites -- added on the Versa (LG VX-9600)
+PACKET favorite:
+    2 UINT { 'default': 0xffff } +pb_index  # contact or group id
+    1 UINT { 'default': 0xff }   +fav_type  # 1 - contact, 2 - group
+    %{
+    def has_pbentry(self):
+        return self.pb_index != 0xffff and self.fav_type == 1
+    %}
+
+PACKET favorites:
+    * LIST { 'elementclass': favorite, 'length': NUMFAVORITES } +items
+    %{
+    def set_favorite(self, index, entity_index, ispbentry):
+        if index < NUMFAVORITES:
+            self.items[index].pb_index = entity_index
+            if ispbentry:
+                self.items[index].fav_type = 1
+            else:
+                self.items[index].fav_type = 2
+    %}

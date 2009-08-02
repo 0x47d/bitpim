@@ -30,18 +30,6 @@ NUMFAVORITES=10
 
 %}
 
-# Favorites -- added on the Versa (LG VX-9600)
-PACKET favorite:
-    2 UINT { 'default': 0xffff } +pb_index  # contact or group id
-    1 UINT { 'default': 0xff }   +fav_type  # 1 - contact, 2 - group
-    %{
-    def has_pbentry(self):
-        return self.pb_index != 0xffff and self.fav_type == 1
-    %}
-
-PACKET favorites:
-    * LIST { 'elementclass': favorite, 'length': NUMFAVORITES } +items
-
 # Call history
 PACKET call:
     4 GPSDATE GPStime    # no. of seconds since 0h 1-6-80, based off local time.
@@ -60,3 +48,31 @@ PACKET callhistory:
     4 UINT numcalls
     1 UINT unk1
     * LIST {'elementclass': call} +calls
+
+
+# Favorites -- added on the Versa (LG VX-9600)
+PACKET favorite:
+    2 UINT { 'default': 0 }      +unk0
+    2 UINT { 'default': 0xffff } +pb_index  # contact or group id
+    4 UINT { 'default': 0 }      +unk1
+    4 UINT { 'default': 0x45 }   +unk2
+    %{
+    def has_pbentry(self):
+        return self.pb_index != 0xffff
+    %}
+
+PACKET favorites:
+    2 UINT { 'default': 0 } +count
+    * LIST { 'elementclass': favorite, 'length': self.count } +items
+    * LIST { 'length': NUMFAVORITES - self.count } pad:
+        12 DATA { 'default': '\xff'*507 } +dontcare
+    %{
+    def set_favorite(self, index, entity_index, ispbentry):
+        # index is not used for the VX-9600
+        if ispbentry and count < NUMFAVORITES:
+            new_favorite = self.favorite ()
+            new_favorite.pb_index = entity_index
+            self.items.append (new_favorite)
+            self.count += 1
+    %}
+
