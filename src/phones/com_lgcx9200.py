@@ -19,13 +19,13 @@ Communicate with the LG CX9200 cell phone.
 import common
 import com_brew
 import prototypes
-import com_lgvx11000
+import com_lgvx9200
 import p_lgvx9200
 import helpids
 import sms
 
 #-------------------------------------------------------------------------------
-parentphone=com_lgvx11000.Phone
+parentphone=com_lgvx9200.Phone
 class Phone(parentphone):
     desc="LG-CX9200 (Keybo 2)"
     helpid=helpids.ID_PHONE_LGVX9200
@@ -33,8 +33,8 @@ class Phone(parentphone):
     serialsname='lgcx9200'
 
     my_model='CX9200'
-    builtinringtones= ('Low Beep Once', 'Low Beeps', 'Loud Beep Once', 'Loud Beeps', 'Door Bell', 'VZW Default Tone') + \
-                      tuple(['Ringtone '+`n` for n in range(1,17)]) + ('No Ring',)
+    builtinringtones= ('Low Beep Once', 'Low Beeps', 'Loud Beep Once', 'Loud Beeps', 'Door Bell') + \
+                      tuple(['Ringtone '+`n` for n in range(1,18)]) + ('No Ring',)
 
     def setDMversion(self):
         self._DMv5=False
@@ -49,7 +49,7 @@ class Phone(parentphone):
     #  - SMS                 - same dir structure as the VX-8800
 
 #-------------------------------------------------------------------------------
-parentprofile=com_lgvx11000.Profile
+parentprofile=com_lgvx9200.Profile
 class Profile(parentprofile):
     BP_Calendar_Version=3
 
