@@ -9,7 +9,7 @@
 
 %{
 
-"""Various descriptions of data specific to LG VX11000"""
+"""Various descriptions of data specific to LG VX9200"""
 
 # groups     - same as VX-8700
 # phonebook  - LG Phonebook v1.0 Extended (same as VX-11K)
@@ -61,3 +61,39 @@ PACKET indexfile:
     "Used for tracking wallpaper and ringtones"
     * LIST {'elementclass': indexentry, 'createdefault': True} +items
                     
+# /pim/pbnumber.dat format
+PACKET pnfileentry:
+    4   STRING { 'terminator': None,
+                 'raiseonunterminatedread': False,
+                 'raiseontruncate': False,
+                 'default': '\xff\xff\xff\xff'} +entry_tag # some entries don't have this??
+    if self.entry_tag != '\xff\xff\xff\xff':
+        # this is a valid slot
+        2 UINT { 'default': 0 } +pad00
+        # year, month, day, hour, min, sec
+        * PBDateTime {'defaulttocurrenttime': True } +mod_date
+        6   STRING { 'default': '', 'raiseonunterminatedread': False } +unk0
+        2   UINT pn_id # 0 based
+        2   UINT pe_id # 0 based
+        1   UINT { 'default': 0 } +unknown00
+        1   UINT pn_order "0-based order of this phone within this contact"
+        25  LGHEXPN phone_number
+        1   UINT { 'default': 1 } +unknown01
+        1   UINT ntype
+        1   UINT { 'default': 0 } +unknown02
+        6   USTRING { 'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False, 'raiseontruncate': False, 'default': '</PN>'} +exit_tag # some entries don't have this??
+    else:
+        # empty slot: all 0xFF
+        60 DATA { 'default': '\xFF'*60 } +blanks
+    %{
+    def valid(self):
+         return self.phone_number != None
+    def malformed(self):
+         # malformed (yet valid) entries have been seen on several phones including the VX-8550 and VX-10000
+         return self.entry_tag != PB_NUMBER_SOR
+    %}
+
+PACKET pnfile:
+    * LIST { 'elementclass': pnfileentry,
+             'createdefault': True,
+             'length': NUMPHONENUMBERENTRIES } +items

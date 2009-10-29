@@ -25,6 +25,7 @@ import helpids
 import sms
 
 #-------------------------------------------------------------------------------
+p_lgcx9200=p_lgvx9200
 parentphone=com_lgvx9200.Phone
 class Phone(parentphone):
     desc="LG-CX9200 (Keybo 2)"
