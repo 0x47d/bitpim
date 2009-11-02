@@ -533,7 +533,14 @@ class USTRING(BaseProtogenClass):
             self._write_encoding=self._encoding
         if self._terminator_length < 1 or self._terminator_length > 4:
             raise ValueException("Terminator length outside allowed range of 1-4.  You tried setting it to %d" % self._terminator_length)
-        
+
+        # detect correct terminator length
+        if self._terminator == 0:
+            if self._encoding.startswith("utf_16"):
+                self._terminator_length = 2
+            elif self._encoding.startswith("utf_32"):
+                self._terminator_length = 4
+
         # Set our value if one was specified
         if len(args)==0:
             pass
@@ -672,6 +679,8 @@ class USTRING(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         # calculate length
         temp_str=self.convert_for_write()
+        # this length is the character length of the string NOT the byte length (BIG DIFFERENCE)
+        # the byte length is calculated below
         l=len(temp_str)
         if self._terminator is not None:
             l+=1
@@ -684,6 +693,10 @@ class USTRING(BaseProtogenClass):
             for j in range(self._terminator_length):
                 buf.appendbyte((term & 0xFF))
                 term=term>>8
+        # calculate the byte length
+        self._bufferendoffset=buf.getcurrentoffset()
+        l = self._bufferendoffset - self._bufferstartoffset
+        # pad the buffer
         if self._sizeinbytes is not None:
             if l<self._sizeinbytes:
                 buf.appendbytes(chr(self._pad)*(self._sizeinbytes-l))
@@ -717,6 +730,7 @@ class USTRING(BaseProtogenClass):
         """Returns the string we are"""
         if self._value is None:
             raise ValueNotSetException()
+
         # convert to unicode if we are not already
         if not isinstance(self._value, unicode):
             try:
