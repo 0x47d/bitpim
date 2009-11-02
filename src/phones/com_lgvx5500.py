@@ -44,6 +44,11 @@ class Phone(parentphone):
         ( 'images',     'dload/image.dat',    'brew/mod/10888', '',          100, 0x00, 100),
         )
 
+    def setDMversion(self):
+        self._DMv5=False
+        self._DMv6=True
+        self._timeout=5 # Assume a quick timeout on newer phones
+
 parentprofile=com_lgvx9700.Profile
 class Profile(parentprofile):
     phone_manufacturer='LG Electronics Inc'

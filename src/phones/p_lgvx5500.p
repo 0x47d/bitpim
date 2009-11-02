@@ -64,7 +64,7 @@ PACKET pbgroup:
     66 USTRING {'encoding': 'utf_16_le',
                 'raiseonunterminatedread': False,
                 'raiseontruncate': False,
-                'default': '' } +name
+                'default': ''} +name
     2  UINT { 'default': 0 } +groupid
     1  UINT {'default': 0} +user_added "=1 when was added by user"
 

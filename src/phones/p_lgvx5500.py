@@ -853,7 +853,7 @@ class pbgroup(BaseProtogenClass):
         self._bufferstartoffset=buf.getcurrentoffset()
         try: self.__field_name
         except:
-            self.__field_name=USTRING(**{'sizeinbytes': 66, 'encoding': 'utf_16_le',                'raiseonunterminatedread': False,                'raiseontruncate': False,                'default': '' })
+            self.__field_name=USTRING(**{'sizeinbytes': 66, 'encoding': 'utf_16_le',                'raiseonunterminatedread': False,                'raiseontruncate': False,                'default': ''})
         self.__field_name.writetobuffer(buf)
         try: self.__field_groupid
         except:
@@ -871,7 +871,7 @@ class pbgroup(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_name=USTRING(**{'sizeinbytes': 66, 'encoding': 'utf_16_le',                'raiseonunterminatedread': False,                'raiseontruncate': False,                'default': '' })
+        self.__field_name=USTRING(**{'sizeinbytes': 66, 'encoding': 'utf_16_le',                'raiseonunterminatedread': False,                'raiseontruncate': False,                'default': ''})
         self.__field_name.readfrombuffer(buf)
         self.__field_groupid=UINT(**{'sizeinbytes': 2,  'default': 0 })
         self.__field_groupid.readfrombuffer(buf)
@@ -883,14 +883,14 @@ class pbgroup(BaseProtogenClass):
     def __getfield_name(self):
         try: self.__field_name
         except:
-            self.__field_name=USTRING(**{'sizeinbytes': 66, 'encoding': 'utf_16_le',                'raiseonunterminatedread': False,                'raiseontruncate': False,                'default': '' })
+            self.__field_name=USTRING(**{'sizeinbytes': 66, 'encoding': 'utf_16_le',                'raiseonunterminatedread': False,                'raiseontruncate': False,                'default': ''})
         return self.__field_name.getvalue()
 
     def __setfield_name(self, value):
         if isinstance(value,USTRING):
             self.__field_name=value
         else:
-            self.__field_name=USTRING(value,**{'sizeinbytes': 66, 'encoding': 'utf_16_le',                'raiseonunterminatedread': False,                'raiseontruncate': False,                'default': '' })
+            self.__field_name=USTRING(value,**{'sizeinbytes': 66, 'encoding': 'utf_16_le',                'raiseonunterminatedread': False,                'raiseontruncate': False,                'default': ''})
 
     def __delfield_name(self): del self.__field_name
 
