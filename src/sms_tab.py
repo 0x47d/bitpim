@@ -123,6 +123,9 @@ class SMSInfo(pb_editor.DirtyUIBase):
                    n[self._class_index]==TimeStamp:
                     w=n[self._w_index]
                     w.SetValue('')
+                if n[self._class_index]==wx.CheckBox:
+                    f=n[self._w_index]
+                    f.SetValue(False)
         else:
             _bad_fields=self._not_used_fields.get(data.folder, ())
             for i,n in enumerate(self._fields):

@@ -232,6 +232,7 @@ class Profile(object):
         "video": {'meta-help': 'Video clips'},
         "images(sd)": {'meta-help': 'General images stored on removable media'},
         "video(sd)": {'meta-help': 'Video clips stored on removable media'},
+        "picture ids": {'meta-help': 'Images used for contact/group Picture ID'},
         }
 
     stockimagetargets={

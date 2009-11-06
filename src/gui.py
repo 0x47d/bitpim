@@ -1380,7 +1380,7 @@ class MainWindow(wx.Frame):
                     merge=True
                 else:
                     merge=False
-                self.GetActivePhonebookWidget().importdata(results['phonebook'], results.get('categories', []), merge)
+                self.GetActivePhonebookWidget().importdata(results['phonebook'], results.get('categories', []), merge, results.get('group_wallpapers', []))
 
             # wallpaper
             updwp=False # did we update the wallpaper

@@ -11,12 +11,13 @@
 
 """Various descriptions of data specific to LG VX11000"""
 
-# groups     - same as VX-8700
+# groups     - same as VX-8700 (added group wallpaper bit)
 # phonebook  - LG Phonebook v1.0 (same as VX-8550)
 # schedule   - same as VX-8550
 # memos      - same as VX-8550
 # sms        - same as VX-9100
 # index file - same as VX-9700
+# favorites  - same as VX-9600
 from p_lgvx9600 import *
 
 # SMS index files
@@ -26,8 +27,30 @@ drafts_index    = "dload/drafts.dat"
 
 # Phonebook addresses
 pa_file_name = "pim/pbaddress.dat"
+pb_group_filename = "pim/pbgroup.dat"
 
+#Group Picture ID Path Index File
+GroupWPPathIndexFile='pim/pbGroupPixIdSetAsPath.dat'
+
+# Phonebook favorites
+favorites_file_name  = "pim/pbFavorite.dat"
+NUMFAVORITES=10
+
+#verified these constants specific to VX11000
 PHONEBOOKENTRYSIZE=512
+NUMSPEEDDIALS=1000
+FIRSTSPEEDDIAL=1
+LASTSPEEDDIAL=999
+NUMEMERGENCYCONTACTS=3
+NUMPHONEBOOKENTRIES=1000
+NUMEMAILS=2
+NUMPHONENUMBERS=5
+MAXCALENDARDESCRIPTION=32
+MAX_PHONEBOOK_GROUPS=30
+MEMOLENGTH=300
+SMS_CANNED_MAX_ITEMS=30
+SMS_CANNED_MAX_LENGTH=100
+NUMCALENDARENTRIES=300 #TODO: need to verify this number
 
 PA_ENTRY_SOR = "<PA>"
 
@@ -53,6 +76,18 @@ PACKET callhistory:
     4 UINT numcalls
     1 UINT unk1
     * LIST {'elementclass': call, 'length': self.numcalls} +calls
+
+# pbspeed.dat
+PACKET speeddial:
+    2 UINT {'default': 0xffff} +entry "0-based entry number"
+    1 UINT {'default': 0xff} +number "number type"
+    %{
+    def valid(self):
+        return self.entry!=0xffff
+    %}
+
+PACKET speeddials:
+   * LIST {'length': NUMSPEEDDIALS, 'elementclass': speeddial} +speeddials
 
 # /pim/pbentry.dat format
 PACKET pbfileentry:
@@ -138,7 +173,7 @@ PACKET pbgroup:
                 'default': '' } +name
     2  UINT { 'default': 0 } +groupid
     1  UINT { 'default': 0 } +user_added "=1 when was added by user"
-    2  UINT { 'default': 0 } +pad
+    2  UINT { 'default': 0 } +wallpaper
 
 PACKET pbgroups:
     "Phonebook groups"
@@ -167,3 +202,11 @@ PACKET favorites:
             else:
                 self.items[index].fav_type = 2
     %}
+
+PACKET GroupPicID_PathIndexEntry:
+    255 USTRING { 'encoding': PHONE_ENCODING,
+                  'default': '' } +pathname
+PACKET GroupPicID_PathIndexFile:
+    * LIST { 'elementclass': GroupPicID_PathIndexEntry,
+             'raiseonincompleteread': False,
+             'createdefault': True} +items            

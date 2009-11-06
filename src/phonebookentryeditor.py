@@ -18,6 +18,7 @@ import nameparser
 import wallpaper
 import guihelper
 import field_color
+import helpids
 
 """The dialog for editing a phonebook entry"""
 
@@ -291,6 +292,12 @@ class WallpaperEditor(DirtyUIBase):
         _box=field_color.build_color_field(self, wx.StaticBox,
                                            (self, -1, "Wallpaper"),
                                            'wallpaper')
+        
+        #if it is definitely specified in field color data that you don't want the selection, then don't show it
+        #type_needed=field_color.color(self, 'wallpaper_type', None)
+        #if type_needed==wx.RED:
+        #    has_type=False
+            
         hs=wx.StaticBoxSizer(_box, wx.HORIZONTAL)
         self.static_box=_box
 
@@ -412,6 +419,8 @@ class WallpaperEditor(DirtyUIBase):
 
 # CategoryManager---------------------------------------------------------------
 class CategoryManager(wx.Dialog):
+    
+    ID_LIST=wx.NewId()
 
     def __init__(self, parent, title="Manage Categories"):
         wx.Dialog.__init__(self, parent, -1, title, style=wx.CAPTION|wx.SYSTEM_MENU|wx.DEFAULT_DIALOG_STYLE|
@@ -422,16 +431,24 @@ class CategoryManager(wx.Dialog):
         self.delbut=wx.Button(self, wx.NewId(), "Delete")
         self.addbut=wx.Button(self, wx.NewId(), "Add")
         self.add=wx.TextCtrl(self, -1)
+        self.preview=wallpaper.WallpaperPreview(self)
         hs.Add(self.delbut,0, wx.EXPAND|wx.ALL, 5)
         hs.Add(self.addbut,0, wx.EXPAND|wx.ALL, 5)
         hs.Add(self.add, 1, wx.EXPAND|wx.ALL, 5)
         vs.Add(hs, 0, wx.EXPAND|wx.ALL, 5)
 
-        self.thelistb=wx.ListBox(self, -1, size=(100, 250), style=wx.LB_SORT)
+        self.thelistb=wx.ListBox(self, self.ID_LIST, size=(100, 250), style=wx.LB_SORT)
         self.addlistb=wx.ListBox(self, -1, style=wx.LB_SORT)
         self.dellistb=wx.ListBox(self, -1, style=wx.LB_SORT)
 
         hs=wx.BoxSizer(wx.HORIZONTAL)
+        
+        vs2=wx.BoxSizer(wx.VERTICAL)
+        vs2.Add(wx.StaticText(self, -1, "  Wallpaper"), 0, wx.ALL, 2)
+        vs2.Add(self.preview, 1, wx.EXPAND|wx.ALL, 0)
+        self.editbut=wx.Button(self, wx.NewId(), "Edit Wallpaper")
+        vs2.Add(self.editbut, 0, wx.EXPAND|wx.ALL, 5)
+        hs.Add(vs2, 1, wx.ALL|wx.EXPAND, 5)
 
         vs2=wx.BoxSizer(wx.VERTICAL)
         vs2.Add(wx.StaticText(self, -1, "  List"), 0, wx.ALL, 2)
@@ -458,19 +475,42 @@ class CategoryManager(wx.Dialog):
         self.curlist=None
         self.dellist=[]
         self.addlist=[]
+        self.wps=None
+        self.groups=None
 
         pubsub.subscribe(self.OnUpdateCategories, pubsub.ALL_CATEGORIES)
         pubsub.publish(pubsub.REQUEST_CATEGORIES)
+        pubsub.subscribe(self.OnWallpaperUpdates, pubsub.ALL_WALLPAPERS)
+        pubsub.publish(pubsub.REQUEST_WALLPAPERS)
+        pubsub.subscribe(self.OnUpdateCategoryWallpapers, pubsub.GROUP_WALLPAPERS)
+        pubsub.publish(pubsub.REQUEST_GROUP_WALLPAPERS)
 
+        wx.EVT_BUTTON(self, self.editbut.GetId(), self.OnEdit)
         wx.EVT_BUTTON(self, self.addbut.GetId(), self.OnAdd)
         wx.EVT_BUTTON(self, self.delbut.GetId(), self.OnDelete)
         wx.EVT_BUTTON(self, wx.ID_OK, self.OnOk)
         wx.EVT_BUTTON(self, wx.ID_CANCEL, self.OnCancel)
+        wx.EVT_BUTTON(self, wx.ID_HELP, lambda _: wx.GetApp().displayhelpid(helpids.ID_CATEGORY_MANAGER))
+        wx.EVT_LISTBOX(self, self.ID_LIST, self.OnLBClicked)
+        wx.EVT_LISTBOX_DCLICK(self, self.ID_LIST, self.OnLBClicked)        
 
     def __del__(self):
         pubsub.unsubscribe(self.OnUpdateCategories)
+        pubsub.unsubscribe(self.OnWallpaperUpdates)
+        pubsub.unsubscribe(self.OnUpdateCategoryWallpapers)
         super(CategoryManager, self).__del__()
-
+        
+    def OnUpdateCategoryWallpapers(self, msg):
+        groups_wp=msg.data[:]
+        if self.groups is None:
+            self.groups = groups_wp
+    
+    def OnWallpaperUpdates(self, msg):
+        "Receives pubsub message with wallpaper list"
+        papers=msg.data[:]
+        if self.wps is None:
+            self.wps = papers
+    
     def OnUpdateCategories(self, msg):
         cats=msg.data[:]
         if self.curlist is None:
@@ -485,14 +525,72 @@ class CategoryManager(wx.Dialog):
         self.addlist.sort()
         self.UpdateLBs()
 
+    def OnLBClicked(self, evt=None):
+        if self.thelistb.GetSelection()==wx.NOT_FOUND:
+            return
+        groupname=self.curlist[self.thelistb.GetSelection()]
+        try:
+            wallpaper=self.returnWP(groupname)
+        except:
+            wallpaper=None
+        
+        if wallpaper==None:
+            self.SetPreview(None)
+        else:
+            try:
+                v_index=self.wps.index(wallpaper)
+                v=self.wps[v_index]
+                self.SetPreview(v)
+            except:
+                self.SetPreview(None)
+
+    def SetPreview(self, name):
+        if name is None:
+            self.preview.SetImage(None)
+        else:
+            self.preview.SetImage(name) 
+            
     def UpdateLBs(self):
         for lb,l in (self.thelistb, self.curlist), (self.addlistb, self.addlist), (self.dellistb, self.dellist):
             lb.Clear()
             for i in l:
                 lb.Append(i)
+    
+    def returnWP(self, groupname):
+        try:
+            gwp=self.groups[:]
+            for entry in gwp:
+                l=entry.split(":", 1)
+                name=l[0]
+                wp=l[1]
+                if name==groupname:
+                    if wp==0:
+                        return None
+                    else:
+                        return wp
+            return None
+        except:
+            return None
         
+    def setWP(self, groupname, wallpaper):
+        gwp=self.groups[:]
+        new_entry=str(groupname)+":"+str(wallpaper)
+        entry_to_remove=None
+        for entry in gwp:
+            l=entry.split(":", 1)
+            name=l[0]
+            wp=l[1]
+            if name==groupname:
+                entry_to_remove=entry
+                break
+        if entry_to_remove is not None:
+            gwp.remove(entry_to_remove)
+            gwp.append(new_entry)
+        self.groups=gwp
+
     def OnOk(self, _):
         pubsub.publish(pubsub.SET_CATEGORIES, self.curlist)
+        pubsub.publish(pubsub.SET_GROUP_WALLPAPERS, self.groups)
         self.Show(False)
         self.Destroy()
 
@@ -500,6 +598,31 @@ class CategoryManager(wx.Dialog):
         self.Show(False)
         self.Destroy()
         
+    def OnEdit(self, _):
+        datakey="group_wallpapers"
+        title="Edit Category Wallpaper"
+        populate_data=[]
+        _key=self.thelistb.GetSelection()
+        if _key > -1:
+            _groupname=self.curlist[_key]
+            wp_name=self.returnWP(_groupname)
+            if wp_name is None:
+                populate_data.append({})
+            else:
+                populate_data.append({"wallpaper": wp_name})
+            with guihelper.WXDialogWrapper(SingleFieldEditor(self, datakey, title, populate_data), True) as (dlg, retcode):
+                if retcode==wx.ID_OK:
+                    _data=dlg.GetData()
+                    if _data:
+                        new_wp=_data[0] #only want the first entry since you can only get 1 wallpaper per group
+                        new_wp_name=new_wp.get('wallpaper', None)
+                        if new_wp_name is not None:
+                            self.setWP(_groupname, new_wp_name) #set new wallpaper
+                    else:
+                        new_wp_name=None
+                        self.setWP(_groupname, 0) #clear wallpaper
+                    self.SetPreview(new_wp_name)
+                    
     def OnAdd(self, _):
         v=self.add.GetValue()
         self.add.SetValue("")
@@ -509,6 +632,8 @@ class CategoryManager(wx.Dialog):
         if v not in self.curlist:
             self.curlist.append(v)
             self.curlist.sort()
+            #add group to self.groups            
+            self.groups.append(str(v)+":0")
         if v not in self.addlist:
             self.addlist.append(v)
             self.addlist.sort()
@@ -525,6 +650,15 @@ class CategoryManager(wx.Dialog):
             return
         i=self.curlist.index(v)
         del self.curlist[i]
+        entry_to_remove=None
+        for entry in self.groups:
+            l=entry.split(":", 1)
+            name=l[0]
+            if name==v:
+                entry_to_remove=entry
+                break
+        if entry_to_remove is not None:
+            self.groups.remove(entry_to_remove)
         if v in self.addlist:
             i=self.addlist.index(v)
             del self.addlist[i]
@@ -1856,15 +1990,16 @@ class SingleFieldEditor(wx.Dialog):
     tabsfactory={
         'categories': ("Categories", "categories", CategoryEditor),
         'wallpapers': ("Wallpapers", "wallpapers", WallpaperEditor),
+        'group_wallpapers': ("Group Wallpapers", "group_wallpapers", WallpaperEditor),
         'ringtones': ("Ringtones", "ringtones", RingtoneEditor) }
 
     color_field_name='phonebook'
 
-    def __init__(self, parent, key):
+    def __init__(self, parent, key, caption="Edit PhoneBook Entry", populatedata=None):
         if not self.tabsfactory.has_key(key):
             raise KeyError
         super(SingleFieldEditor, self).__init__(parent, -1,
-                                                "Edit PhoneBook Entry",
+                                                caption,
                                                 size=(740,580),
                                                 style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
         field_color.get_color_info_from_profile(self)
@@ -1883,7 +2018,16 @@ class SingleFieldEditor(wx.Dialog):
 
         # instantiate the nb widgets
         name,key,klass=self.tabsfactory[key]
-        widget=EditorManager(self.nb, klass)
+        if name in ('Group Wallpapers'):
+            #instantiate WallpaperEditor class with arguments, because I can't pass in args thru EditorManager
+            #widget=klass(self.nb, parent, False)
+            widget=EditorManager(self.nb, klass)
+            #hide the add widget button since we aren't using EditorManager
+            #vs.Hide(0)
+            if populatedata is not None:
+                widget.Populate(populatedata)
+        else:
+            widget=EditorManager(self.nb, klass)
         self.nb.AddPage(widget,name)
 
         vs.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND|wx.ALL, 5)

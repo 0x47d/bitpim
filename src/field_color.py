@@ -101,7 +101,8 @@ def build_field_info(widget, name=None):
         _names=[]
     while _parent:
         if hasattr(_parent, 'color_field_name'):
-            _names.append(_parent.color_field_name)
+            if _parent.color_field_name not in _names:
+                _names.append(_parent.color_field_name)
         _parent=_parent.GetParent()
     _names.reverse()
     _dict=current_field_info

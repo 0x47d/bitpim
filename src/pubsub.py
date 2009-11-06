@@ -30,6 +30,10 @@ from wx.lib.pubsub import Publisher
 
 
 # Maintain the list of categories
+REQUEST_GROUP_WALLPAPERS=( 'request', 'groupwps') # no data
+GROUP_WALLPAPERS=( 'response', 'groupwps' ) # data is list of groups and their wallpapers
+SET_GROUP_WALLPAPERS=( 'request', 'setgroupwps') # data is list of groups and their wallpapers
+MERGE_GROUP_WALLPAPERS=( 'request', 'mergegroupwps') # data is list of groups and their wallpapers
 REQUEST_CATEGORIES=( 'request', 'categories' ) # no data
 ALL_CATEGORIES=( 'response', 'categories') # data is list of strings
 SET_CATEGORIES=( 'request', 'setcategories') # data is list of strings

@@ -192,6 +192,11 @@ class PhoneEntryDetailsView(bphtml.HTMLWindow):
 ### Functions used to get data from a record
 ###
 
+def formatICE(iceindex):
+    return iceindex['iceindex']+1
+
+def formatFav(favoriteindex):
+    return favoriteindex['favoriteindex']+1
 
 def formatcategories(cats):
     c=[cat['category'] for cat in cats]
@@ -299,7 +304,8 @@ _getdatalist=[
     "Memo4", ("memos", 3, None, "memo", True),
     "Memo5", ("memos", 4, None, "memo", True),
 
-    "ICEindex", ("ice", 0, None, "iceindex", False),
+    "ICE #", ("ice", 0, None, formatICE, False),
+    "Favorite #", ("favorite", 0, None, formatFav, False)
 
     ]
 
@@ -426,15 +432,27 @@ class CategoryManager:
 
     def __init__(self):
         self.categories=[]
+        self.group_wps=[]
+        
         pubsub.subscribe(self.OnListRequest, pubsub.REQUEST_CATEGORIES)
         pubsub.subscribe(self.OnSetCategories, pubsub.SET_CATEGORIES)
         pubsub.subscribe(self.OnMergeCategories, pubsub.MERGE_CATEGORIES)
         pubsub.subscribe(self.OnAddCategory, pubsub.ADD_CATEGORY)
+        pubsub.subscribe(self.OnGroupWPRequest, pubsub.REQUEST_GROUP_WALLPAPERS)
+        pubsub.subscribe(self.OnSetGroupWP, pubsub.SET_GROUP_WALLPAPERS)
+        pubsub.subscribe(self.OnMergeGroupWP, pubsub.MERGE_GROUP_WALLPAPERS)
 
     def OnListRequest(self, msg=None):
         # nb we publish a copy of the list, not the real
         # thing.  otherwise other code inadvertently modifies it!
         pubsub.publish(pubsub.ALL_CATEGORIES, self.categories[:])
+        
+    def OnGroupWPRequest(self, msg=None):
+        pubsub.publish(pubsub.GROUP_WALLPAPERS, self.group_wps[:])
+        
+    def OnSetGroupWP(self, msg):
+        self.group_wps=msg.data[:]
+        self.OnGroupWPRequest()
 
     def OnAddCategory(self, msg):
         name=msg.data
@@ -460,6 +478,27 @@ class CategoryManager:
         if newcats!=self.categories:
             self.categories=newcats
             self.OnListRequest()
+
+    def OnMergeGroupWP(self, msg):
+        new_groups=msg.data[:]
+        gwp=self.group_wps[:]
+        temp_dict={}
+        for entry in gwp:
+            l=entry.split(":", 1)
+            name=l[0]
+            wp=l[1]
+            temp_dict[name]=wp
+        for entry in new_groups:
+            l=entry.split(":", 1)
+            name=l[0]
+            wp=l[1]
+            temp_dict[name]=wp
+        out_list=[]
+        for k, v in temp_dict.items():
+            out_list.append(str(k)+":"+str(v))
+        self.group_wps=out_list
+        self.OnGroupWPRequest()
+        
 
 CategoryManager=CategoryManager() # shadow out class name
 
@@ -574,6 +613,7 @@ class PhoneWidget(wx.Panel, widgets.BitPimWidget):
         self._data={}
         self.parent=parent
         self.categories=[]
+        self.group_wps=[]
         self.modified=False
         self.table_panel=wx.Panel(split)
         self.table=wx.grid.Grid(self.table_panel, wx.NewId())
@@ -639,6 +679,7 @@ class PhoneWidget(wx.Panel, widgets.BitPimWidget):
         wx.grid.EVT_GRID_CELL_RIGHT_CLICK(self, self.OnCellRightClick)
         wx.EVT_LEFT_DCLICK(self.preview, self.OnPreviewDClick)
         pubsub.subscribe(self.OnCategoriesUpdate, pubsub.ALL_CATEGORIES)
+        pubsub.subscribe(self.OnGroupWPUpdate, pubsub.GROUP_WALLPAPERS)
         pubsub.subscribe(self.OnPBLookup, pubsub.REQUEST_PB_LOOKUP)
         pubsub.subscribe(self.OnMediaNameChanged, pubsub.MEDIA_NAME_CHANGED)
         # we draw the column headers
@@ -733,6 +774,11 @@ class PhoneWidget(wx.Panel, widgets.BitPimWidget):
     def OnCategoriesUpdate(self, msg):
         if self.categories!=msg.data:
             self.categories=msg.data[:]
+            self.modified=True
+            
+    def OnGroupWPUpdate(self, msg):
+        if self.group_wps!=msg.data:
+            self.group_wps=msg.data[:]
             self.modified=True
 
     def OnPBLookup(self, msg):
@@ -926,6 +972,12 @@ class PhoneWidget(wx.Panel, widgets.BitPimWidget):
             dict['phonebook'].update(r)
             c=[e for e in self.categories if e not in dict['categories']]
             dict['categories']+=c
+            for i in range(0,len(self.group_wps),2):
+                grp_name = self.group_wps[i]
+                grp_wp = self.group_wps[i+1]
+                if grp_name not in dict['group_wallpapers']:
+                    dict['group_wallpapers'].append(grp_name)
+                    dict['group_wallpapers'].append(grp_wp)
             self._save_db(dict)
 
     def EditEntries(self, row, column):
@@ -1094,6 +1146,7 @@ class PhoneWidget(wx.Panel, widgets.BitPimWidget):
     def getdata(self, dict):
         dict['phonebook']=self._data.copy()
         dict['categories']=self.categories[:]
+        dict['group_wallpapers']=self.group_wps[:]
         return dict
 
     def DeleteBySerial(self, bpserial):
@@ -1148,6 +1201,7 @@ class PhoneWidget(wx.Panel, widgets.BitPimWidget):
             version=2
             dict['result']['phonebook']={}
             dict['result']['categories']=[]
+            dict['result']['group_wallpapers']=[]
             
     def clear(self):
         self._data={}
@@ -1156,20 +1210,21 @@ class PhoneWidget(wx.Panel, widgets.BitPimWidget):
     def getfromfs(self, dict, timestamp=None):
         self.thedir=self.mainwindow.phonebookpath
         if os.path.exists(os.path.join(self.thedir, "index.idx")):
-            d={'result': {'phonebook': {}, 'categories': []}}
+            d={'result': {'phonebook': {}, 'categories': [], 'group_wallpapers': [],}}
             common.readversionedindexfile(os.path.join(self.thedir, "index.idx"), d, self.versionupgrade, self.CURRENTFILEVERSION)
             pb=d['result']['phonebook']
             database.ensurerecordtype(pb, phonebookobjectfactory)
             pb=database.extractbitpimserials(pb)
             self.mainwindow.database.savemajordict("phonebook", pb)
             self.mainwindow.database.savelist("categories", d['result']['categories'])
+            self.mainwindow.database.savelist("group_wallpapers", d['result']['group_wallpapers'])
             # now that save is succesful, move file out of the way
             os.rename(os.path.join(self.thedir, "index.idx"), os.path.join(self.thedir, "index-is-now-in-database.bak"))
         # read info from the database
         dict['phonebook']=self.mainwindow.database.getmajordictvalues(
             "phonebook", phonebookobjectfactory, at_time=timestamp)
         dict['categories']=self.mainwindow.database.loadlist("categories")
-            
+        dict['group_wallpapers']=self.mainwindow.database.loadlist("group_wallpapers")            
 
     def _updatecount(self):
         # Update the count of contatcs
@@ -1185,10 +1240,14 @@ class PhoneWidget(wx.Panel, widgets.BitPimWidget):
         pubsub.publish(pubsub.MERGE_CATEGORIES, dict['categories'])
         pb=dict['phonebook']
         cats=[]
+        pb_groupwps=[] #list for groups found in phonebook
         for i in pb:
             for cat in pb[i].get('categories', []):
                 cats.append(cat['category'])
-        pubsub.publish(pubsub.MERGE_CATEGORIES, cats)                
+                pb_groupwps.append(str(cat['category'])+":0") #the wallpaper is unknown as this point
+        pubsub.publish(pubsub.MERGE_CATEGORIES, cats)
+        pubsub.publish(pubsub.MERGE_GROUP_WALLPAPERS, pb_groupwps) #keep this order: pull out from phonebook FIRST
+        pubsub.publish(pubsub.MERGE_GROUP_WALLPAPERS, dict['group_wallpapers']) #then add the ones from results dict
         k=pb.keys()
         k.sort()
         self.clear()
@@ -1200,6 +1259,7 @@ class PhoneWidget(wx.Panel, widgets.BitPimWidget):
     def _save_db(self, dict):
         self.mainwindow.database.savemajordict("phonebook", database.extractbitpimserials(dict["phonebook"]))
         self.mainwindow.database.savelist("categories", dict["categories"])
+        self.mainwindow.database.savelist("group_wallpapers", dict["group_wallpapers"])
         
     def populatefs(self, dict):
         if self.read_only:
@@ -1221,7 +1281,7 @@ class PhoneWidget(wx.Panel, widgets.BitPimWidget):
                             if isinstance(_value, str):
                                 _item[_subkey]=_value.decode('ascii', 'ignore')
 
-    def importdata(self, importdata, categoriesinfo=[], merge=True):
+    def importdata(self, importdata, categoriesinfo=[], merge=True, groupwpsinfo=[]):
         if self.read_only:
             wx.MessageBox('You are viewing historical data which cannot be changed or saved',
                           'Cannot Save Phonebook Data',
@@ -1244,6 +1304,7 @@ class PhoneWidget(wx.Panel, widgets.BitPimWidget):
                     database.ensurebitpimserials(result)
                     d['phonebook']=result
                     d['categories']=categoriesinfo
+                    d['group_wallpapers']=groupwpsinfo
                     self.populatefs(d)
                     self.populate(d, False)
     

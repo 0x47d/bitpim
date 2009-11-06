@@ -23,6 +23,10 @@ import com_lgvx9700
 import p_lgvx11000
 import helpids
 import sms
+import field_color
+import phonenumber
+import wx
+import database
 
 DEBUG1=False
 
@@ -42,19 +46,132 @@ class Phone(parentphone):
                        'Deep Blue Calling', 'Fairy Palaces', 'Central Park', 'Balmy Climate', 'Spring Legend',
                        'East of Rain', 'No Ring',)
 
+    ringtonelocations= (
+        # type           index file             default dir                 external dir  max  type   index
+        ('ringers',     'dload/myringtone.dat','brew/mod/10889/ringtones', '',            100, 0x01,  100),
+        ( 'sounds',     'dload/mysound.dat',   'brew/mod/18067',           '',            100, 0x02,  None),
+        ( 'sounds(sd)', 'dload/sd_sound.dat',  'mmc1/my_sounds',           '',            100, 0x02,  None),
+        ( 'music',      'dload/efs_music.dat', 'my_music',                 '',            100, 0x104, None),
+        ( 'music(sd)',  'dload/sd_music.dat',  'mmc1/my_music',            '',            100, 0x14,  None),
+        )
+
+    #add picture ids to list of wallpapers, seems to be new for this phone
+    wallpaperlocations= (
+        #  type          index file                           default dir         external dir  max  type Index
+        ( 'images',     'dload/image.dat',                    'brew/mod/10888',    '',          100, 0x00, 100),
+        ( 'images(sd)', 'dload/sd_image.dat',                 'mmc1/my_pix',       '',          100, 0x10, None),
+        ( 'video',      'dload/video.dat',                    'brew/mod/10890',    '',          100, 0x03, None),
+        ( 'video(sd)',  'dload/sd_video.dat',                 'mmc1/my_flix',      '',          100, 0x13, None),
+        ( 'picture ids','set_as_pic_id_dir/setas_pic_id.dat', 'set_as_pic_id_dir', '',          999, 0x00, None),
+        )
+    
     def setDMversion(self):
         self._DMv5=False
         self._DMv6=True
         self._timeout=5 # Assume a quick timeout on newer phones
+        
+    def getphoneinfo(self, phone_info):
+        self.log('Getting Phone Info')
+        try:
+            s=self.getfilecontents('brew/version.txt')
+            if s[:7]==self.my_model:
+                phone_info.append('Manufacturer:', Profile.phone_manufacturer)
+                phone_info.append('Model:', self.my_model)
+                phone_info.append('Name:', self.desc[12:21])
+                phone_info.append('ESN:', self.get_brew_esn())
+                phone_info.append('Firmware Version:', self.get_firmware_version())
+                #get the phone number from 'My Name Card'
+                namecard=self.getfilecontents2('pim/pbmyentry.dat', 208, 10)
+                phone_info.append('Phone Number:', phonenumber.format(namecard))
+        except Exception, e:
+            pass
+        return
 
     # Fundamentals:
     #  - get_esn             - same as LG VX-8300
-    #  - getgroups           - same as LG VX-8700
+    #  - getgroups           - new implementation here due to group picture ids and no 'No Group' on this phone
     #  - getwallpaperindices - LGUncountedIndexedMedia
     #  - getringtoneindices  - LGUncountedIndexedMedia
     #  - DM Version          - 6
-    #  - phonebook           - same as LG VX-8550
+    #  - phonebook           - same as LG VX-8550, with some slight differences with picture ids, speed dials
     #  - SMS                 - same dir structure as the VX-8800
+
+    def getgroups(self, results):
+        "Read groups"
+        # Reads groups that use explicit IDs
+        self.log("Reading group information")
+        g=self.readobject(self.protocolclass.pb_group_filename,
+                          self.protocolclass.pbgroups,
+                          'Reading groups data')
+        
+        self.log("Reading Group Picture IDs")
+        group_picid_pathf=self._get_group_path_index(self.protocolclass.GroupWPPathIndexFile)
+        _groupwp_ids=self._build_media_dict(results, group_picid_pathf, 'wallpaper-index')
+        
+        groups={}
+        for i in range(len(g.groups)):
+            _group = g.groups[i]
+            if _group.name:
+                try:
+                    if _group.wallpaper == 0x64:
+                        #indexes between _groupwp_ids and g.groups correspond to each other
+                        #the group id does not match up to anything for group picture id purposes 
+                        paper = _groupwp_ids.get(group_picid_pathf.items[i].pathname, None)
+                    else:
+                        paper = self.protocolclass.NOWALLPAPER
+                        
+                    if paper is None:
+                        raise
+                
+                    groups[_group.groupid]= { 'name': _group.name, 'user_added': _group.user_added,
+                                              'wallpaper': paper } #groups can have wallpaper on this phone
+                except:
+                    self.log("can't find wallpaper for group index: " + str(_group.groupid) + ": " + str(_group.name))
+
+        results['groups'] = groups
+        return groups
+
+    def savegroups(self, data):
+        groups=data.get('groups', {})
+        keys=groups.keys()
+        keys.sort()
+        keys.reverse() 
+        g=self.protocolclass.pbgroups()
+        
+        wp_index=data.get('wallpaper-index', {})
+        group_picid_pathf=self.protocolclass.GroupPicID_PathIndexFile()
+        
+        #Don't write the no group entry, it doesn't exist on this phone!
+        for i in keys:
+            if not i:
+                continue #already wrote this one out
+            # now write the rest in reverse ID order
+            group_entry = groups[i]
+            new_entry = self.protocolclass.pbgroup(name=groups[i]['name'], groupid=i, user_added=groups[i].get('user_added', 1), wallpaper=0)
+            for key in group_entry:
+                if key == 'wallpaper':
+                    if group_entry['wallpaper']==self.protocolclass.NOWALLPAPER:
+                        new_entry.wallpaper = self._findmediainindex(data['wallpaper-index'], None, group_entry['name'], 'wallpaper')
+                    else:
+                        new_entry.wallpaper = self._findmediainindex(data['wallpaper-index'], group_entry['wallpaper'], group_entry['name'], 'wallpaper')
+                    try:
+                        _filename = wp_index[new_entry.wallpaper]['filename']
+                        group_picid_pathf.items.append(self.protocolclass.GroupPicID_PathIndexEntry(pathname=_filename))
+                        new_entry.wallpaper = 0x64
+                    except:
+                        group_picid_pathf.items.append(self.protocolclass.GroupPicID_PathIndexEntry())
+            
+            g.groups.append(new_entry)
+        
+        #write group picture ids
+        self.log("Writing group picture ID")
+        self.writeobject(self.protocolclass.GroupWPPathIndexFile, 
+                         group_picid_pathf, logtitle='Writing group wallpaper paths',
+                         uselocalfs=DEBUG1)             
+        #write groups
+        self.writeobject(self.protocolclass.pb_group_filename, g,
+                         logtitle='Writing phonebook groups',
+                         uselocalfs=DEBUG1)
 
     def _build_favorites_dict(self):
         if hasattr(self.protocolclass, 'favorites'):
@@ -70,6 +187,12 @@ class Phone(parentphone):
             return _res
         else:
             return None
+        
+    def _get_group_path_index(self, index_file):
+        buf = prototypes.buffer(self.getfilecontents(index_file))
+        _path_file=self.protocolclass.GroupPicID_PathIndexFile();
+        _path_file.readfrombuffer(buf, logtitle="Read group wallpaper path index: " + index_file)
+        return _path_file        
 
     def getphonebook (self, result):
         """Reads the phonebook data.  The L{getfundamentals} information will
@@ -94,6 +217,7 @@ class Phone(parentphone):
                                    self.protocolclass.pnfile,
                                    logtitle='Reading phonebook numbers')
 
+        #handle errors people are having when pa_file doesn't exist
         try:
             # check for addresses support
             if hasattr(self.protocolclass, 'pafile'):
@@ -141,11 +265,20 @@ class Phone(parentphone):
                       "Phone book read completed")
 
         result['phonebook']=pbook
+        #add a simple list of categories to result dict
         cats=[]
         for i in result['groups']:
             if result['groups'][i]['name']!='No Group':
                 cats.append(result['groups'][i]['name'])
         result['categories']=cats
+        #add a simple list of categories with their wallpapers to result dict
+        group_wps=[]
+        for i in result['groups']:
+            groupinfo=result['groups'][i]
+            name=str(groupinfo.get('name'))
+            wp_name=str(groupinfo.get('wallpaper'))
+            group_wps.append(name+":"+wp_name)
+        result['group_wallpapers']=group_wps
         return pbook
 
     def extractphonebookentry(self, entry, numbers, addresses, speeds, ices, favorites, fundamentals,
@@ -186,7 +319,7 @@ class Phone(parentphone):
 
                 res['wallpapers']=[ {'wallpaper': paper, 'use': 'call'} ]                
             except:
-                print "can't find wallpaper for index",entry.wallpaper
+                self.log("can't find wallpaper for index: " + str(entry.wallpaper))
             
         # ringtones
         if entry.ringtone != self.protocolclass.NORINGTONE:
@@ -201,7 +334,7 @@ class Phone(parentphone):
 
                 res['ringtones']=[ {'ringtone': tone, 'use': 'call'} ]
             except:
-                print "can't find ringtone for index",entry.ringtone
+                self.log("can't find ringtone for index: " + str(entry.ringtone))
 
         if addresses is not None and entry.addressindex != 0xffff:
             for _address in addresses.items:
@@ -219,19 +352,34 @@ class Phone(parentphone):
         # assign the ICE entry to the associated contact to keep them in sync
         res=self._assigniceentry(entry, numbers, ices, res)
 
-        # addign the favorite entry
+        # adding the favorite entry
         res=self._assignfavoriteentry(entry, favorites, res)
   
         return res
 
     def _assignfavoriteentry(self, entry, favorites, res):
         if favorites.has_key(entry.entry_number0):
-            # this contact entry is an ICE entry
+            # this contact entry is an favorite entry
             res['favorite']=[ { 'favoriteindex': favorites[entry.entry_number0] } ]
         return res
 
     def savephonebook (self, data):
         "Saves out the phonebook"
+        
+        #take the simple list of categories with their wallpapers and add it to result dict
+        new_group_dict={}
+        group_wps=data.get('group_wallpapers', {})
+        for i in range(len(group_wps)):
+            groupwp_entry=group_wps[i]
+            entry_list=groupwp_entry.split(":", 1) #split on colon a maximum of once
+            name=entry_list[0]
+            wp=entry_list[1]
+            for key in data['groups']:
+                group_entry=data['groups'][key]
+                if name==group_entry.get('name'):
+                    group_entry['wallpaper']=wp
+                    new_group_dict[key]=group_entry
+        data['groups']=new_group_dict
         self.savegroups (data)
 
         ring_pathf=self.protocolclass.PathIndexFile()
@@ -331,14 +479,25 @@ class Phone(parentphone):
         req.speeddials.append(self.protocolclass.speeddial())
         # if empty, slot 1 is for voicemail
         if speeddials.has_key(1):
-            req.speeddials.append(self.protocolclass.speeddial(entry=speeddials[1]['entry'],
-                                                               number=speeddials[1]['type']))
+            answer = wx.MessageBox("You have assigned speed dial #1 in your PhoneBook.\nAre you sure you want to overwrite the 'Voicemail' speed dial?", "Caution overwriting speed dial", wx.YES_NO|wx.ICON_EXCLAMATION|wx.STAY_ON_TOP)
+            if answer == wx.YES:
+                req.speeddials.append(self.protocolclass.speeddial(entry=speeddials[1]['entry'],number=speeddials[1]['type']))
+            else:
+                req.speeddials.append(self.protocolclass.speeddial(entry=1000,number=6))                
         else:
-            req.speeddials.append(self.protocolclass.speeddial(entry=1000,
-                                                               number=6))
+            req.speeddials.append(self.protocolclass.speeddial(entry=1000,number=6))
+            
         for i in range(2, self.protocolclass.NUMSPEEDDIALS):
             sd=self.protocolclass.speeddial()
             if speeddials.has_key(i):
+                if i==411:
+                    answer = wx.MessageBox("You have assigned speed dial #411 in your PhoneBook.\nAre you sure you want to overwrite the 'Directory Assistance' speed dial?", "Caution overwriting speed dial", wx.YES_NO|wx.ICON_EXCLAMATION|wx.STAY_ON_TOP)
+                    if answer == wx.YES:
+                        sd.entry=speeddials[i]['entry']
+                        sd.number=speeddials[i]['type']
+                    else:
+                        req.speeddials.append(sd)
+                        continue #they dont want to assign 411 so skip to next iteration                     
                 sd.entry=speeddials[i]['entry']
                 sd.number=speeddials[i]['type']
             req.speeddials.append(sd)
@@ -452,15 +611,22 @@ class Profile(parentprofile):
     BP_Calendar_Version=3
     phone_manufacturer='LG Electronics Inc'
     phone_model='VX11000'
-    # inside screen resoluation
+    # inside screen resolution
     WALLPAPER_WIDTH  = 800
     WALLPAPER_HEIGHT = 480
-
+    
+    ringtoneorigins=('ringers', 'sounds', 'sounds(sd)',' music', 'music(sd)')
+    excluded_ringtone_origins=('music', 'music(sd)')  
+    
+    # wallpaper origins that are not available for the contact assignment
+    excluded_wallpaper_origins=('video','video(sd)')  
+   
     imageorigins={}
     imageorigins.update(common.getkv(parentprofile.stockimageorigins, "images"))
     imageorigins.update(common.getkv(parentprofile.stockimageorigins, "video"))
     imageorigins.update(common.getkv(parentprofile.stockimageorigins, "images(sd)"))
     imageorigins.update(common.getkv(parentprofile.stockimageorigins, "video(sd)"))
+    imageorigins.update(common.getkv(parentprofile.stockimageorigins, "picture ids"))
 
     # our targets are the same for all origins
     imagetargets={}
@@ -489,12 +655,73 @@ class Profile(parentprofile):
         ('memo', 'write', 'OVERWRITE'),       # all memo list writing
 ##        ('playlist', 'read', 'OVERWRITE'),
 ##        ('playlist', 'write', 'OVERWRITE'),
-        ('t9_udb', 'write', 'OVERWRITE'),
+##        ('t9_udb', 'write', 'OVERWRITE'),
         )
     if __debug__:
         _supportedsyncs+=(
         ('t9_udb', 'read', 'OVERWRITE'),
+        ('t9_udb', 'write', 'OVERWRITE'),
+        ('playlist', 'read', None),
+        ('playlist', 'write', 'OVERWRITE'),
+        ('playlist', 'write', 'MERGE'),
         )
+        
+    field_color_data={
+    'phonebook': {
+        'name': {
+            'first': False, 'middle': False, 'last': False, 'full': 1,
+            'nickname': False, 'details': 1 },
+        'number': {
+            'type': 5, 'speeddial': 5, 'number': 5,
+            'ringtone': False, 'wallpaper': False, 'details': 5 },
+        'email': 2,
+        'email_details': {
+            'emailspeeddial': False, 'emailringtone': False,
+            'emailwallpaper': False },
+        'address': {
+            'type': False, 'company': False, 'street': 1, 'street2': False,
+            'city': 1, 'state': 1, 'postalcode': 1, 'country': 1, 'details': 1 },
+        'url': 0,
+        'memo': 0,
+        'category': 1,
+        'wallpaper': 1,
+        'group_wallpaper': 1,
+        #'wallpaper_type': False,
+        'ringtone': 1,
+        'storage': False,
+        'secret': False,
+        'ICE': 1,
+        'Favorite': 1,
+        },
+    'calendar': {
+        'description': True, 'location': False, 'allday': False,
+        'start': True, 'end': True, 'priority': False,
+        'alarm': True, 'vibrate': True,
+        'repeat': True,
+        'memo': False,
+        'category': False,
+        'wallpaper': False,
+        'ringtone': True,
+        },
+    'memo': {
+        'subject': False,
+        'date': True,
+        'secret': False,
+        'category': False,
+        'memo': True,
+        },
+    'todo': {
+        'summary': False,
+        'status': False,
+        'due_date': False,
+        'percent_complete': False,
+        'completion_date': False,
+        'private': False,
+        'priority': False,
+        'category': False,
+        'memo': False,
+        },
+    }        
 
 
     def convertphonebooktophone(self, helper, data):
