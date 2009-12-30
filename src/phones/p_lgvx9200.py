@@ -1050,3 +1050,229 @@ class pnfile(BaseProtogenClass):
 
 
 
+class pbgroup(BaseProtogenClass):
+    __fields=['name', 'groupid', 'user_added', 'unk0']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(pbgroup,self).__init__(**dict)
+        if self.__class__ is pbgroup:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(pbgroup,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(pbgroup,kwargs)
+        if len(args): raise TypeError('Unexpected arguments supplied: '+`args`)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_name
+        except:
+            self.__field_name=USTRING(**{'sizeinbytes': 34, 'encoding': PHONE_ENCODING,                'raiseonunterminatedread': False,                'raiseontruncate': False,                'default': '' })
+        self.__field_name.writetobuffer(buf)
+        try: self.__field_groupid
+        except:
+            self.__field_groupid=UINT(**{'sizeinbytes': 2,  'default': 0 })
+        self.__field_groupid.writetobuffer(buf)
+        try: self.__field_user_added
+        except:
+            self.__field_user_added=UINT(**{'sizeinbytes': 1,  'default': 0 })
+        self.__field_user_added.writetobuffer(buf)
+        try: self.__field_unk0
+        except:
+            self.__field_unk0=UINT(**{'sizeinbytes': 2,  'default': 0 })
+        self.__field_unk0.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_name=USTRING(**{'sizeinbytes': 34, 'encoding': PHONE_ENCODING,                'raiseonunterminatedread': False,                'raiseontruncate': False,                'default': '' })
+        self.__field_name.readfrombuffer(buf)
+        self.__field_groupid=UINT(**{'sizeinbytes': 2,  'default': 0 })
+        self.__field_groupid.readfrombuffer(buf)
+        self.__field_user_added=UINT(**{'sizeinbytes': 1,  'default': 0 })
+        self.__field_user_added.readfrombuffer(buf)
+        self.__field_unk0=UINT(**{'sizeinbytes': 2,  'default': 0 })
+        self.__field_unk0.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_name(self):
+        try: self.__field_name
+        except:
+            self.__field_name=USTRING(**{'sizeinbytes': 34, 'encoding': PHONE_ENCODING,                'raiseonunterminatedread': False,                'raiseontruncate': False,                'default': '' })
+        return self.__field_name.getvalue()
+
+    def __setfield_name(self, value):
+        if isinstance(value,USTRING):
+            self.__field_name=value
+        else:
+            self.__field_name=USTRING(value,**{'sizeinbytes': 34, 'encoding': PHONE_ENCODING,                'raiseonunterminatedread': False,                'raiseontruncate': False,                'default': '' })
+
+    def __delfield_name(self): del self.__field_name
+
+    name=property(__getfield_name, __setfield_name, __delfield_name, None)
+
+    def __getfield_groupid(self):
+        try: self.__field_groupid
+        except:
+            self.__field_groupid=UINT(**{'sizeinbytes': 2,  'default': 0 })
+        return self.__field_groupid.getvalue()
+
+    def __setfield_groupid(self, value):
+        if isinstance(value,UINT):
+            self.__field_groupid=value
+        else:
+            self.__field_groupid=UINT(value,**{'sizeinbytes': 2,  'default': 0 })
+
+    def __delfield_groupid(self): del self.__field_groupid
+
+    groupid=property(__getfield_groupid, __setfield_groupid, __delfield_groupid, None)
+
+    def __getfield_user_added(self):
+        try: self.__field_user_added
+        except:
+            self.__field_user_added=UINT(**{'sizeinbytes': 1,  'default': 0 })
+        return self.__field_user_added.getvalue()
+
+    def __setfield_user_added(self, value):
+        if isinstance(value,UINT):
+            self.__field_user_added=value
+        else:
+            self.__field_user_added=UINT(value,**{'sizeinbytes': 1,  'default': 0 })
+
+    def __delfield_user_added(self): del self.__field_user_added
+
+    user_added=property(__getfield_user_added, __setfield_user_added, __delfield_user_added, "=1 when was added by user -- not really")
+
+    def __getfield_unk0(self):
+        try: self.__field_unk0
+        except:
+            self.__field_unk0=UINT(**{'sizeinbytes': 2,  'default': 0 })
+        return self.__field_unk0.getvalue()
+
+    def __setfield_unk0(self, value):
+        if isinstance(value,UINT):
+            self.__field_unk0=value
+        else:
+            self.__field_unk0=UINT(value,**{'sizeinbytes': 2,  'default': 0 })
+
+    def __delfield_unk0(self): del self.__field_unk0
+
+    unk0=property(__getfield_unk0, __setfield_unk0, __delfield_unk0, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('name', self.__field_name, None)
+        yield ('groupid', self.__field_groupid, None)
+        yield ('user_added', self.__field_user_added, "=1 when was added by user -- not really")
+        yield ('unk0', self.__field_unk0, None)
+
+
+
+
+class pbgroups(BaseProtogenClass):
+    "Phonebook groups"
+    __fields=['groups']
+
+    def __init__(self, *args, **kwargs):
+        dict={}
+        # What was supplied to this function
+        dict.update(kwargs)
+        # Parent constructor
+        super(pbgroups,self).__init__(**dict)
+        if self.__class__ is pbgroups:
+            self._update(args,dict)
+
+
+    def getfields(self):
+        return self.__fields
+
+
+    def _update(self, args, kwargs):
+        super(pbgroups,self)._update(args,kwargs)
+        keys=kwargs.keys()
+        for key in keys:
+            if key in self.__fields:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        # Were any unrecognized kwargs passed in?
+        if __debug__:
+            self._complainaboutunusedargs(pbgroups,kwargs)
+        if len(args):
+            dict2={'elementclass': pbgroup,            'length': MAX_PHONEBOOK_GROUPS,            'createdefault': True}
+            dict2.update(kwargs)
+            kwargs=dict2
+            self.__field_groups=LIST(*args,**dict2)
+        # Make all P fields that haven't already been constructed
+
+
+    def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
+        'Writes this packet to the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        try: self.__field_groups
+        except:
+            self.__field_groups=LIST(**{'elementclass': pbgroup,            'length': MAX_PHONEBOOK_GROUPS,            'createdefault': True})
+        self.__field_groups.writetobuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+
+
+    def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
+        'Reads this packet from the supplied buffer'
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
+        self.__field_groups=LIST(**{'elementclass': pbgroup,            'length': MAX_PHONEBOOK_GROUPS,            'createdefault': True})
+        self.__field_groups.readfrombuffer(buf)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+
+    def __getfield_groups(self):
+        try: self.__field_groups
+        except:
+            self.__field_groups=LIST(**{'elementclass': pbgroup,            'length': MAX_PHONEBOOK_GROUPS,            'createdefault': True})
+        return self.__field_groups.getvalue()
+
+    def __setfield_groups(self, value):
+        if isinstance(value,LIST):
+            self.__field_groups=value
+        else:
+            self.__field_groups=LIST(value,**{'elementclass': pbgroup,            'length': MAX_PHONEBOOK_GROUPS,            'createdefault': True})
+
+    def __delfield_groups(self): del self.__field_groups
+
+    groups=property(__getfield_groups, __setfield_groups, __delfield_groups, None)
+
+    def iscontainer(self):
+        return True
+
+    def containerelements(self):
+        yield ('groups', self.__field_groups, None)
+
+
+
+

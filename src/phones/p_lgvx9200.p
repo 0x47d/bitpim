@@ -1,6 +1,6 @@
 ### BITPIM ( -*- python -*- )
 ###
-### Copyright (C) 2009 Nathan Hjelm <hjelmn@users.sourceforge.net>
+### Copyright (C) 2009-2010 Nathan Hjelm <hjelmn@users.sourceforge.net>
 ###
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the BitPim license as detailed in the LICENSE file.
@@ -97,3 +97,22 @@ PACKET pnfile:
     * LIST { 'elementclass': pnfileentry,
              'createdefault': True,
              'length': NUMPHONENUMBERENTRIES } +items
+
+# pbgroup.dat
+# The VX9100 has a fixed size pbgroup.dat, hence the need to fill up with
+# unused slots.
+PACKET pbgroup:
+    34 USTRING {'encoding': PHONE_ENCODING,
+                'raiseonunterminatedread': False,
+                'raiseontruncate': False,
+                'default': '' } +name
+    2  UINT { 'default': 0 } +groupid
+    1  UINT { 'default': 0 } +user_added "=1 when was added by user -- not really"
+    2  UINT { 'default': 0 } +unk0
+
+PACKET pbgroups:
+    "Phonebook groups"
+    * LIST {'elementclass': pbgroup,
+            'length': MAX_PHONEBOOK_GROUPS,
+            'createdefault': True} +groups
+            
