@@ -108,14 +108,13 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
             _path_name=self.protocolclass.GROUP_INDEX_FILE_NAME
             for i in range(256):
                 _name='%s%d'%(_path_name, i)
-                if self.statfile(_name):
+                if self.exists(_name):
                     _file_name=_name
                     break
             if not _file_name:
                 return _res
-            _buf=prototypes.buffer(self.getfilecontents(_file_name))
-            _index_file=self.protocolclass.GroupIndexFile()
-            _index_file.readfrombuffer(_buf)
+            _index_file=self.readobject(_file_name,
+                                        self.protocolclass.GroupIndexFile)
             for _entry in _index_file.items[1:]:
                 if _entry.name:
                     _res[_entry.index]={ 'name': _entry.name }
@@ -285,7 +284,7 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
                               fundamentals):
         _index=fundamentals.get(index_key, {})
         _media={}
-        for _key,_entry in _index.items():
+        for _entry in _index.values():
             if _entry.has_key('filename') and _entry['filename']:
                 try:
                     _media[_entry['name']]=self.getfilecontents(_entry['filename'],
@@ -365,9 +364,10 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         
     def _add_files(self, index_key, media_key,
                    new_list, fundamentals):
-        """Add new file using BEW"""
+        """Add new file using BREW"""
         _index=fundamentals.get(index_key, {})
         _media=fundamentals.get(media_key, {})
+        _res=[]
         for _file in new_list:
             _data=self._item_from_index(_file, 'data', _media)
             if not _data:
@@ -388,10 +388,12 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
                 _file_name=_path+'/'+_file
                 try:
                     self.writefile(_file_name, _data)
+                    _res.append(_file)
                 except:
                     self.log('Failed to write file '+_file_name)
                     if __debug__:
                         raise
+        return _res
 
     def _update_media_index(self, index_file_class, index_entry_class,
                             media_path, excluded_files,
@@ -1261,9 +1263,9 @@ class PBEntry(object):
     # Extracting data from the phone--------------------------------------------
     def _extract_emails(self, entry, p_class):
         # extract emails
-        if self.pb.info & p_class.PB_FLG_EMAIL:
+        if self.pb.has_email:
             entry['emails']=[{ 'email': self.pb.email }]
-        if self.pb.info & p_class.PB_FLG_EMAIL2:
+        if self.pb.has_email2:
             entry.setdefault('emails', []).append({ 'email': self.pb.email2 })
     _number_type_dict={
         'cell': (Phone.protocolclass.PB_FLG_CELL, 'cell'),
@@ -1280,29 +1282,29 @@ class PBEntry(object):
                 _num_entry=getattr(self.pb, _key)
                 _number={ 'number': _num_entry.number,
                           'type': _info_list[1] }
-                if _num_entry.option&p_class.PB_FLG_SPEEDDIAL:
+                if _num_entry.has_speeddial:
                     _number['speeddial']=_num_entry.speeddial
-                if _num_entry.option&p_class.PB_FLG_RINGTONE and \
+                if _num_entry.has_ringtone and \
                    not entry.has_key('ringtones'):
                     _ringtone=self.phone.ringtone_name_from_range(
                         _num_entry.ringtone, self.fundamentals)
                     if _ringtone:
                         entry['ringtones']=[{ 'ringtone': _ringtone,
                                               'use': 'call' }]
-                if _num_entry.option & p_class.PB_FLG_PRIMARY:
+                if _num_entry.is_primary:
                     # this is the primary number, insert to the beginning
                     entry['numbers']=[_number]+entry['numbers']
                 else:
                     entry['numbers'].append(_number)
     def _extract_group(self, entry, p_class):
-        if not self.pb.info&p_class.PB_FLG_GROUP:
+        if not self.pb.has_group:
             # no group specified
             return
         _groups=self.fundamentals.get('groups', {})
         if _groups.has_key(self.pb.group):
             entry['categories']=[{ 'category': _groups[self.pb.group]['name'] }]
     def _extract_wallpaper(self, entry, p_class):
-        if not self.pb.info&p_class.PB_FLG_WP:
+        if not self.pb.has_wallpaper:
             return
         _idx=self.pb.wallpaper.rfind('$')+1
         _wp=self.pb.wallpaper[_idx:]

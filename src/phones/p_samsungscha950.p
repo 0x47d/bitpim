@@ -174,9 +174,9 @@ PACKET RPictureIndexEntry:
 PACKET RPictureIndexFile:
     * LIST { 'elementclass': RPictureIndexEntry } +items
 
-PACKET GroupEntry:
+PACKET -GroupEntry:
     1 UINT index
-    4 UNKNOWN dunno1
+    4 DONTCARE
     4 DateTime datetime
     68 USTRING { 'encoding': ENCODING,
                  'terminator': 0 } name
@@ -185,7 +185,7 @@ PACKET GroupEntry:
         * LIST { 'length': self.numofmembers } members:
             2 UINT index
     
-PACKET GroupIndexFile:
+PACKET -GroupIndexFile:
     1 UINT num_of_entries
     * LIST { 'elementclass': GroupEntry } +items
 
@@ -324,60 +324,106 @@ PACKET JournalRec:
 PACKET JournalFile:
     * LIST { 'elementclass': JournalRec } +items
 
-PACKET NumberEntry:
+PACKET -NumberEntry:
     * STRING { 'terminator': None,
                'pascal': True } number
     1 UINT option
-    if self.option & PB_FLG_SPEEDDIAL:
+    if self.has_speeddial:
         2 UINT speeddial
-    if self.option & PB_FLG_RINGTONE:
+    if self.has_ringtone:
         * STRING { 'terminator': None,
                    'pascal': True } ringtone
+    %{
+    @property
+    def has_speeddial(self):
+        return bool(self.option & PB_FLG_SPEEDDIAL)
+    @property
+    def has_ringtone(self):
+        return bool(self.option & PB_FLG_RINGTONE)
+    @property
+    def is_primary(self):
+        return bool(self.option & PB_FLG_PRIMARY)
+    %}
 
-PACKET PBEntry:
+PACKET -PBEntry:
     2 UINT info
-    2 UINT { 'default': 0 } +zero1
-    if self.info & PB_FLG_NAME:
+    2 DONTCARE
+    if self.has_name:
         * USTRING { 'terminator': None,
                     'encoding': ENCODING,
                     'pascal': True } name
-    if self.info & PB_FLG_EMAIL:
+    if self.has_mail:
         * USTRING { 'terminator': None,
                     'encoding': ENCODING,
                     'pascal': True } email
-    if self.info & PB_FLG_EMAIL2:
+    if self.has_email2:
         * USTRING { 'terminator': None,
                     'encoding': ENCODING,
                    'pascal': True } email2
-    if self.info & PB_FLG_HOME:
+    if self.has_home:
         * NumberEntry home
-    if self.info & PB_FLG_WORK:
+    if self.ihas_work:
         * NumberEntry work
-    if self.info & PB_FLG_CELL:
+    if self.has_cell:
         * NumberEntry cell
-    if self.info & PB_FLG_FAX:
+    if self.has_fax:
         * NumberEntry fax
-    if self.info & PB_FLG_CELL2:
+    if self.has_cell2:
         * NumberEntry cell2
-    if self.info & PB_FLG_DATE:
+    if self.has_date:
         4 DateTime datetime
-    if self.info & PB_FLG_GROUP:
+    if self.has_group:
         1 UINT group
-    if self.info & PB_FLG_WP:
+    if self.has_wallpaper:
         * STRING { 'terminator': None,
                    'pascal': True } wallpaper
         4 UINT wallpaper_range
+    %{
+    @property
+    def has_name(self):
+        return bool(self.info & PB_FLG_NAME)
+    @property
+    def has_email(self):
+        return bool(self.info & PB_FLG_EMAIL)
+    @property
+    def has_email2(self):
+        return bool(self.info & PB_FLG_EMAIL2)
+    @property
+    def has_home(self):
+        return bool(self.info & PB_FLG_HOME)
+    @property
+    def has_work(self):
+        return bool(self.info & PB_FLG_WORK)
+    @property
+    def has_cell(self):
+        return bool(self.info & PB_FLG_CELL)
+    @property
+    def has_fax(self):
+        return bool(self.info & PB_FLG_FAX)
+    @property
+    def has_cell2(self):
+        return bool(self.info & PB_FLG_CELL2)
+    @property
+    def has_date(self):
+        return bool(self.info & PB_FLG_DATE)
+    @property
+    def has_group(self):
+        return bool(self.info & PB_FLG_GROUP)
+    @property
+    def has_wallpaper(self):
+        return bool(self.info & PB_FLG_WP)
+    %}
 
-PACKET LenEntry:
+PACKET -LenEntry:
     2 UINT { 'default': 0 } +itemlen
 
-PACKET PBFile:
+PACKET -PBFile:
     * LIST { 'elementclass': LenEntry,
              'length': 8,
              'createdefault': True } +lens
     * LIST { 'elementclass': PBEntry } +items
 
-PACKET PBFileHeader:
+PACKET -PBFileHeader:
     * LIST { 'elementclass': LenEntry,
              'length': 8,
              'createdefault': True } +lens
@@ -386,41 +432,41 @@ PACKET ss_cmd_hdr:
     4 UINT { 'default': 0xfa4b } +commandcode
     1 UINT command
 
-PACKET ss_cmd_resp:
+PACKET -ss_cmd_resp:
     * ss_cmd_hdr cmd_hdr
     * DATA data
 
 PACKET ss_sw_req:
     * ss_cmd_hdr { 'command': SS_CMD_SW_VERSION } +hdr
-PACKET ss_sw_resp:
+PACKET -ss_sw_resp:
     * ss_cmd_hdr hdr
     * STRING { 'terminator': 0 } sw_version
 PACKET ss_hw_req:
     * ss_cmd_hdr { 'command': SS_CMD_HW_VERSION } +hdr
-PACKET ss_hw_resp:
+PACKET -ss_hw_resp:
     * ss_cmd_hdr hdr
     * STRING { 'terminator': 0 } hw_version
 
 PACKET ss_pb_count_req:
     * ss_cmd_hdr { 'command': SS_CMD_PB_COUNT } +hdr
-PACKET ss_pb_count_resp:
+PACKET -ss_pb_count_resp:
     * ss_cmd_hdr hdr
-    1 UINT zero
+    1 DONTCARE
     2 UINT count
 PACKET ss_pb_read_req:
     * ss_cmd_hdr { 'command': SS_CMD_PB_READ } +hdr
-    1 UINT { 'default': 0 } +zero
+    1 DONTCARE +
     2 UINT index
-PACKET ss_pb_read_resp:
+PACKET -ss_pb_read_resp:
     * ss_cmd_hdr hdr
-    1 UINT dunno1
+    1 DONTCARE
     2 UINT index
-    1 UINT dunno2
+    1 DONTCARE
     * DATA data
 PACKET ss_pb_voicemail_read_req:
     * ss_cmd_hdr { 'command': SS_CMD_PB_VOICEMAIL_READ } +hdr
     1 UINT { 'constant': SS_CMD_PB_VOICEMAIL_PARAM } +param
-PACKET ss_pb_voicemail_resp:
+PACKET -ss_pb_voicemail_resp:
     * ss_cmd_hdr hdr
     1 UINT param
     * STRING { 'terminator': 0 } number
@@ -431,7 +477,7 @@ PACKET ss_pb_voicemail_write_req:
                'default': PB_DEFAULT_VOICEMAIL_NUMBER } +number
 PACKET ss_pb_clear_req:
     * ss_cmd_hdr { 'command': SS_CMD_PB_CLEAR } +hdr
-PACKET ss_pb_clear_resp:
+PACKET -ss_pb_clear_resp:
     * ss_cmd_hdr hdr
     2 UINT flg
 
@@ -442,8 +488,7 @@ PACKET ss_number_entry:
                'raiseontruncate': False } +number
     2 UINT { 'default': 0 } +speeddial
     1 UINT { 'default': 0 } +primary
-    8 STRING { 'pad': 0,
-               'default': '' } +zero
+    8 DONTCARE +
     * STRING { 'terminator': 0,
                'default': '' } +ringtone
 
@@ -462,19 +507,19 @@ PACKET ss_pb_entry:
                 'default': '',
                 'maxsizeinbytes': PB_MAX_EMAIL_LEN,
                 'raiseontruncate': False } +email2
-    4 UINT { 'default': 0 } +zero1
+    4 DONTCARE +
     * STRING { 'terminator': 0,
                'default': '' } +wallpaper
-    1 UINT { 'default': 0 } +zero2
+    1 DONTCARE +
     * ss_number_entry +home
     * ss_number_entry +work
     * ss_number_entry +cell
     * ss_number_entry +dummy
     * ss_number_entry +fax
     * ss_number_entry +cell2
-    4 UINT { 'default': 0 } +zero3
+    4 DONTCARE +
     1 UINT { 'default': 0 } +group
-    2 UINT { 'default': 0 } +zero4
+    2 DONTCARE +
     
 PACKET ss_pb_write_req:
     * ss_cmd_hdr { 'command': SS_CMD_PB_WRITE } +hdr
@@ -483,49 +528,49 @@ PACKET ss_pb_write_req:
 
 PACKET ss_pb_write_resp:
     * ss_cmd_hdr hdr
-    1 UINT zero
+    1 DONTCARE
     2 UINT index
 
 # Call History
-PACKET cl_list:
+PACKET -cl_list:
     1 UINT index
 
-PACKET cl_index_file:
+PACKET -cl_index_file:
     * LIST { 'length': CL_MAX_ENTRIES,
              'elementclass': cl_list } incoming
     * LIST { 'length': CL_MAX_ENTRIES,
              'elementclass': cl_list } outgoing
     * LIST { 'length': CL_MAX_ENTRIES,
              'elementclass': cl_list } missed
-    111 UNKNOWN dunno1
+    111 DONTCARE
     4 UINT incoming_count
     4 UINT outgoing_count
     4 UINT missed_count
 
-PACKET cl_file:
+PACKET -cl_file:
     1 UINT cl_type
     51 STRING { 'terminator': 0 } number
     4 DateTime1 datetime
-    4 UNKNOWN dunno1
+    4 DONTCARE
     4 UINT duration
     %{
-    def _valid(self):
+    @property
+    def valid(self):
         global CL_VALID_TYPE
         return bool(self.cl_type in CL_VALID_TYPE and self.number)
-    valid=property(fget=_valid)
     %}
 
 # SMS Stuff
 PACKET pBOOL:
     P BOOL value
 
-PACKET sms_header:
+PACKET -sms_header:
     2 UINT index
     1 UINT msg_len
     1 UINT callback_len
     1 UINT bitmap1
     1 UINT bitmap2
-    6 UNKNOWN dunno1
+    6 DONTCARE
     2 UINT body_len
     2 UINT file_type
     1 UINT msg_type
@@ -543,23 +588,23 @@ PACKET sms_header:
             'has_1byte2': self.bitmap2 & SMS_FLG2_MSG,
             'has_40bytes': self.bitmap1 & SMS_FLG1_HAS40 } body
 
-PACKET sms_msg_stat_list:
+PACKET -sms_msg_stat_list:
     1 UINT status
-PACKET sms_datetime_list:
+PACKET -sms_datetime_list:
     4 DateTime1 datetime
-    4 UNKNOWN dunno
-PACKET sms_delivered_datetime:
+    4 DONTCARE
+PACKET -sms_delivered_datetime:
     * LIST { 'elementclass': sms_datetime_list,
              'length': 10 } datetime
-    20 UNKNOWN dunno
-PACKET sms_body:
+    20 DONTCARE
+PACKET -sms_body:
     P UINT msg_len
     P BOOL { 'default': True } +has_callback
     P BOOL { 'default': False } +has_priority
     P BOOL { 'default': False } +has_1byte
     P BOOL { 'default': True } +has_1byte2
     P BOOL { 'default': False } +has_40bytes
-    50 UNKNOWN dunno1
+    50 DONTCARE
     * USTRING { 'sizeinbytes': self.msg_len,
                 'encoding': ENCODING,
                 'terminator': None } msg
@@ -571,10 +616,10 @@ PACKET sms_body:
     if self.has_priority:
         1 UINT priority
     if self.has_1byte:
-        1 UNKNOWN dunno3
-    40 UNKNOWN dunno4
+        1 DONTCARE
+    40 DONTCARE
     4 DateTime1 datetime
-    17 UNKNOWN dunno5
+    17 DONTCARE
     1 UINT addr_len0
     1 UINT addr_len1
     1 UINT addr_len2
@@ -616,12 +661,12 @@ PACKET sms_body:
         * STRING { 'sizeinbytes': self.addr_len9,
                    'terminator': None } addr9
     if not self.has_1byte and self.has_1byte2:
-        1 UNKNOWN dunno6
+        1 DONTCARE
     if self.has_1byte2:
-        1 UNKNOWN dunno7
-    21 UNKNOWN dunno8
+        1 DONTCARE
+    21 DONTCARE
     if self.has_40bytes:
-        40 UNKNOWN dunno9
+        40 DONTCARE
     * LIST { 'elementclass': sms_msg_stat_list,
              'length': 10 } msg_stat
     # too hard to do it here.  Will be handled by the phone code

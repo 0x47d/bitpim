@@ -239,7 +239,7 @@ class PBEntry(parentpbentry):
         self._build_memo(entry.get('memos', [{}])[0].get('memo', None))
 
     def _extract_wallpaper(self, entry, p_class):
-        if not self.pb.info&p_class.PB_FLG_WP:
+        if not self.pb.has_wallpaper:
             return
         _idx=self.pb.wallpaper.rfind('|')+1
         # really ugly hack here !!!
@@ -253,7 +253,7 @@ class PBEntry(parentpbentry):
 
     def _extract_memo(self, entry, p_class):
         # extract the note portion from the phone into BitPim dict
-        if self.pb.info&p_class.PB_FLG_NOTE:
+        if self.pb.has_note:
             entry['memos']=[{ 'memo': self.pb.note }]
 
     def getvalue(self):

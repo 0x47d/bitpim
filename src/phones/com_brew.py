@@ -863,12 +863,12 @@ class RealBrewProtocol2(RealBrewProtocol):
     by newer qualcomm chipsets used in phones like the LG vx8100
     """
 
-    def exists(self, name):
-        try:
-            self.statfile(name)
-        except BrewNoSuchFileException:
-            return False
-        return True
+##    def exists(self, name):
+##        try:
+##            self.statfile(name)
+##        except BrewNoSuchFileException:
+##            return False
+##        return True
 
     def reconfig_directory(self):
         # not sure how important this is or even what it really does
@@ -904,17 +904,14 @@ class RealBrewProtocol2(RealBrewProtocol):
 
     def openfile(self, name, mode, flags=p_brew.new_fileopen_flag_existing):
         self.log("Open file '"+name+"'")
-        req=p_brew.new_openfilerequest()
-        req.filename=name
-        req.mode=mode
-        req.flags=flags
+        req=p_brew.new_openfilerequest(filename=name, mode=mode,
+                                       flags=flags)
         res=self.sendbrewcommand(req, p_brew.new_openfileresponse)
         return res.handle
 
     def closefile(self, handle):
         self.log("Close file")
-        req=p_brew.new_closefilerequest()
-        req.handle=handle
+        req=p_brew.new_closefilerequest(handle=handle)
         self.sendbrewcommand(req, p_brew.new_closefileresponse)
 
     def writefile(self, name, contents):
@@ -990,13 +987,11 @@ class RealBrewProtocol2(RealBrewProtocol):
             filesize=node['size']
             read=0
             counter=0
+            req=p_brew.new_readfilerequest(handle=handle, bytes=block_size)
             while True:
                 counter=(counter&0xff)+1
                 if counter%5==0:
                     self.progress(data.tell(), filesize, desc)
-                req=p_brew.new_readfilerequest()
-                req.handle=handle
-                req.bytes=block_size
                 req.position=read
                 res=self.sendbrewcommand(req, p_brew.new_readfileresponse)
                 if res.bytes:
@@ -1056,6 +1051,24 @@ class RealBrewProtocol2(RealBrewProtocol):
         self.progress(1,1,desc)
         return data.getvalue()[:size]
 
+    def _get_dir_handle(self, dirname):
+        # return the handle to the specified dir
+        req=p_brew.new_opendirectoryrequest(dirname=dirname if dirname else "/")
+        res=self.sendbrewcommand(req, p_brew.new_opendirectoryresponse)
+        if res.handle:
+            return res.handle
+        # dir does not exist
+        raise BrewNoSuchDirectoryException
+
+    def _close_dir(self, handle):
+        req=p_brew.new_closedirectoryrequest(handle=handle)
+        res=self.sendbrewcommand(req, p_brew.new_closedirectoryresponse)
+
+    def listsubdirs(self, dir='', recurse=0):
+        self.log("Listing subdirs in dir: '"+dir+"'")
+        self.log("X recurse="+`recurse`)
+        return self.getfilesystem(dir, recurse, files=0)
+
     def listfiles(self, dir=''):
         self.log("Listing files in dir: '"+dir+"'")
         return self.getfilesystem(dir, recurse=0, directories=0)
@@ -1063,23 +1076,14 @@ class RealBrewProtocol2(RealBrewProtocol):
     def getfilesystem(self, dir="", recurse=0, directories=1, files=1):
         results={}
         self.log("Listing dir '"+dir+"'")
-        req=p_brew.new_opendirectoryrequest()
-        if dir=="":
-            req.dirname="/"
-        else:
-            req.dirname=dir
-        res=self.sendbrewcommand(req, p_brew.new_opendirectoryresponse)
-        handle=res.handle
-        if handle==0: # happens if the directory does not exist
-            raise BrewNoSuchDirectoryException
+        handle=self._get_dir_handle(dir)
         dirs={}
         count=0
         try:
             # get all the directory entries from the phone
+            req=p_brew.new_listentryrequest(handle=handle)
             for i in xrange(1, 10000):
-                req=p_brew.new_listentryrequest()
                 req.entrynumber=i
-                req.handle=handle
                 res=self.sendbrewcommand(req, p_brew.new_listentryresponse)
                 if len(res.entryname) == 0: # signifies end of list
                     break
@@ -1088,10 +1092,7 @@ class RealBrewProtocol2(RealBrewProtocol):
                 else:
                     direntry=res.entryname
                 if files and (res.type==0 or res.type == 0x0f): # file or special file
-                    if res.type == 0:
-                        results[direntry]={ 'name': direntry, 'type': 'file', 'size': res.size, 'special': False }
-                    elif res.type == 0x0f:
-                        results[direntry]={ 'name': direntry, 'type': 'file', 'size': res.size, 'special': True }
+                    results[direntry]={ 'name': direntry, 'type': 'file', 'size': res.size, 'special': res.type==0xf }
                     try:
                         if res.date<=0:
                             results[direntry]['date']=(0, "")
@@ -1106,9 +1107,7 @@ class RealBrewProtocol2(RealBrewProtocol):
                         count+=1
         finally: # we MUST close the handle regardless or we wont be able to list the filesystem
             # reliably again without rebooting it
-            req=p_brew.new_closedirectoryrequest()
-            req.handle=handle
-            res=self.sendbrewcommand(req, p_brew.new_closedirectoryresponse)
+            self._close_dir(handle)
         # recurse the subdirectories
         for i in range(count):
             results.update(self.getfilesystem(dirs[i], recurse-1))
@@ -1120,13 +1119,15 @@ class RealBrewProtocol2(RealBrewProtocol):
         req=p_brew.new_statfilerequest()
         req.filename=name
         res=self.sendbrewcommand(req, p_brew.new_statfileresponse)
-        if res.error==2:    # ENOENT
-            raise BrewNoSuchFileException
-        elif res.error==0x13: # ENODEV
-            # locked system file. example: /dev.null
-            raise BrewFileLockedException
-        elif res.error != 0:
-            raise BrewStatFileException(res.error, name)
+##        if res.error==2:    # ENOENT
+##            raise BrewNoSuchFileException
+##        elif res.error==0x13: # ENODEV
+##            # locked system file. example: /dev.null
+##            raise BrewFileLockedException
+##        elif res.error != 0:
+##            raise BrewStatFileException(res.error, name)
+        if res.error==2 or res.error==0x13 or res.error!=0:
+            return None
         if res.type==1 or res.type==0x86:
             # files on external media have type 0x86
             results={ 'name': name, 'type': 'file', 'size': res.size }

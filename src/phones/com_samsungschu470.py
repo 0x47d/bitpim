@@ -153,14 +153,8 @@ class Phone(parentphone):
 parentpbentry=u740.PBEntry
 class PBEntry(parentpbentry):
 
-    def _extract_wallpaper(self, entry, p_class):
-        if not self.pb.info2 & p_class.PB_FLG2_WP:
-            return
-        entry['wallpapers']=[{ 'wallpaper': common.basename(self.pb.wallpaper2),
-                               'use': 'call' }]
-
     def _extract_ringtone(self, entry, p_class):
-        if  self.pb.info2 & p_class.PB_FLG2_RINGTONE and \
+        if  self.pb.has_ringtone and \
            self.pb.ringtone:
             if self.pb.ringtone.startswith('/ff/'):
                 # user's ringtone

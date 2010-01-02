@@ -278,6 +278,11 @@ class protogentokenizer:
             raise protoerror("expecting 'PACKET'", t)
         thedict=self._getdict()
         t=self._next()
+        # class name
+        themodifiers=""
+        while t[0]=='OP':
+            themodifiers+=t[1]
+            t=self._next()
         if t[0]!='NAME':
             raise protoerror("expecting packet name", t)
         thename=t[1]
@@ -311,8 +316,8 @@ class protogentokenizer:
         self._consumenl()
         # ok, now pointing to packet data
         self.state.append(self.STATE_PACKET)
-        self.packetstack.append( (thename, thedict, thecomment) )
-        return self.PACKETSTART, thename, None, thedict, thecomment
+        self.packetstack.append( (thename, thedict, thecomment, themodifiers) )
+        return self.PACKETSTART, thename, None, thedict, thecomment, themodifiers
 
     def _processpacketfield(self):
         """Read in one packet field"""
@@ -395,9 +400,12 @@ class protogentokenizer:
         while t[0]=='OP':
             themodifiers+=t[1]
             t=self._next()
-        if t[0]!='NAME':
-            raise protoerror("Expecting field name", t)
-        thename=t[1]
+        thevisible=t[0]=='NAME'
+        if thevisible:
+            thename=t[1]
+        else:
+            # Anonymous, invisible field
+            thename=self._getautogenname(t[2][0])
 
         # A colon (anonymous inner struct), newline, or string description
         thedesc=None
@@ -428,11 +436,11 @@ class protogentokenizer:
                 
             # put new packet on results pushback
             autoclass=self._getautogenname(t[2][0])
-            self.resultspb.append( (self.PACKETSTART, autoclass, None, None, "'Anonymous inner class'") )
+            self.resultspb.append( (self.PACKETSTART, autoclass, None, None, "'Anonymous inner class'", "") )
             self.state.append(self.STATE_PACKET)
 
             return self.FIELD, thename, thesize, thetype, "{'elementclass': "+autoclass+"}", \
-                   thedict, thedesc, themodifiers
+                   thedict, thedesc, themodifiers, thevisible
         
         # optional string
         if t[0]=='STRING':
@@ -448,7 +456,8 @@ class protogentokenizer:
                 self._next()
                 self._consumenl()
         # return what have digested ..
-        return self.FIELD, thename, thesize, thetype, None, thedict, thedesc, themodifiers
+        return self.FIELD, thename, thesize, thetype, None, thedict, thedesc,\
+               themodifiers, thevisible
 
 def indent(level=1):
     return "    "*level
@@ -486,15 +495,14 @@ class codegen:
     def genclasscode(self, out, namestuff, fields, codes):
         classname=namestuff[1]
         tokens=self.tokenizer
+        _read_only='-' in namestuff[5]
         print >>out, "class %s(BaseProtogenClass):" % (classname,)
         if namestuff[4] is not None:
             print >>out, indent()+namestuff[4]
-
+        if _read_only:
+            print >>out, indent(1)+"# Read-From-Buffer-Only Class"
         # fields
-        fieldlist=[]
-        for f in fields:
-            if f[0]==tokens.FIELD:
-                fieldlist.append(f[1])
+        fieldlist=[f[1] for f in fields if f[0]==tokens.FIELD and f[8]]
 
         print >>out, indent(1)+"__fields="+`fieldlist`
         print >>out, ""
@@ -561,27 +569,30 @@ class codegen:
         print >>out, "\n"
 
         # Write to a buffer
-        print >>out, indent()+"def writetobuffer(self,buf,autolog=True,logtitle=\"<written data>\"):"
-        print >>out, indent(2)+"'Writes this packet to the supplied buffer'"
-        print >>out, indent(2)+"self._bufferstartoffset=buf.getcurrentoffset()"
         i=2
-        for f in fields:
-            if f[0]==tokens.FIELD and f[2]!='P':
-                if '+' in f[7]:
-                    print >>out, indent(i)+"try: self.__field_%s" % (f[1],)
-                    print >>out, indent(i)+"except:"
-                    self.makefield(out, i+1, f, isreading=False)
-                print >>out, indent(i)+"self.__field_"+f[1]+".writetobuffer(buf)"
-            elif f[0]==tokens.CONDITIONALSTART:
-                print >>out, indent(i)+f[1]
-                i+=1
-            elif f[0]==tokens.CONDITIONALRESTART:
-                print >>out, indent(i-1)+f[1]
-            elif f[0]==tokens.CONDITIONALEND:
-                i-=1
-        assert i==2
-        print >>out, indent(2)+"self._bufferendoffset=buf.getcurrentoffset()"
-        print >>out, indent(2)+"if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)"
+        print >>out, indent()+"def writetobuffer(self,buf,autolog=True,logtitle=\"<written data>\"):"
+        print >>out, indent(i)+"'Writes this packet to the supplied buffer'"
+        if _read_only:
+            print >>out, indent(i)+"raise NotImplementedError"
+        else:
+            print >>out, indent(i)+"self._bufferstartoffset=buf.getcurrentoffset()"
+            for f in fields:
+                if f[0]==tokens.FIELD and f[2]!='P':
+                    if '+' in f[7]:
+                        print >>out, indent(i)+"try: self.__field_%s" % (f[1],)
+                        print >>out, indent(i)+"except:"
+                        self.makefield(out, i+1, f, isreading=False)
+                    print >>out, indent(i)+"self.__field_"+f[1]+".writetobuffer(buf)"
+                elif f[0]==tokens.CONDITIONALSTART:
+                    print >>out, indent(i)+f[1]
+                    i+=1
+                elif f[0]==tokens.CONDITIONALRESTART:
+                    print >>out, indent(i-1)+f[1]
+                elif f[0]==tokens.CONDITIONALEND:
+                    i-=1
+            assert i==2
+            print >>out, indent(2)+"self._bufferendoffset=buf.getcurrentoffset()"
+            print >>out, indent(2)+"if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)"
         print >>out, "\n"
                 
         # Read from a buffer
@@ -594,8 +605,12 @@ class codegen:
             if f[0]==tokens.FIELD:
                 if f[2]=='P':
                     continue
-                self.makefield(out, i, f)
-                print >>out, indent(i)+"self.__field_%s.readfrombuffer(buf)" % (f[1],)
+                if _read_only and not f[8]:
+                    # anonymous field, use temp field instead
+                    print >>out, indent(i)+self._maketempfieldstr(f)+".readfrombuffer(buf)"
+                else:
+                    self.makefield(out, i, f)
+                    print >>out, indent(i)+"self.__field_%s.readfrombuffer(buf)" % (f[1],)
             elif f[0]==tokens.CONDITIONALSTART:
                 print >>out, indent(i)+f[1]
                 i+=1
@@ -609,7 +624,7 @@ class codegen:
 
         # Setup each field as a property
         for f in fields:
-            if f[0]==tokens.FIELD:
+            if f[0]==tokens.FIELD and f[8]:
                 # get
                 print >>out, indent()+"def __getfield_%s(self):" % (f[1],)
                 if '+' in f[7]:
@@ -630,7 +645,7 @@ class codegen:
                 print >>out, indent()+"%s=property(__getfield_%s, __setfield_%s, __delfield_%s, %s)\n" % (f[1], f[1], f[1], f[1], f[6])
                 if '++' in f[7]:
                     # allow setting attributes
-                    print >>out, indent()+"def set_%s_attr(self, **kwargs):"%f[1]
+                    print >>out, indent()+"def ss_pb_count_respset_%s_attr(self, **kwargs):"%f[1]
                     print >>out, indent(2)+"self.%s"%f[1]
                     print >>out, indent(2)+"self.__field_%s.update(**kwargs)\n"%f[1]
 
@@ -640,15 +655,25 @@ class codegen:
 
         print >>out, indent()+"def containerelements(self):"
         i=2
+        _pass_flg= { i: True }
         for f in fields:
-            if f[0]==tokens.FIELD:
+            if f[0]==tokens.FIELD and f[8]:
                 print >>out, indent(i)+"yield ('%s', self.__field_%s, %s)" % (f[1], f[1], f[6])
+                _pass_flg[i]=False
             elif f[0]==tokens.CONDITIONALSTART:
                 print >>out, indent(i)+f[1]
+                _pass_flg[i]=False
                 i+=1
+                _pass_flg[i]=True
             elif f[0]==tokens.CONDITIONALRESTART:
+                if _pass_flg[i]:
+                    print >>out, indent(i)+"pass"
+                else:
+                    _pass_flg[i]=True
                 print >>out, indent(i-1)+f[1]
             elif f[0]==tokens.CONDITIONALEND:
+                if _pass_flg[i]:
+                    print >>out, indent(i)+"pass"
                 i-=1
         assert i==2
 
@@ -678,6 +703,26 @@ class codegen:
         d=[dd[1:-1] for dd in d]
         dd="{"+", ".join(d)+"}"
         print >>out, indent(indentamount)+"self.__field_%s=%s(%s**%s)" % (field[1], field[3], args, dd)
+
+    def _maketempfieldstr(self, field, args='', isreading=True):
+        # create and return string that creates a temporary field
+        d=[]
+        if field[2]!='P' and field[2]>=0:
+            d.append("{'sizeinbytes': "+`field[2]`+"}")
+        if not (isreading and '*' in field[7]):
+            for xx in 4,5:
+                if field[xx] is not None:
+                    d.append(field[xx])
+
+        for dd in d:
+            assert dd[0]=='{' and dd[-1]=='}'
+
+        if len(d)==0:
+            return "%s(%s)" % (fields[3], args)
+
+        d=[dd[1:-1] for dd in d]
+        dd="{"+", ".join(d)+"}"
+        return "%s(%s**%s)" % (field[3], args, dd)
 
 
 def processfile(inputfilename, outputfilename):

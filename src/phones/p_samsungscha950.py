@@ -1361,7 +1361,8 @@ class RPictureIndexFile(BaseProtogenClass):
 
 
 class GroupEntry(BaseProtogenClass):
-    __fields=['index', 'dunno1', 'datetime', 'name', 'numofmembers', 'members']
+    # Read-From-Buffer-Only Class
+    __fields=['index', 'datetime', 'name', 'numofmembers', 'members']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -1393,16 +1394,7 @@ class GroupEntry(BaseProtogenClass):
 
     def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
-        self._bufferstartoffset=buf.getcurrentoffset()
-        self.__field_index.writetobuffer(buf)
-        self.__field_dunno1.writetobuffer(buf)
-        self.__field_datetime.writetobuffer(buf)
-        self.__field_name.writetobuffer(buf)
-        self.__field_numofmembers.writetobuffer(buf)
-        if self.numofmembers:
-            self.__field_members.writetobuffer(buf)
-        self._bufferendoffset=buf.getcurrentoffset()
-        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+        raise NotImplementedError
 
 
     def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
@@ -1411,8 +1403,7 @@ class GroupEntry(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_index=UINT(**{'sizeinbytes': 1})
         self.__field_index.readfrombuffer(buf)
-        self.__field_dunno1=UNKNOWN(**{'sizeinbytes': 4})
-        self.__field_dunno1.readfrombuffer(buf)
+        DONTCARE(**{'sizeinbytes': 4}).readfrombuffer(buf)
         self.__field_datetime=DateTime(**{'sizeinbytes': 4})
         self.__field_datetime.readfrombuffer(buf)
         self.__field_name=USTRING(**{'sizeinbytes': 68,  'encoding': ENCODING,                 'terminator': 0 })
@@ -1437,19 +1428,6 @@ class GroupEntry(BaseProtogenClass):
     def __delfield_index(self): del self.__field_index
 
     index=property(__getfield_index, __setfield_index, __delfield_index, None)
-
-    def __getfield_dunno1(self):
-        return self.__field_dunno1.getvalue()
-
-    def __setfield_dunno1(self, value):
-        if isinstance(value,UNKNOWN):
-            self.__field_dunno1=value
-        else:
-            self.__field_dunno1=UNKNOWN(value,**{'sizeinbytes': 4})
-
-    def __delfield_dunno1(self): del self.__field_dunno1
-
-    dunno1=property(__getfield_dunno1, __setfield_dunno1, __delfield_dunno1, None)
 
     def __getfield_datetime(self):
         return self.__field_datetime.getvalue()
@@ -1508,7 +1486,6 @@ class GroupEntry(BaseProtogenClass):
 
     def containerelements(self):
         yield ('index', self.__field_index, None)
-        yield ('dunno1', self.__field_dunno1, None)
         yield ('datetime', self.__field_datetime, None)
         yield ('name', self.__field_name, None)
         yield ('numofmembers', self.__field_numofmembers, None)
@@ -1594,6 +1571,7 @@ class _gen_p_samsungscha950_186(BaseProtogenClass):
 
 
 class GroupIndexFile(BaseProtogenClass):
+    # Read-From-Buffer-Only Class
     __fields=['num_of_entries', 'items']
 
     def __init__(self, *args, **kwargs):
@@ -1626,14 +1604,7 @@ class GroupIndexFile(BaseProtogenClass):
 
     def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
-        self._bufferstartoffset=buf.getcurrentoffset()
-        self.__field_num_of_entries.writetobuffer(buf)
-        try: self.__field_items
-        except:
-            self.__field_items=LIST(**{ 'elementclass': GroupEntry })
-        self.__field_items.writetobuffer(buf)
-        self._bufferendoffset=buf.getcurrentoffset()
-        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+        raise NotImplementedError
 
 
     def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
@@ -4051,6 +4022,7 @@ class JournalFile(BaseProtogenClass):
 
 
 class NumberEntry(BaseProtogenClass):
+    # Read-From-Buffer-Only Class
     __fields=['number', 'option', 'speeddial', 'ringtone']
 
     def __init__(self, *args, **kwargs):
@@ -4083,15 +4055,7 @@ class NumberEntry(BaseProtogenClass):
 
     def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
-        self._bufferstartoffset=buf.getcurrentoffset()
-        self.__field_number.writetobuffer(buf)
-        self.__field_option.writetobuffer(buf)
-        if self.option & PB_FLG_SPEEDDIAL:
-            self.__field_speeddial.writetobuffer(buf)
-        if self.option & PB_FLG_RINGTONE:
-            self.__field_ringtone.writetobuffer(buf)
-        self._bufferendoffset=buf.getcurrentoffset()
-        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+        raise NotImplementedError
 
 
     def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
@@ -4102,10 +4066,10 @@ class NumberEntry(BaseProtogenClass):
         self.__field_number.readfrombuffer(buf)
         self.__field_option=UINT(**{'sizeinbytes': 1})
         self.__field_option.readfrombuffer(buf)
-        if self.option & PB_FLG_SPEEDDIAL:
+        if self.has_speeddial:
             self.__field_speeddial=UINT(**{'sizeinbytes': 2})
             self.__field_speeddial.readfrombuffer(buf)
-        if self.option & PB_FLG_RINGTONE:
+        if self.has_ringtone:
             self.__field_ringtone=STRING(**{ 'terminator': None,                   'pascal': True })
             self.__field_ringtone.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -4169,16 +4133,27 @@ class NumberEntry(BaseProtogenClass):
     def containerelements(self):
         yield ('number', self.__field_number, None)
         yield ('option', self.__field_option, None)
-        if self.option & PB_FLG_SPEEDDIAL:
+        if self.has_speeddial:
             yield ('speeddial', self.__field_speeddial, None)
-        if self.option & PB_FLG_RINGTONE:
+        if self.has_ringtone:
             yield ('ringtone', self.__field_ringtone, None)
+
+    @property
+    def has_speeddial(self):
+        return bool(self.option & PB_FLG_SPEEDDIAL)
+    @property
+    def has_ringtone(self):
+        return bool(self.option & PB_FLG_RINGTONE)
+    @property
+    def is_primary(self):
+        return bool(self.option & PB_FLG_PRIMARY)
 
 
 
 
 class PBEntry(BaseProtogenClass):
-    __fields=['info', 'zero1', 'name', 'email', 'email2', 'home', 'work', 'cell', 'fax', 'cell2', 'datetime', 'group', 'wallpaper', 'wallpaper_range']
+    # Read-From-Buffer-Only Class
+    __fields=['info', 'name', 'email', 'email2', 'home', 'work', 'cell', 'fax', 'cell2', 'datetime', 'group', 'wallpaper', 'wallpaper_range']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -4210,37 +4185,7 @@ class PBEntry(BaseProtogenClass):
 
     def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
-        self._bufferstartoffset=buf.getcurrentoffset()
-        self.__field_info.writetobuffer(buf)
-        try: self.__field_zero1
-        except:
-            self.__field_zero1=UINT(**{'sizeinbytes': 2,  'default': 0 })
-        self.__field_zero1.writetobuffer(buf)
-        if self.info & PB_FLG_NAME:
-            self.__field_name.writetobuffer(buf)
-        if self.info & PB_FLG_EMAIL:
-            self.__field_email.writetobuffer(buf)
-        if self.info & PB_FLG_EMAIL2:
-            self.__field_email2.writetobuffer(buf)
-        if self.info & PB_FLG_HOME:
-            self.__field_home.writetobuffer(buf)
-        if self.info & PB_FLG_WORK:
-            self.__field_work.writetobuffer(buf)
-        if self.info & PB_FLG_CELL:
-            self.__field_cell.writetobuffer(buf)
-        if self.info & PB_FLG_FAX:
-            self.__field_fax.writetobuffer(buf)
-        if self.info & PB_FLG_CELL2:
-            self.__field_cell2.writetobuffer(buf)
-        if self.info & PB_FLG_DATE:
-            self.__field_datetime.writetobuffer(buf)
-        if self.info & PB_FLG_GROUP:
-            self.__field_group.writetobuffer(buf)
-        if self.info & PB_FLG_WP:
-            self.__field_wallpaper.writetobuffer(buf)
-            self.__field_wallpaper_range.writetobuffer(buf)
-        self._bufferendoffset=buf.getcurrentoffset()
-        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+        raise NotImplementedError
 
 
     def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
@@ -4249,39 +4194,38 @@ class PBEntry(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_info=UINT(**{'sizeinbytes': 2})
         self.__field_info.readfrombuffer(buf)
-        self.__field_zero1=UINT(**{'sizeinbytes': 2,  'default': 0 })
-        self.__field_zero1.readfrombuffer(buf)
-        if self.info & PB_FLG_NAME:
+        DONTCARE(**{'sizeinbytes': 2}).readfrombuffer(buf)
+        if self.has_name:
             self.__field_name=USTRING(**{ 'terminator': None,                    'encoding': ENCODING,                    'pascal': True })
             self.__field_name.readfrombuffer(buf)
-        if self.info & PB_FLG_EMAIL:
+        if self.has_mail:
             self.__field_email=USTRING(**{ 'terminator': None,                    'encoding': ENCODING,                    'pascal': True })
             self.__field_email.readfrombuffer(buf)
-        if self.info & PB_FLG_EMAIL2:
+        if self.has_email2:
             self.__field_email2=USTRING(**{ 'terminator': None,                    'encoding': ENCODING,                   'pascal': True })
             self.__field_email2.readfrombuffer(buf)
-        if self.info & PB_FLG_HOME:
+        if self.has_home:
             self.__field_home=NumberEntry()
             self.__field_home.readfrombuffer(buf)
-        if self.info & PB_FLG_WORK:
+        if self.ihas_work:
             self.__field_work=NumberEntry()
             self.__field_work.readfrombuffer(buf)
-        if self.info & PB_FLG_CELL:
+        if self.has_cell:
             self.__field_cell=NumberEntry()
             self.__field_cell.readfrombuffer(buf)
-        if self.info & PB_FLG_FAX:
+        if self.has_fax:
             self.__field_fax=NumberEntry()
             self.__field_fax.readfrombuffer(buf)
-        if self.info & PB_FLG_CELL2:
+        if self.has_cell2:
             self.__field_cell2=NumberEntry()
             self.__field_cell2.readfrombuffer(buf)
-        if self.info & PB_FLG_DATE:
+        if self.has_date:
             self.__field_datetime=DateTime(**{'sizeinbytes': 4})
             self.__field_datetime.readfrombuffer(buf)
-        if self.info & PB_FLG_GROUP:
+        if self.has_group:
             self.__field_group=UINT(**{'sizeinbytes': 1})
             self.__field_group.readfrombuffer(buf)
-        if self.info & PB_FLG_WP:
+        if self.has_wallpaper:
             self.__field_wallpaper=STRING(**{ 'terminator': None,                   'pascal': True })
             self.__field_wallpaper.readfrombuffer(buf)
             self.__field_wallpaper_range=UINT(**{'sizeinbytes': 4})
@@ -4301,22 +4245,6 @@ class PBEntry(BaseProtogenClass):
     def __delfield_info(self): del self.__field_info
 
     info=property(__getfield_info, __setfield_info, __delfield_info, None)
-
-    def __getfield_zero1(self):
-        try: self.__field_zero1
-        except:
-            self.__field_zero1=UINT(**{'sizeinbytes': 2,  'default': 0 })
-        return self.__field_zero1.getvalue()
-
-    def __setfield_zero1(self, value):
-        if isinstance(value,UINT):
-            self.__field_zero1=value
-        else:
-            self.__field_zero1=UINT(value,**{'sizeinbytes': 2,  'default': 0 })
-
-    def __delfield_zero1(self): del self.__field_zero1
-
-    zero1=property(__getfield_zero1, __setfield_zero1, __delfield_zero1, None)
 
     def __getfield_name(self):
         return self.__field_name.getvalue()
@@ -4479,35 +4407,69 @@ class PBEntry(BaseProtogenClass):
 
     def containerelements(self):
         yield ('info', self.__field_info, None)
-        yield ('zero1', self.__field_zero1, None)
-        if self.info & PB_FLG_NAME:
+        if self.has_name:
             yield ('name', self.__field_name, None)
-        if self.info & PB_FLG_EMAIL:
+        if self.has_mail:
             yield ('email', self.__field_email, None)
-        if self.info & PB_FLG_EMAIL2:
+        if self.has_email2:
             yield ('email2', self.__field_email2, None)
-        if self.info & PB_FLG_HOME:
+        if self.has_home:
             yield ('home', self.__field_home, None)
-        if self.info & PB_FLG_WORK:
+        if self.ihas_work:
             yield ('work', self.__field_work, None)
-        if self.info & PB_FLG_CELL:
+        if self.has_cell:
             yield ('cell', self.__field_cell, None)
-        if self.info & PB_FLG_FAX:
+        if self.has_fax:
             yield ('fax', self.__field_fax, None)
-        if self.info & PB_FLG_CELL2:
+        if self.has_cell2:
             yield ('cell2', self.__field_cell2, None)
-        if self.info & PB_FLG_DATE:
+        if self.has_date:
             yield ('datetime', self.__field_datetime, None)
-        if self.info & PB_FLG_GROUP:
+        if self.has_group:
             yield ('group', self.__field_group, None)
-        if self.info & PB_FLG_WP:
+        if self.has_wallpaper:
             yield ('wallpaper', self.__field_wallpaper, None)
             yield ('wallpaper_range', self.__field_wallpaper_range, None)
+
+    @property
+    def has_name(self):
+        return bool(self.info & PB_FLG_NAME)
+    @property
+    def has_email(self):
+        return bool(self.info & PB_FLG_EMAIL)
+    @property
+    def has_email2(self):
+        return bool(self.info & PB_FLG_EMAIL2)
+    @property
+    def has_home(self):
+        return bool(self.info & PB_FLG_HOME)
+    @property
+    def has_work(self):
+        return bool(self.info & PB_FLG_WORK)
+    @property
+    def has_cell(self):
+        return bool(self.info & PB_FLG_CELL)
+    @property
+    def has_fax(self):
+        return bool(self.info & PB_FLG_FAX)
+    @property
+    def has_cell2(self):
+        return bool(self.info & PB_FLG_CELL2)
+    @property
+    def has_date(self):
+        return bool(self.info & PB_FLG_DATE)
+    @property
+    def has_group(self):
+        return bool(self.info & PB_FLG_GROUP)
+    @property
+    def has_wallpaper(self):
+        return bool(self.info & PB_FLG_WP)
 
 
 
 
 class LenEntry(BaseProtogenClass):
+    # Read-From-Buffer-Only Class
     __fields=['itemlen']
 
     def __init__(self, *args, **kwargs):
@@ -4544,13 +4506,7 @@ class LenEntry(BaseProtogenClass):
 
     def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
-        self._bufferstartoffset=buf.getcurrentoffset()
-        try: self.__field_itemlen
-        except:
-            self.__field_itemlen=UINT(**{'sizeinbytes': 2,  'default': 0 })
-        self.__field_itemlen.writetobuffer(buf)
-        self._bufferendoffset=buf.getcurrentoffset()
-        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+        raise NotImplementedError
 
 
     def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
@@ -4588,6 +4544,7 @@ class LenEntry(BaseProtogenClass):
 
 
 class PBFile(BaseProtogenClass):
+    # Read-From-Buffer-Only Class
     __fields=['lens', 'items']
 
     def __init__(self, *args, **kwargs):
@@ -4620,17 +4577,7 @@ class PBFile(BaseProtogenClass):
 
     def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
-        self._bufferstartoffset=buf.getcurrentoffset()
-        try: self.__field_lens
-        except:
-            self.__field_lens=LIST(**{ 'elementclass': LenEntry,             'length': 8,             'createdefault': True })
-        self.__field_lens.writetobuffer(buf)
-        try: self.__field_items
-        except:
-            self.__field_items=LIST(**{ 'elementclass': PBEntry })
-        self.__field_items.writetobuffer(buf)
-        self._bufferendoffset=buf.getcurrentoffset()
-        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+        raise NotImplementedError
 
 
     def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
@@ -4687,6 +4634,7 @@ class PBFile(BaseProtogenClass):
 
 
 class PBFileHeader(BaseProtogenClass):
+    # Read-From-Buffer-Only Class
     __fields=['lens']
 
     def __init__(self, *args, **kwargs):
@@ -4723,13 +4671,7 @@ class PBFileHeader(BaseProtogenClass):
 
     def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
-        self._bufferstartoffset=buf.getcurrentoffset()
-        try: self.__field_lens
-        except:
-            self.__field_lens=LIST(**{ 'elementclass': LenEntry,             'length': 8,             'createdefault': True })
-        self.__field_lens.writetobuffer(buf)
-        self._bufferendoffset=buf.getcurrentoffset()
-        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+        raise NotImplementedError
 
 
     def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
@@ -4860,6 +4802,7 @@ class ss_cmd_hdr(BaseProtogenClass):
 
 
 class ss_cmd_resp(BaseProtogenClass):
+    # Read-From-Buffer-Only Class
     __fields=['cmd_hdr', 'data']
 
     def __init__(self, *args, **kwargs):
@@ -4892,11 +4835,7 @@ class ss_cmd_resp(BaseProtogenClass):
 
     def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
-        self._bufferstartoffset=buf.getcurrentoffset()
-        self.__field_cmd_hdr.writetobuffer(buf)
-        self.__field_data.writetobuffer(buf)
-        self._bufferendoffset=buf.getcurrentoffset()
-        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+        raise NotImplementedError
 
 
     def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
@@ -5027,6 +4966,7 @@ class ss_sw_req(BaseProtogenClass):
 
 
 class ss_sw_resp(BaseProtogenClass):
+    # Read-From-Buffer-Only Class
     __fields=['hdr', 'sw_version']
 
     def __init__(self, *args, **kwargs):
@@ -5059,11 +4999,7 @@ class ss_sw_resp(BaseProtogenClass):
 
     def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
-        self._bufferstartoffset=buf.getcurrentoffset()
-        self.__field_hdr.writetobuffer(buf)
-        self.__field_sw_version.writetobuffer(buf)
-        self._bufferendoffset=buf.getcurrentoffset()
-        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+        raise NotImplementedError
 
 
     def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
@@ -5194,6 +5130,7 @@ class ss_hw_req(BaseProtogenClass):
 
 
 class ss_hw_resp(BaseProtogenClass):
+    # Read-From-Buffer-Only Class
     __fields=['hdr', 'hw_version']
 
     def __init__(self, *args, **kwargs):
@@ -5226,11 +5163,7 @@ class ss_hw_resp(BaseProtogenClass):
 
     def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
-        self._bufferstartoffset=buf.getcurrentoffset()
-        self.__field_hdr.writetobuffer(buf)
-        self.__field_hw_version.writetobuffer(buf)
-        self._bufferendoffset=buf.getcurrentoffset()
-        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+        raise NotImplementedError
 
 
     def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
@@ -5361,7 +5294,8 @@ class ss_pb_count_req(BaseProtogenClass):
 
 
 class ss_pb_count_resp(BaseProtogenClass):
-    __fields=['hdr', 'zero', 'count']
+    # Read-From-Buffer-Only Class
+    __fields=['hdr', 'count']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -5393,12 +5327,7 @@ class ss_pb_count_resp(BaseProtogenClass):
 
     def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
-        self._bufferstartoffset=buf.getcurrentoffset()
-        self.__field_hdr.writetobuffer(buf)
-        self.__field_zero.writetobuffer(buf)
-        self.__field_count.writetobuffer(buf)
-        self._bufferendoffset=buf.getcurrentoffset()
-        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+        raise NotImplementedError
 
 
     def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
@@ -5407,8 +5336,7 @@ class ss_pb_count_resp(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_hdr=ss_cmd_hdr()
         self.__field_hdr.readfrombuffer(buf)
-        self.__field_zero=UINT(**{'sizeinbytes': 1})
-        self.__field_zero.readfrombuffer(buf)
+        DONTCARE(**{'sizeinbytes': 1}).readfrombuffer(buf)
         self.__field_count=UINT(**{'sizeinbytes': 2})
         self.__field_count.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -5426,19 +5354,6 @@ class ss_pb_count_resp(BaseProtogenClass):
     def __delfield_hdr(self): del self.__field_hdr
 
     hdr=property(__getfield_hdr, __setfield_hdr, __delfield_hdr, None)
-
-    def __getfield_zero(self):
-        return self.__field_zero.getvalue()
-
-    def __setfield_zero(self, value):
-        if isinstance(value,UINT):
-            self.__field_zero=value
-        else:
-            self.__field_zero=UINT(value,**{'sizeinbytes': 1})
-
-    def __delfield_zero(self): del self.__field_zero
-
-    zero=property(__getfield_zero, __setfield_zero, __delfield_zero, None)
 
     def __getfield_count(self):
         return self.__field_count.getvalue()
@@ -5458,14 +5373,13 @@ class ss_pb_count_resp(BaseProtogenClass):
 
     def containerelements(self):
         yield ('hdr', self.__field_hdr, None)
-        yield ('zero', self.__field_zero, None)
         yield ('count', self.__field_count, None)
 
 
 
 
 class ss_pb_read_req(BaseProtogenClass):
-    __fields=['hdr', 'zero', 'index']
+    __fields=['hdr', 'index']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -5502,10 +5416,10 @@ class ss_pb_read_req(BaseProtogenClass):
         except:
             self.__field_hdr=ss_cmd_hdr(**{ 'command': SS_CMD_PB_READ })
         self.__field_hdr.writetobuffer(buf)
-        try: self.__field_zero
+        try: self.__field__gen_p_samsungscha950_458
         except:
-            self.__field_zero=UINT(**{'sizeinbytes': 1,  'default': 0 })
-        self.__field_zero.writetobuffer(buf)
+            self.__field__gen_p_samsungscha950_458=DONTCARE(**{'sizeinbytes': 1})
+        self.__field__gen_p_samsungscha950_458.writetobuffer(buf)
         self.__field_index.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -5517,8 +5431,8 @@ class ss_pb_read_req(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_hdr=ss_cmd_hdr(**{ 'command': SS_CMD_PB_READ })
         self.__field_hdr.readfrombuffer(buf)
-        self.__field_zero=UINT(**{'sizeinbytes': 1,  'default': 0 })
-        self.__field_zero.readfrombuffer(buf)
+        self.__field__gen_p_samsungscha950_458=DONTCARE(**{'sizeinbytes': 1})
+        self.__field__gen_p_samsungscha950_458.readfrombuffer(buf)
         self.__field_index=UINT(**{'sizeinbytes': 2})
         self.__field_index.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -5540,22 +5454,6 @@ class ss_pb_read_req(BaseProtogenClass):
 
     hdr=property(__getfield_hdr, __setfield_hdr, __delfield_hdr, None)
 
-    def __getfield_zero(self):
-        try: self.__field_zero
-        except:
-            self.__field_zero=UINT(**{'sizeinbytes': 1,  'default': 0 })
-        return self.__field_zero.getvalue()
-
-    def __setfield_zero(self, value):
-        if isinstance(value,UINT):
-            self.__field_zero=value
-        else:
-            self.__field_zero=UINT(value,**{'sizeinbytes': 1,  'default': 0 })
-
-    def __delfield_zero(self): del self.__field_zero
-
-    zero=property(__getfield_zero, __setfield_zero, __delfield_zero, None)
-
     def __getfield_index(self):
         return self.__field_index.getvalue()
 
@@ -5574,14 +5472,14 @@ class ss_pb_read_req(BaseProtogenClass):
 
     def containerelements(self):
         yield ('hdr', self.__field_hdr, None)
-        yield ('zero', self.__field_zero, None)
         yield ('index', self.__field_index, None)
 
 
 
 
 class ss_pb_read_resp(BaseProtogenClass):
-    __fields=['hdr', 'dunno1', 'index', 'dunno2', 'data']
+    # Read-From-Buffer-Only Class
+    __fields=['hdr', 'index', 'data']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -5613,14 +5511,7 @@ class ss_pb_read_resp(BaseProtogenClass):
 
     def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
-        self._bufferstartoffset=buf.getcurrentoffset()
-        self.__field_hdr.writetobuffer(buf)
-        self.__field_dunno1.writetobuffer(buf)
-        self.__field_index.writetobuffer(buf)
-        self.__field_dunno2.writetobuffer(buf)
-        self.__field_data.writetobuffer(buf)
-        self._bufferendoffset=buf.getcurrentoffset()
-        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+        raise NotImplementedError
 
 
     def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
@@ -5629,12 +5520,10 @@ class ss_pb_read_resp(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_hdr=ss_cmd_hdr()
         self.__field_hdr.readfrombuffer(buf)
-        self.__field_dunno1=UINT(**{'sizeinbytes': 1})
-        self.__field_dunno1.readfrombuffer(buf)
+        DONTCARE(**{'sizeinbytes': 1}).readfrombuffer(buf)
         self.__field_index=UINT(**{'sizeinbytes': 2})
         self.__field_index.readfrombuffer(buf)
-        self.__field_dunno2=UINT(**{'sizeinbytes': 1})
-        self.__field_dunno2.readfrombuffer(buf)
+        DONTCARE(**{'sizeinbytes': 1}).readfrombuffer(buf)
         self.__field_data=DATA()
         self.__field_data.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -5653,19 +5542,6 @@ class ss_pb_read_resp(BaseProtogenClass):
 
     hdr=property(__getfield_hdr, __setfield_hdr, __delfield_hdr, None)
 
-    def __getfield_dunno1(self):
-        return self.__field_dunno1.getvalue()
-
-    def __setfield_dunno1(self, value):
-        if isinstance(value,UINT):
-            self.__field_dunno1=value
-        else:
-            self.__field_dunno1=UINT(value,**{'sizeinbytes': 1})
-
-    def __delfield_dunno1(self): del self.__field_dunno1
-
-    dunno1=property(__getfield_dunno1, __setfield_dunno1, __delfield_dunno1, None)
-
     def __getfield_index(self):
         return self.__field_index.getvalue()
 
@@ -5678,19 +5554,6 @@ class ss_pb_read_resp(BaseProtogenClass):
     def __delfield_index(self): del self.__field_index
 
     index=property(__getfield_index, __setfield_index, __delfield_index, None)
-
-    def __getfield_dunno2(self):
-        return self.__field_dunno2.getvalue()
-
-    def __setfield_dunno2(self, value):
-        if isinstance(value,UINT):
-            self.__field_dunno2=value
-        else:
-            self.__field_dunno2=UINT(value,**{'sizeinbytes': 1})
-
-    def __delfield_dunno2(self): del self.__field_dunno2
-
-    dunno2=property(__getfield_dunno2, __setfield_dunno2, __delfield_dunno2, None)
 
     def __getfield_data(self):
         return self.__field_data.getvalue()
@@ -5710,9 +5573,7 @@ class ss_pb_read_resp(BaseProtogenClass):
 
     def containerelements(self):
         yield ('hdr', self.__field_hdr, None)
-        yield ('dunno1', self.__field_dunno1, None)
         yield ('index', self.__field_index, None)
-        yield ('dunno2', self.__field_dunno2, None)
         yield ('data', self.__field_data, None)
 
 
@@ -5818,6 +5679,7 @@ class ss_pb_voicemail_read_req(BaseProtogenClass):
 
 
 class ss_pb_voicemail_resp(BaseProtogenClass):
+    # Read-From-Buffer-Only Class
     __fields=['hdr', 'param', 'number']
 
     def __init__(self, *args, **kwargs):
@@ -5850,12 +5712,7 @@ class ss_pb_voicemail_resp(BaseProtogenClass):
 
     def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
-        self._bufferstartoffset=buf.getcurrentoffset()
-        self.__field_hdr.writetobuffer(buf)
-        self.__field_param.writetobuffer(buf)
-        self.__field_number.writetobuffer(buf)
-        self._bufferendoffset=buf.getcurrentoffset()
-        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+        raise NotImplementedError
 
 
     def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
@@ -6124,6 +5981,7 @@ class ss_pb_clear_req(BaseProtogenClass):
 
 
 class ss_pb_clear_resp(BaseProtogenClass):
+    # Read-From-Buffer-Only Class
     __fields=['hdr', 'flg']
 
     def __init__(self, *args, **kwargs):
@@ -6156,11 +6014,7 @@ class ss_pb_clear_resp(BaseProtogenClass):
 
     def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
-        self._bufferstartoffset=buf.getcurrentoffset()
-        self.__field_hdr.writetobuffer(buf)
-        self.__field_flg.writetobuffer(buf)
-        self._bufferendoffset=buf.getcurrentoffset()
-        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+        raise NotImplementedError
 
 
     def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
@@ -6211,7 +6065,7 @@ class ss_pb_clear_resp(BaseProtogenClass):
 
 
 class ss_number_entry(BaseProtogenClass):
-    __fields=['number', 'speeddial', 'primary', 'zero', 'ringtone']
+    __fields=['number', 'speeddial', 'primary', 'ringtone']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -6256,10 +6110,10 @@ class ss_number_entry(BaseProtogenClass):
         except:
             self.__field_primary=UINT(**{'sizeinbytes': 1,  'default': 0 })
         self.__field_primary.writetobuffer(buf)
-        try: self.__field_zero
+        try: self.__field__gen_p_samsungscha950_491
         except:
-            self.__field_zero=STRING(**{'sizeinbytes': 8,  'pad': 0,               'default': '' })
-        self.__field_zero.writetobuffer(buf)
+            self.__field__gen_p_samsungscha950_491=DONTCARE(**{'sizeinbytes': 8})
+        self.__field__gen_p_samsungscha950_491.writetobuffer(buf)
         try: self.__field_ringtone
         except:
             self.__field_ringtone=STRING(**{ 'terminator': 0,               'default': '' })
@@ -6278,8 +6132,8 @@ class ss_number_entry(BaseProtogenClass):
         self.__field_speeddial.readfrombuffer(buf)
         self.__field_primary=UINT(**{'sizeinbytes': 1,  'default': 0 })
         self.__field_primary.readfrombuffer(buf)
-        self.__field_zero=STRING(**{'sizeinbytes': 8,  'pad': 0,               'default': '' })
-        self.__field_zero.readfrombuffer(buf)
+        self.__field__gen_p_samsungscha950_491=DONTCARE(**{'sizeinbytes': 8})
+        self.__field__gen_p_samsungscha950_491.readfrombuffer(buf)
         self.__field_ringtone=STRING(**{ 'terminator': 0,               'default': '' })
         self.__field_ringtone.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -6333,22 +6187,6 @@ class ss_number_entry(BaseProtogenClass):
 
     primary=property(__getfield_primary, __setfield_primary, __delfield_primary, None)
 
-    def __getfield_zero(self):
-        try: self.__field_zero
-        except:
-            self.__field_zero=STRING(**{'sizeinbytes': 8,  'pad': 0,               'default': '' })
-        return self.__field_zero.getvalue()
-
-    def __setfield_zero(self, value):
-        if isinstance(value,STRING):
-            self.__field_zero=value
-        else:
-            self.__field_zero=STRING(value,**{'sizeinbytes': 8,  'pad': 0,               'default': '' })
-
-    def __delfield_zero(self): del self.__field_zero
-
-    zero=property(__getfield_zero, __setfield_zero, __delfield_zero, None)
-
     def __getfield_ringtone(self):
         try: self.__field_ringtone
         except:
@@ -6372,14 +6210,13 @@ class ss_number_entry(BaseProtogenClass):
         yield ('number', self.__field_number, None)
         yield ('speeddial', self.__field_speeddial, None)
         yield ('primary', self.__field_primary, None)
-        yield ('zero', self.__field_zero, None)
         yield ('ringtone', self.__field_ringtone, None)
 
 
 
 
 class ss_pb_entry(BaseProtogenClass):
-    __fields=['name', 'email', 'email2', 'zero1', 'wallpaper', 'zero2', 'home', 'work', 'cell', 'dummy', 'fax', 'cell2', 'zero3', 'group', 'zero4']
+    __fields=['name', 'email', 'email2', 'wallpaper', 'home', 'work', 'cell', 'dummy', 'fax', 'cell2', 'group']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -6421,18 +6258,18 @@ class ss_pb_entry(BaseProtogenClass):
         except:
             self.__field_email2=USTRING(**{ 'terminator': 0,                'encoding': ENCODING,                'default': '',                'maxsizeinbytes': PB_MAX_EMAIL_LEN,                'raiseontruncate': False })
         self.__field_email2.writetobuffer(buf)
-        try: self.__field_zero1
+        try: self.__field__gen_p_samsungscha950_510
         except:
-            self.__field_zero1=UINT(**{'sizeinbytes': 4,  'default': 0 })
-        self.__field_zero1.writetobuffer(buf)
+            self.__field__gen_p_samsungscha950_510=DONTCARE(**{'sizeinbytes': 4})
+        self.__field__gen_p_samsungscha950_510.writetobuffer(buf)
         try: self.__field_wallpaper
         except:
             self.__field_wallpaper=STRING(**{ 'terminator': 0,               'default': '' })
         self.__field_wallpaper.writetobuffer(buf)
-        try: self.__field_zero2
+        try: self.__field__gen_p_samsungscha950_513
         except:
-            self.__field_zero2=UINT(**{'sizeinbytes': 1,  'default': 0 })
-        self.__field_zero2.writetobuffer(buf)
+            self.__field__gen_p_samsungscha950_513=DONTCARE(**{'sizeinbytes': 1})
+        self.__field__gen_p_samsungscha950_513.writetobuffer(buf)
         try: self.__field_home
         except:
             self.__field_home=ss_number_entry()
@@ -6457,18 +6294,18 @@ class ss_pb_entry(BaseProtogenClass):
         except:
             self.__field_cell2=ss_number_entry()
         self.__field_cell2.writetobuffer(buf)
-        try: self.__field_zero3
+        try: self.__field__gen_p_samsungscha950_520
         except:
-            self.__field_zero3=UINT(**{'sizeinbytes': 4,  'default': 0 })
-        self.__field_zero3.writetobuffer(buf)
+            self.__field__gen_p_samsungscha950_520=DONTCARE(**{'sizeinbytes': 4})
+        self.__field__gen_p_samsungscha950_520.writetobuffer(buf)
         try: self.__field_group
         except:
             self.__field_group=UINT(**{'sizeinbytes': 1,  'default': 0 })
         self.__field_group.writetobuffer(buf)
-        try: self.__field_zero4
+        try: self.__field__gen_p_samsungscha950_522
         except:
-            self.__field_zero4=UINT(**{'sizeinbytes': 2,  'default': 0 })
-        self.__field_zero4.writetobuffer(buf)
+            self.__field__gen_p_samsungscha950_522=DONTCARE(**{'sizeinbytes': 2})
+        self.__field__gen_p_samsungscha950_522.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
@@ -6483,12 +6320,12 @@ class ss_pb_entry(BaseProtogenClass):
         self.__field_email.readfrombuffer(buf)
         self.__field_email2=USTRING(**{ 'terminator': 0,                'encoding': ENCODING,                'default': '',                'maxsizeinbytes': PB_MAX_EMAIL_LEN,                'raiseontruncate': False })
         self.__field_email2.readfrombuffer(buf)
-        self.__field_zero1=UINT(**{'sizeinbytes': 4,  'default': 0 })
-        self.__field_zero1.readfrombuffer(buf)
+        self.__field__gen_p_samsungscha950_510=DONTCARE(**{'sizeinbytes': 4})
+        self.__field__gen_p_samsungscha950_510.readfrombuffer(buf)
         self.__field_wallpaper=STRING(**{ 'terminator': 0,               'default': '' })
         self.__field_wallpaper.readfrombuffer(buf)
-        self.__field_zero2=UINT(**{'sizeinbytes': 1,  'default': 0 })
-        self.__field_zero2.readfrombuffer(buf)
+        self.__field__gen_p_samsungscha950_513=DONTCARE(**{'sizeinbytes': 1})
+        self.__field__gen_p_samsungscha950_513.readfrombuffer(buf)
         self.__field_home=ss_number_entry()
         self.__field_home.readfrombuffer(buf)
         self.__field_work=ss_number_entry()
@@ -6501,12 +6338,12 @@ class ss_pb_entry(BaseProtogenClass):
         self.__field_fax.readfrombuffer(buf)
         self.__field_cell2=ss_number_entry()
         self.__field_cell2.readfrombuffer(buf)
-        self.__field_zero3=UINT(**{'sizeinbytes': 4,  'default': 0 })
-        self.__field_zero3.readfrombuffer(buf)
+        self.__field__gen_p_samsungscha950_520=DONTCARE(**{'sizeinbytes': 4})
+        self.__field__gen_p_samsungscha950_520.readfrombuffer(buf)
         self.__field_group=UINT(**{'sizeinbytes': 1,  'default': 0 })
         self.__field_group.readfrombuffer(buf)
-        self.__field_zero4=UINT(**{'sizeinbytes': 2,  'default': 0 })
-        self.__field_zero4.readfrombuffer(buf)
+        self.__field__gen_p_samsungscha950_522=DONTCARE(**{'sizeinbytes': 2})
+        self.__field__gen_p_samsungscha950_522.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
 
@@ -6555,22 +6392,6 @@ class ss_pb_entry(BaseProtogenClass):
 
     email2=property(__getfield_email2, __setfield_email2, __delfield_email2, None)
 
-    def __getfield_zero1(self):
-        try: self.__field_zero1
-        except:
-            self.__field_zero1=UINT(**{'sizeinbytes': 4,  'default': 0 })
-        return self.__field_zero1.getvalue()
-
-    def __setfield_zero1(self, value):
-        if isinstance(value,UINT):
-            self.__field_zero1=value
-        else:
-            self.__field_zero1=UINT(value,**{'sizeinbytes': 4,  'default': 0 })
-
-    def __delfield_zero1(self): del self.__field_zero1
-
-    zero1=property(__getfield_zero1, __setfield_zero1, __delfield_zero1, None)
-
     def __getfield_wallpaper(self):
         try: self.__field_wallpaper
         except:
@@ -6586,22 +6407,6 @@ class ss_pb_entry(BaseProtogenClass):
     def __delfield_wallpaper(self): del self.__field_wallpaper
 
     wallpaper=property(__getfield_wallpaper, __setfield_wallpaper, __delfield_wallpaper, None)
-
-    def __getfield_zero2(self):
-        try: self.__field_zero2
-        except:
-            self.__field_zero2=UINT(**{'sizeinbytes': 1,  'default': 0 })
-        return self.__field_zero2.getvalue()
-
-    def __setfield_zero2(self, value):
-        if isinstance(value,UINT):
-            self.__field_zero2=value
-        else:
-            self.__field_zero2=UINT(value,**{'sizeinbytes': 1,  'default': 0 })
-
-    def __delfield_zero2(self): del self.__field_zero2
-
-    zero2=property(__getfield_zero2, __setfield_zero2, __delfield_zero2, None)
 
     def __getfield_home(self):
         try: self.__field_home
@@ -6699,22 +6504,6 @@ class ss_pb_entry(BaseProtogenClass):
 
     cell2=property(__getfield_cell2, __setfield_cell2, __delfield_cell2, None)
 
-    def __getfield_zero3(self):
-        try: self.__field_zero3
-        except:
-            self.__field_zero3=UINT(**{'sizeinbytes': 4,  'default': 0 })
-        return self.__field_zero3.getvalue()
-
-    def __setfield_zero3(self, value):
-        if isinstance(value,UINT):
-            self.__field_zero3=value
-        else:
-            self.__field_zero3=UINT(value,**{'sizeinbytes': 4,  'default': 0 })
-
-    def __delfield_zero3(self): del self.__field_zero3
-
-    zero3=property(__getfield_zero3, __setfield_zero3, __delfield_zero3, None)
-
     def __getfield_group(self):
         try: self.__field_group
         except:
@@ -6731,22 +6520,6 @@ class ss_pb_entry(BaseProtogenClass):
 
     group=property(__getfield_group, __setfield_group, __delfield_group, None)
 
-    def __getfield_zero4(self):
-        try: self.__field_zero4
-        except:
-            self.__field_zero4=UINT(**{'sizeinbytes': 2,  'default': 0 })
-        return self.__field_zero4.getvalue()
-
-    def __setfield_zero4(self, value):
-        if isinstance(value,UINT):
-            self.__field_zero4=value
-        else:
-            self.__field_zero4=UINT(value,**{'sizeinbytes': 2,  'default': 0 })
-
-    def __delfield_zero4(self): del self.__field_zero4
-
-    zero4=property(__getfield_zero4, __setfield_zero4, __delfield_zero4, None)
-
     def iscontainer(self):
         return True
 
@@ -6754,18 +6527,14 @@ class ss_pb_entry(BaseProtogenClass):
         yield ('name', self.__field_name, None)
         yield ('email', self.__field_email, None)
         yield ('email2', self.__field_email2, None)
-        yield ('zero1', self.__field_zero1, None)
         yield ('wallpaper', self.__field_wallpaper, None)
-        yield ('zero2', self.__field_zero2, None)
         yield ('home', self.__field_home, None)
         yield ('work', self.__field_work, None)
         yield ('cell', self.__field_cell, None)
         yield ('dummy', self.__field_dummy, None)
         yield ('fax', self.__field_fax, None)
         yield ('cell2', self.__field_cell2, None)
-        yield ('zero3', self.__field_zero3, None)
         yield ('group', self.__field_group, None)
-        yield ('zero4', self.__field_zero4, None)
 
 
 
@@ -6887,7 +6656,7 @@ class ss_pb_write_req(BaseProtogenClass):
 
 
 class ss_pb_write_resp(BaseProtogenClass):
-    __fields=['hdr', 'zero', 'index']
+    __fields=['hdr', 'index']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -6921,7 +6690,7 @@ class ss_pb_write_resp(BaseProtogenClass):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_hdr.writetobuffer(buf)
-        self.__field_zero.writetobuffer(buf)
+        self.__field__gen_p_samsungscha950_531.writetobuffer(buf)
         self.__field_index.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -6933,8 +6702,8 @@ class ss_pb_write_resp(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_hdr=ss_cmd_hdr()
         self.__field_hdr.readfrombuffer(buf)
-        self.__field_zero=UINT(**{'sizeinbytes': 1})
-        self.__field_zero.readfrombuffer(buf)
+        self.__field__gen_p_samsungscha950_531=DONTCARE(**{'sizeinbytes': 1})
+        self.__field__gen_p_samsungscha950_531.readfrombuffer(buf)
         self.__field_index=UINT(**{'sizeinbytes': 2})
         self.__field_index.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -6952,19 +6721,6 @@ class ss_pb_write_resp(BaseProtogenClass):
     def __delfield_hdr(self): del self.__field_hdr
 
     hdr=property(__getfield_hdr, __setfield_hdr, __delfield_hdr, None)
-
-    def __getfield_zero(self):
-        return self.__field_zero.getvalue()
-
-    def __setfield_zero(self, value):
-        if isinstance(value,UINT):
-            self.__field_zero=value
-        else:
-            self.__field_zero=UINT(value,**{'sizeinbytes': 1})
-
-    def __delfield_zero(self): del self.__field_zero
-
-    zero=property(__getfield_zero, __setfield_zero, __delfield_zero, None)
 
     def __getfield_index(self):
         return self.__field_index.getvalue()
@@ -6984,13 +6740,13 @@ class ss_pb_write_resp(BaseProtogenClass):
 
     def containerelements(self):
         yield ('hdr', self.__field_hdr, None)
-        yield ('zero', self.__field_zero, None)
         yield ('index', self.__field_index, None)
 
 
 
 
 class cl_list(BaseProtogenClass):
+    # Read-From-Buffer-Only Class
     __fields=['index']
 
     def __init__(self, *args, **kwargs):
@@ -7027,10 +6783,7 @@ class cl_list(BaseProtogenClass):
 
     def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
-        self._bufferstartoffset=buf.getcurrentoffset()
-        self.__field_index.writetobuffer(buf)
-        self._bufferendoffset=buf.getcurrentoffset()
-        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+        raise NotImplementedError
 
 
     def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
@@ -7065,7 +6818,8 @@ class cl_list(BaseProtogenClass):
 
 
 class cl_index_file(BaseProtogenClass):
-    __fields=['incoming', 'outgoing', 'missed', 'dunno1', 'incoming_count', 'outgoing_count', 'missed_count']
+    # Read-From-Buffer-Only Class
+    __fields=['incoming', 'outgoing', 'missed', 'incoming_count', 'outgoing_count', 'missed_count']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -7097,16 +6851,7 @@ class cl_index_file(BaseProtogenClass):
 
     def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
-        self._bufferstartoffset=buf.getcurrentoffset()
-        self.__field_incoming.writetobuffer(buf)
-        self.__field_outgoing.writetobuffer(buf)
-        self.__field_missed.writetobuffer(buf)
-        self.__field_dunno1.writetobuffer(buf)
-        self.__field_incoming_count.writetobuffer(buf)
-        self.__field_outgoing_count.writetobuffer(buf)
-        self.__field_missed_count.writetobuffer(buf)
-        self._bufferendoffset=buf.getcurrentoffset()
-        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+        raise NotImplementedError
 
 
     def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
@@ -7119,8 +6864,7 @@ class cl_index_file(BaseProtogenClass):
         self.__field_outgoing.readfrombuffer(buf)
         self.__field_missed=LIST(**{ 'length': CL_MAX_ENTRIES,             'elementclass': cl_list })
         self.__field_missed.readfrombuffer(buf)
-        self.__field_dunno1=UNKNOWN(**{'sizeinbytes': 111})
-        self.__field_dunno1.readfrombuffer(buf)
+        DONTCARE(**{'sizeinbytes': 111}).readfrombuffer(buf)
         self.__field_incoming_count=UINT(**{'sizeinbytes': 4})
         self.__field_incoming_count.readfrombuffer(buf)
         self.__field_outgoing_count=UINT(**{'sizeinbytes': 4})
@@ -7169,19 +6913,6 @@ class cl_index_file(BaseProtogenClass):
 
     missed=property(__getfield_missed, __setfield_missed, __delfield_missed, None)
 
-    def __getfield_dunno1(self):
-        return self.__field_dunno1.getvalue()
-
-    def __setfield_dunno1(self, value):
-        if isinstance(value,UNKNOWN):
-            self.__field_dunno1=value
-        else:
-            self.__field_dunno1=UNKNOWN(value,**{'sizeinbytes': 111})
-
-    def __delfield_dunno1(self): del self.__field_dunno1
-
-    dunno1=property(__getfield_dunno1, __setfield_dunno1, __delfield_dunno1, None)
-
     def __getfield_incoming_count(self):
         return self.__field_incoming_count.getvalue()
 
@@ -7228,7 +6959,6 @@ class cl_index_file(BaseProtogenClass):
         yield ('incoming', self.__field_incoming, None)
         yield ('outgoing', self.__field_outgoing, None)
         yield ('missed', self.__field_missed, None)
-        yield ('dunno1', self.__field_dunno1, None)
         yield ('incoming_count', self.__field_incoming_count, None)
         yield ('outgoing_count', self.__field_outgoing_count, None)
         yield ('missed_count', self.__field_missed_count, None)
@@ -7237,7 +6967,8 @@ class cl_index_file(BaseProtogenClass):
 
 
 class cl_file(BaseProtogenClass):
-    __fields=['cl_type', 'number', 'datetime', 'dunno1', 'duration']
+    # Read-From-Buffer-Only Class
+    __fields=['cl_type', 'number', 'datetime', 'duration']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -7269,14 +7000,7 @@ class cl_file(BaseProtogenClass):
 
     def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
-        self._bufferstartoffset=buf.getcurrentoffset()
-        self.__field_cl_type.writetobuffer(buf)
-        self.__field_number.writetobuffer(buf)
-        self.__field_datetime.writetobuffer(buf)
-        self.__field_dunno1.writetobuffer(buf)
-        self.__field_duration.writetobuffer(buf)
-        self._bufferendoffset=buf.getcurrentoffset()
-        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+        raise NotImplementedError
 
 
     def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
@@ -7289,8 +7013,7 @@ class cl_file(BaseProtogenClass):
         self.__field_number.readfrombuffer(buf)
         self.__field_datetime=DateTime1(**{'sizeinbytes': 4})
         self.__field_datetime.readfrombuffer(buf)
-        self.__field_dunno1=UNKNOWN(**{'sizeinbytes': 4})
-        self.__field_dunno1.readfrombuffer(buf)
+        DONTCARE(**{'sizeinbytes': 4}).readfrombuffer(buf)
         self.__field_duration=UINT(**{'sizeinbytes': 4})
         self.__field_duration.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -7335,19 +7058,6 @@ class cl_file(BaseProtogenClass):
 
     datetime=property(__getfield_datetime, __setfield_datetime, __delfield_datetime, None)
 
-    def __getfield_dunno1(self):
-        return self.__field_dunno1.getvalue()
-
-    def __setfield_dunno1(self, value):
-        if isinstance(value,UNKNOWN):
-            self.__field_dunno1=value
-        else:
-            self.__field_dunno1=UNKNOWN(value,**{'sizeinbytes': 4})
-
-    def __delfield_dunno1(self): del self.__field_dunno1
-
-    dunno1=property(__getfield_dunno1, __setfield_dunno1, __delfield_dunno1, None)
-
     def __getfield_duration(self):
         return self.__field_duration.getvalue()
 
@@ -7368,13 +7078,12 @@ class cl_file(BaseProtogenClass):
         yield ('cl_type', self.__field_cl_type, None)
         yield ('number', self.__field_number, None)
         yield ('datetime', self.__field_datetime, None)
-        yield ('dunno1', self.__field_dunno1, None)
         yield ('duration', self.__field_duration, None)
 
-    def _valid(self):
+    @property
+    def valid(self):
         global CL_VALID_TYPE
         return bool(self.cl_type in CL_VALID_TYPE and self.number)
-    valid=property(fget=_valid)
 
 
 
@@ -7454,7 +7163,8 @@ class pBOOL(BaseProtogenClass):
 
 
 class sms_header(BaseProtogenClass):
-    __fields=['index', 'msg_len', 'callback_len', 'bitmap1', 'bitmap2', 'dunno1', 'body_len', 'file_type', 'msg_type', 'enhance_delivery', 'is_txt_msg', 'in_msg', 'sent_msg', 'draft_msg', 'body']
+    # Read-From-Buffer-Only Class
+    __fields=['index', 'msg_len', 'callback_len', 'bitmap1', 'bitmap2', 'body_len', 'file_type', 'msg_type', 'enhance_delivery', 'is_txt_msg', 'in_msg', 'sent_msg', 'draft_msg', 'body']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -7486,25 +7196,7 @@ class sms_header(BaseProtogenClass):
 
     def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
-        self._bufferstartoffset=buf.getcurrentoffset()
-        self.__field_index.writetobuffer(buf)
-        self.__field_msg_len.writetobuffer(buf)
-        self.__field_callback_len.writetobuffer(buf)
-        self.__field_bitmap1.writetobuffer(buf)
-        self.__field_bitmap2.writetobuffer(buf)
-        self.__field_dunno1.writetobuffer(buf)
-        self.__field_body_len.writetobuffer(buf)
-        self.__field_file_type.writetobuffer(buf)
-        self.__field_msg_type.writetobuffer(buf)
-        self.__field_enhance_delivery.writetobuffer(buf)
-        self.__field_is_txt_msg.writetobuffer(buf)
-        self.__field_in_msg.writetobuffer(buf)
-        self.__field_sent_msg.writetobuffer(buf)
-        self.__field_draft_msg.writetobuffer(buf)
-        if self.is_txt_msg.value:
-            self.__field_body.writetobuffer(buf)
-        self._bufferendoffset=buf.getcurrentoffset()
-        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+        raise NotImplementedError
 
 
     def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
@@ -7521,8 +7213,7 @@ class sms_header(BaseProtogenClass):
         self.__field_bitmap1.readfrombuffer(buf)
         self.__field_bitmap2=UINT(**{'sizeinbytes': 1})
         self.__field_bitmap2.readfrombuffer(buf)
-        self.__field_dunno1=UNKNOWN(**{'sizeinbytes': 6})
-        self.__field_dunno1.readfrombuffer(buf)
+        DONTCARE(**{'sizeinbytes': 6}).readfrombuffer(buf)
         self.__field_body_len=UINT(**{'sizeinbytes': 2})
         self.__field_body_len.readfrombuffer(buf)
         self.__field_file_type=UINT(**{'sizeinbytes': 2})
@@ -7609,19 +7300,6 @@ class sms_header(BaseProtogenClass):
     def __delfield_bitmap2(self): del self.__field_bitmap2
 
     bitmap2=property(__getfield_bitmap2, __setfield_bitmap2, __delfield_bitmap2, None)
-
-    def __getfield_dunno1(self):
-        return self.__field_dunno1.getvalue()
-
-    def __setfield_dunno1(self, value):
-        if isinstance(value,UNKNOWN):
-            self.__field_dunno1=value
-        else:
-            self.__field_dunno1=UNKNOWN(value,**{'sizeinbytes': 6})
-
-    def __delfield_dunno1(self): del self.__field_dunno1
-
-    dunno1=property(__getfield_dunno1, __setfield_dunno1, __delfield_dunno1, None)
 
     def __getfield_body_len(self):
         return self.__field_body_len.getvalue()
@@ -7749,7 +7427,6 @@ class sms_header(BaseProtogenClass):
         yield ('callback_len', self.__field_callback_len, None)
         yield ('bitmap1', self.__field_bitmap1, None)
         yield ('bitmap2', self.__field_bitmap2, None)
-        yield ('dunno1', self.__field_dunno1, None)
         yield ('body_len', self.__field_body_len, None)
         yield ('file_type', self.__field_file_type, None)
         yield ('msg_type', self.__field_msg_type, None)
@@ -7765,6 +7442,7 @@ class sms_header(BaseProtogenClass):
 
 
 class sms_msg_stat_list(BaseProtogenClass):
+    # Read-From-Buffer-Only Class
     __fields=['status']
 
     def __init__(self, *args, **kwargs):
@@ -7801,10 +7479,7 @@ class sms_msg_stat_list(BaseProtogenClass):
 
     def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
-        self._bufferstartoffset=buf.getcurrentoffset()
-        self.__field_status.writetobuffer(buf)
-        self._bufferendoffset=buf.getcurrentoffset()
-        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+        raise NotImplementedError
 
 
     def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
@@ -7839,7 +7514,8 @@ class sms_msg_stat_list(BaseProtogenClass):
 
 
 class sms_datetime_list(BaseProtogenClass):
-    __fields=['datetime', 'dunno']
+    # Read-From-Buffer-Only Class
+    __fields=['datetime']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -7871,11 +7547,7 @@ class sms_datetime_list(BaseProtogenClass):
 
     def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
-        self._bufferstartoffset=buf.getcurrentoffset()
-        self.__field_datetime.writetobuffer(buf)
-        self.__field_dunno.writetobuffer(buf)
-        self._bufferendoffset=buf.getcurrentoffset()
-        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+        raise NotImplementedError
 
 
     def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
@@ -7884,8 +7556,7 @@ class sms_datetime_list(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_datetime=DateTime1(**{'sizeinbytes': 4})
         self.__field_datetime.readfrombuffer(buf)
-        self.__field_dunno=UNKNOWN(**{'sizeinbytes': 4})
-        self.__field_dunno.readfrombuffer(buf)
+        DONTCARE(**{'sizeinbytes': 4}).readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
 
@@ -7902,31 +7573,18 @@ class sms_datetime_list(BaseProtogenClass):
 
     datetime=property(__getfield_datetime, __setfield_datetime, __delfield_datetime, None)
 
-    def __getfield_dunno(self):
-        return self.__field_dunno.getvalue()
-
-    def __setfield_dunno(self, value):
-        if isinstance(value,UNKNOWN):
-            self.__field_dunno=value
-        else:
-            self.__field_dunno=UNKNOWN(value,**{'sizeinbytes': 4})
-
-    def __delfield_dunno(self): del self.__field_dunno
-
-    dunno=property(__getfield_dunno, __setfield_dunno, __delfield_dunno, None)
-
     def iscontainer(self):
         return True
 
     def containerelements(self):
         yield ('datetime', self.__field_datetime, None)
-        yield ('dunno', self.__field_dunno, None)
 
 
 
 
 class sms_delivered_datetime(BaseProtogenClass):
-    __fields=['datetime', 'dunno']
+    # Read-From-Buffer-Only Class
+    __fields=['datetime']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -7958,11 +7616,7 @@ class sms_delivered_datetime(BaseProtogenClass):
 
     def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
-        self._bufferstartoffset=buf.getcurrentoffset()
-        self.__field_datetime.writetobuffer(buf)
-        self.__field_dunno.writetobuffer(buf)
-        self._bufferendoffset=buf.getcurrentoffset()
-        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+        raise NotImplementedError
 
 
     def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
@@ -7971,8 +7625,7 @@ class sms_delivered_datetime(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_datetime=LIST(**{ 'elementclass': sms_datetime_list,             'length': 10 })
         self.__field_datetime.readfrombuffer(buf)
-        self.__field_dunno=UNKNOWN(**{'sizeinbytes': 20})
-        self.__field_dunno.readfrombuffer(buf)
+        DONTCARE(**{'sizeinbytes': 20}).readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
 
@@ -7989,31 +7642,18 @@ class sms_delivered_datetime(BaseProtogenClass):
 
     datetime=property(__getfield_datetime, __setfield_datetime, __delfield_datetime, None)
 
-    def __getfield_dunno(self):
-        return self.__field_dunno.getvalue()
-
-    def __setfield_dunno(self, value):
-        if isinstance(value,UNKNOWN):
-            self.__field_dunno=value
-        else:
-            self.__field_dunno=UNKNOWN(value,**{'sizeinbytes': 20})
-
-    def __delfield_dunno(self): del self.__field_dunno
-
-    dunno=property(__getfield_dunno, __setfield_dunno, __delfield_dunno, None)
-
     def iscontainer(self):
         return True
 
     def containerelements(self):
         yield ('datetime', self.__field_datetime, None)
-        yield ('dunno', self.__field_dunno, None)
 
 
 
 
 class sms_body(BaseProtogenClass):
-    __fields=['msg_len', 'has_callback', 'has_priority', 'has_1byte', 'has_1byte2', 'has_40bytes', 'dunno1', 'msg', 'dunno2', 'callback_len', 'callback', 'priority', 'dunno3', 'dunno4', 'datetime', 'dunno5', 'addr_len0', 'addr_len1', 'addr_len2', 'addr_len3', 'addr_len4', 'addr_len5', 'addr_len6', 'addr_len7', 'addr_len8', 'addr_len9', 'addr0', 'addr1', 'addr2', 'addr3', 'addr4', 'addr5', 'addr6', 'addr7', 'addr8', 'addr9', 'dunno6', 'dunno7', 'dunno8', 'dunno9', 'msg_stat']
+    # Read-From-Buffer-Only Class
+    __fields=['msg_len', 'has_callback', 'has_priority', 'has_1byte', 'has_1byte2', 'has_40bytes', 'msg', 'dunno2', 'callback_len', 'callback', 'priority', 'datetime', 'addr_len0', 'addr_len1', 'addr_len2', 'addr_len3', 'addr_len4', 'addr_len5', 'addr_len6', 'addr_len7', 'addr_len8', 'addr_len9', 'addr0', 'addr1', 'addr2', 'addr3', 'addr4', 'addr5', 'addr6', 'addr7', 'addr8', 'addr9', 'msg_stat']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -8063,68 +7703,14 @@ class sms_body(BaseProtogenClass):
 
     def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
-        self._bufferstartoffset=buf.getcurrentoffset()
-        self.__field_dunno1.writetobuffer(buf)
-        self.__field_msg.writetobuffer(buf)
-        if self.has_callback:
-            self.__field_dunno2.writetobuffer(buf)
-            self.__field_callback_len.writetobuffer(buf)
-            self.__field_callback.writetobuffer(buf)
-        if self.has_priority:
-            self.__field_priority.writetobuffer(buf)
-        if self.has_1byte:
-            self.__field_dunno3.writetobuffer(buf)
-        self.__field_dunno4.writetobuffer(buf)
-        self.__field_datetime.writetobuffer(buf)
-        self.__field_dunno5.writetobuffer(buf)
-        self.__field_addr_len0.writetobuffer(buf)
-        self.__field_addr_len1.writetobuffer(buf)
-        self.__field_addr_len2.writetobuffer(buf)
-        self.__field_addr_len3.writetobuffer(buf)
-        self.__field_addr_len4.writetobuffer(buf)
-        self.__field_addr_len5.writetobuffer(buf)
-        self.__field_addr_len6.writetobuffer(buf)
-        self.__field_addr_len7.writetobuffer(buf)
-        self.__field_addr_len8.writetobuffer(buf)
-        self.__field_addr_len9.writetobuffer(buf)
-        if self.addr_len0:
-            self.__field_addr0.writetobuffer(buf)
-        if self.addr_len1:
-            self.__field_addr1.writetobuffer(buf)
-        if self.addr_len2:
-            self.__field_addr2.writetobuffer(buf)
-        if self.addr_len3:
-            self.__field_addr3.writetobuffer(buf)
-        if self.addr_len4:
-            self.__field_addr4.writetobuffer(buf)
-        if self.addr_len5:
-            self.__field_addr5.writetobuffer(buf)
-        if self.addr_len6:
-            self.__field_addr6.writetobuffer(buf)
-        if self.addr_len7:
-            self.__field_addr7.writetobuffer(buf)
-        if self.addr_len8:
-            self.__field_addr8.writetobuffer(buf)
-        if self.addr_len9:
-            self.__field_addr9.writetobuffer(buf)
-        if not self.has_1byte and self.has_1byte2:
-            self.__field_dunno6.writetobuffer(buf)
-        if self.has_1byte2:
-            self.__field_dunno7.writetobuffer(buf)
-        self.__field_dunno8.writetobuffer(buf)
-        if self.has_40bytes:
-            self.__field_dunno9.writetobuffer(buf)
-        self.__field_msg_stat.writetobuffer(buf)
-        self._bufferendoffset=buf.getcurrentoffset()
-        if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
+        raise NotImplementedError
 
 
     def readfrombuffer(self,buf,autolog=True,logtitle="<read data>"):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_dunno1=UNKNOWN(**{'sizeinbytes': 50})
-        self.__field_dunno1.readfrombuffer(buf)
+        DONTCARE(**{'sizeinbytes': 50}).readfrombuffer(buf)
         self.__field_msg=USTRING(**{ 'sizeinbytes': self.msg_len,                'encoding': ENCODING,                'terminator': None })
         self.__field_msg.readfrombuffer(buf)
         if self.has_callback:
@@ -8138,14 +7724,11 @@ class sms_body(BaseProtogenClass):
             self.__field_priority=UINT(**{'sizeinbytes': 1})
             self.__field_priority.readfrombuffer(buf)
         if self.has_1byte:
-            self.__field_dunno3=UNKNOWN(**{'sizeinbytes': 1})
-            self.__field_dunno3.readfrombuffer(buf)
-        self.__field_dunno4=UNKNOWN(**{'sizeinbytes': 40})
-        self.__field_dunno4.readfrombuffer(buf)
+            DONTCARE(**{'sizeinbytes': 1}).readfrombuffer(buf)
+        DONTCARE(**{'sizeinbytes': 40}).readfrombuffer(buf)
         self.__field_datetime=DateTime1(**{'sizeinbytes': 4})
         self.__field_datetime.readfrombuffer(buf)
-        self.__field_dunno5=UNKNOWN(**{'sizeinbytes': 17})
-        self.__field_dunno5.readfrombuffer(buf)
+        DONTCARE(**{'sizeinbytes': 17}).readfrombuffer(buf)
         self.__field_addr_len0=UINT(**{'sizeinbytes': 1})
         self.__field_addr_len0.readfrombuffer(buf)
         self.__field_addr_len1=UINT(**{'sizeinbytes': 1})
@@ -8197,16 +7780,12 @@ class sms_body(BaseProtogenClass):
             self.__field_addr9=STRING(**{ 'sizeinbytes': self.addr_len9,                   'terminator': None })
             self.__field_addr9.readfrombuffer(buf)
         if not self.has_1byte and self.has_1byte2:
-            self.__field_dunno6=UNKNOWN(**{'sizeinbytes': 1})
-            self.__field_dunno6.readfrombuffer(buf)
+            DONTCARE(**{'sizeinbytes': 1}).readfrombuffer(buf)
         if self.has_1byte2:
-            self.__field_dunno7=UNKNOWN(**{'sizeinbytes': 1})
-            self.__field_dunno7.readfrombuffer(buf)
-        self.__field_dunno8=UNKNOWN(**{'sizeinbytes': 21})
-        self.__field_dunno8.readfrombuffer(buf)
+            DONTCARE(**{'sizeinbytes': 1}).readfrombuffer(buf)
+        DONTCARE(**{'sizeinbytes': 21}).readfrombuffer(buf)
         if self.has_40bytes:
-            self.__field_dunno9=UNKNOWN(**{'sizeinbytes': 40})
-            self.__field_dunno9.readfrombuffer(buf)
+            DONTCARE(**{'sizeinbytes': 40}).readfrombuffer(buf)
         self.__field_msg_stat=LIST(**{ 'elementclass': sms_msg_stat_list,             'length': 10 })
         self.__field_msg_stat.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -8305,19 +7884,6 @@ class sms_body(BaseProtogenClass):
 
     has_40bytes=property(__getfield_has_40bytes, __setfield_has_40bytes, __delfield_has_40bytes, None)
 
-    def __getfield_dunno1(self):
-        return self.__field_dunno1.getvalue()
-
-    def __setfield_dunno1(self, value):
-        if isinstance(value,UNKNOWN):
-            self.__field_dunno1=value
-        else:
-            self.__field_dunno1=UNKNOWN(value,**{'sizeinbytes': 50})
-
-    def __delfield_dunno1(self): del self.__field_dunno1
-
-    dunno1=property(__getfield_dunno1, __setfield_dunno1, __delfield_dunno1, None)
-
     def __getfield_msg(self):
         return self.__field_msg.getvalue()
 
@@ -8383,32 +7949,6 @@ class sms_body(BaseProtogenClass):
 
     priority=property(__getfield_priority, __setfield_priority, __delfield_priority, None)
 
-    def __getfield_dunno3(self):
-        return self.__field_dunno3.getvalue()
-
-    def __setfield_dunno3(self, value):
-        if isinstance(value,UNKNOWN):
-            self.__field_dunno3=value
-        else:
-            self.__field_dunno3=UNKNOWN(value,**{'sizeinbytes': 1})
-
-    def __delfield_dunno3(self): del self.__field_dunno3
-
-    dunno3=property(__getfield_dunno3, __setfield_dunno3, __delfield_dunno3, None)
-
-    def __getfield_dunno4(self):
-        return self.__field_dunno4.getvalue()
-
-    def __setfield_dunno4(self, value):
-        if isinstance(value,UNKNOWN):
-            self.__field_dunno4=value
-        else:
-            self.__field_dunno4=UNKNOWN(value,**{'sizeinbytes': 40})
-
-    def __delfield_dunno4(self): del self.__field_dunno4
-
-    dunno4=property(__getfield_dunno4, __setfield_dunno4, __delfield_dunno4, None)
-
     def __getfield_datetime(self):
         return self.__field_datetime.getvalue()
 
@@ -8421,19 +7961,6 @@ class sms_body(BaseProtogenClass):
     def __delfield_datetime(self): del self.__field_datetime
 
     datetime=property(__getfield_datetime, __setfield_datetime, __delfield_datetime, None)
-
-    def __getfield_dunno5(self):
-        return self.__field_dunno5.getvalue()
-
-    def __setfield_dunno5(self, value):
-        if isinstance(value,UNKNOWN):
-            self.__field_dunno5=value
-        else:
-            self.__field_dunno5=UNKNOWN(value,**{'sizeinbytes': 17})
-
-    def __delfield_dunno5(self): del self.__field_dunno5
-
-    dunno5=property(__getfield_dunno5, __setfield_dunno5, __delfield_dunno5, None)
 
     def __getfield_addr_len0(self):
         return self.__field_addr_len0.getvalue()
@@ -8695,58 +8222,6 @@ class sms_body(BaseProtogenClass):
 
     addr9=property(__getfield_addr9, __setfield_addr9, __delfield_addr9, None)
 
-    def __getfield_dunno6(self):
-        return self.__field_dunno6.getvalue()
-
-    def __setfield_dunno6(self, value):
-        if isinstance(value,UNKNOWN):
-            self.__field_dunno6=value
-        else:
-            self.__field_dunno6=UNKNOWN(value,**{'sizeinbytes': 1})
-
-    def __delfield_dunno6(self): del self.__field_dunno6
-
-    dunno6=property(__getfield_dunno6, __setfield_dunno6, __delfield_dunno6, None)
-
-    def __getfield_dunno7(self):
-        return self.__field_dunno7.getvalue()
-
-    def __setfield_dunno7(self, value):
-        if isinstance(value,UNKNOWN):
-            self.__field_dunno7=value
-        else:
-            self.__field_dunno7=UNKNOWN(value,**{'sizeinbytes': 1})
-
-    def __delfield_dunno7(self): del self.__field_dunno7
-
-    dunno7=property(__getfield_dunno7, __setfield_dunno7, __delfield_dunno7, None)
-
-    def __getfield_dunno8(self):
-        return self.__field_dunno8.getvalue()
-
-    def __setfield_dunno8(self, value):
-        if isinstance(value,UNKNOWN):
-            self.__field_dunno8=value
-        else:
-            self.__field_dunno8=UNKNOWN(value,**{'sizeinbytes': 21})
-
-    def __delfield_dunno8(self): del self.__field_dunno8
-
-    dunno8=property(__getfield_dunno8, __setfield_dunno8, __delfield_dunno8, None)
-
-    def __getfield_dunno9(self):
-        return self.__field_dunno9.getvalue()
-
-    def __setfield_dunno9(self, value):
-        if isinstance(value,UNKNOWN):
-            self.__field_dunno9=value
-        else:
-            self.__field_dunno9=UNKNOWN(value,**{'sizeinbytes': 40})
-
-    def __delfield_dunno9(self): del self.__field_dunno9
-
-    dunno9=property(__getfield_dunno9, __setfield_dunno9, __delfield_dunno9, None)
-
     def __getfield_msg_stat(self):
         return self.__field_msg_stat.getvalue()
 
@@ -8770,7 +8245,6 @@ class sms_body(BaseProtogenClass):
         yield ('has_1byte', self.__field_has_1byte, None)
         yield ('has_1byte2', self.__field_has_1byte2, None)
         yield ('has_40bytes', self.__field_has_40bytes, None)
-        yield ('dunno1', self.__field_dunno1, None)
         yield ('msg', self.__field_msg, None)
         if self.has_callback:
             yield ('dunno2', self.__field_dunno2, None)
@@ -8779,10 +8253,8 @@ class sms_body(BaseProtogenClass):
         if self.has_priority:
             yield ('priority', self.__field_priority, None)
         if self.has_1byte:
-            yield ('dunno3', self.__field_dunno3, None)
-        yield ('dunno4', self.__field_dunno4, None)
+            pass
         yield ('datetime', self.__field_datetime, None)
-        yield ('dunno5', self.__field_dunno5, None)
         yield ('addr_len0', self.__field_addr_len0, None)
         yield ('addr_len1', self.__field_addr_len1, None)
         yield ('addr_len2', self.__field_addr_len2, None)
@@ -8814,12 +8286,11 @@ class sms_body(BaseProtogenClass):
         if self.addr_len9:
             yield ('addr9', self.__field_addr9, None)
         if not self.has_1byte and self.has_1byte2:
-            yield ('dunno6', self.__field_dunno6, None)
+            pass
         if self.has_1byte2:
-            yield ('dunno7', self.__field_dunno7, None)
-        yield ('dunno8', self.__field_dunno8, None)
+            pass
         if self.has_40bytes:
-            yield ('dunno9', self.__field_dunno9, None)
+            pass
         yield ('msg_stat', self.__field_msg_stat, None)
 
 

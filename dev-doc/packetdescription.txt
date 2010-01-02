@@ -60,7 +60,12 @@ done by supplying them in a dict.  See the doc in the init methods of each
 type for what they know about.
 
 A packet is described by the PACKET keyword, an optional dict of parameters,
-the name and a colon.  The packet description is then indented one level.
+the name and a colon.  The packet name may have optional modifiers.
+
+A modifier of '-' means that this packet is a "Read-From-Buffer-Only" packet,
+i.e., you don't use this packet to write stuff back out to the phone.
+
+The packet description is then indented one level.
 Each line is a field description:
 
    size  type  {optionalparams}  name  "optionalcomment"
@@ -84,6 +89,10 @@ generally want to use the '+' modifier for all fields with a computed value.
 A modified of '*' means that the dict is only supplied when writing, not reading.
 You will need to use this if the dict contains references to stuff further
 in the packet, since they won't exist while reading.
+
+The name may be ommited, which indicates an anonymous/nameless field.  Anonymous
+fields will not be accessible (no get/set property).  Anonymous fields (along
+type DONTCARE), are typically used for block of data that we don't care about.
 
 The optional comment will appear in the API documentation for the field.
 

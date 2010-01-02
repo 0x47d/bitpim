@@ -1359,6 +1359,77 @@ class DATA(BaseProtogenClass):
             raise ValueNotSetException()
         return self._value
 
+class DONTCARE(BaseProtogenClass):
+    "Block of bytes that we don't know and don't care for"
+    def __init__(self, *args, **kwargs):
+        """
+        A data value can be specified to this constructor or in the value keyword arg
+
+        @keyword sizeinbytes: Length of block
+             If not set, then the rest of the packet will be consumed on reads.
+        @keyword default: (Optional) Our default value, could be either a char or string.
+        @keyword storage: (Optional) True or False: whether to store the data or ignore.
+        """
+        super(DONTCARE, self).__init__(*args, **kwargs)
+        
+        self._sizeinbytes=None
+        self._default='\x00'
+        self._storage=False
+        self._value=None
+
+        if self._ismostderived(DONTCARE):
+            self._update(args,kwargs)
+
+    def _update(self, args, kwargs):
+        super(DONTCARE, self)._update(args, kwargs)
+
+        self._consumekw(kwargs, ("sizeinbytes", "default", "storage", "value"))
+        self._complainaboutunusedargs(DONTCARE, kwargs)
+
+        # Set our value if one was specified
+        if len(args)==0:
+            pass
+        elif len(args)==1:
+            if self._storage:
+                self._value=args[0]
+        else:
+            raise TypeError("Unexpected arguments "+`args`)
+        # must specify the length of the block
+        if self._sizeinbytes is None:
+            raise ValueException("sizeinbytes must be specified for DONTCARE")
+        # check for valid length 
+        if self._storage and self._value is not None and \
+           len(self._value)!=self._sizeinbytes:
+            raise ValueLengthException(len(self._value), self._sizeinbytes)
+        if len(self._default)>1 and len(self._default)!=self._sizeinbytes:
+            raise ValueLengthException(len(self._default), self._sizeinbytes)
+
+    def readfrombuffer(self, buf):
+        self._bufferstartoffset=buf.getcurrentoffset()
+        if self._storage:
+            # read & store
+            self._value=buf.getnextbytes(self._sizeinbytes)
+        else:
+            # just ignore it
+            buf.discardnextbytes(self._sizeinbytes)
+        self._bufferendoffset=buf.getcurrentoffset()
+
+    def writetobuffer(self, buf):
+        self._bufferstartoffset=buf.getcurrentoffset()
+        buf.appendbytes(self.getvalue())
+        self._bufferendoffset=buf.getcurrentoffset()
+
+    def packetsize(self):
+        return self._sizeinbytes
+
+    def getvalue(self):
+        """Returns the bytes we are"""
+        if self._value is not None:
+            return self._value
+        elif len(self._default)>1:
+            return self._default
+        else:
+            return self._default*self._sizeinbytes
 
 class UNKNOWN(DATA):
     "A block of bytes whose purpose we don't know"
@@ -1598,6 +1669,16 @@ class buffer(object):
         "Returns rest of buffer"
         sz=len(self._data)-self._offset
         return self.getnextbytes(sz)
+
+    def discardnextbytes(self, howmany):
+        "Discards howmany bytes"
+        if self._offset+howmany>len(self._data):
+            raise IndexError("Trying to discard "+`howmany`+" bytes starting at "+`self._offset`+" which will go beyond end of "+`len(self._data)`+" byte buffer")
+        self._offset+=howmany
+
+    def discardremainingbytes(self):
+        "Discards the rest of the buffer"
+        self._offset=len(self._data)
 
     def hasmore(self):
         "Is there any data left?"
