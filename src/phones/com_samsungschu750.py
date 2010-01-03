@@ -70,16 +70,6 @@ class Phone(com_brew.RealBrewProtocol2, parentphone):
 
     # We can't use bult-in wallpapers for contact ID
     builtin_wallpapers={}
-##    builtin_wallpapers={
-##        'Preloaded1': 'range_f_wallpaper_preloaded_el_01',
-##        'Preloaded2': 'range_f_wallpaper_preloaded_el_02',
-##        'Preloaded3': 'range_f_wallpaper_preloaded_el_03',
-##        'Preloaded4': 'range_f_wallpaper_preloaded_el_04',
-##        'Preloaded5': 'range_f_wallpaper_preloaded_el_05',
-##        'Preloaded6': 'range_f_wallpaper_preloaded_el_06',
-##        'Preloaded7': 'range_f_wallpaper_preloaded_el_07',
-##        'Preloaded8': 'range_f_wallpaper_preloaded_el_08',
-##        }
 
     def __init__(self, logtarget, commport):
         "Calls all the constructors and sets initial modes"
@@ -171,14 +161,78 @@ class Phone(com_brew.RealBrewProtocol2, parentphone):
 # PBEntry class-----------------------------------------------------------------
 parentpbentry=schu470.PBEntry
 class PBEntry(parentpbentry):
-    pass
+
+    # routines to convert BitPim dict into phone's data
+    def _build_address(self, address):
+        if not address:
+            # nothing to build
+            return
+        if address.get('street', None):
+            self.pb.street=address['street']
+        if address.get('city', None):
+            self.pb.city=address['city']
+        if address.get('state', None):
+            self.pb.state=address['state']
+        if address.get('postalcode', None):
+            self.pb.zipcode=address['postalcode']
+        if address.get('country', None):
+            self.pb.country=address['country']
+
+    def _build(self, entry):
+        parentpbentry._build(self, entry)
+        self._build_address(entry.get('addresses', [{}])[0])
+
+    # routines to convert phone's data into BitPim dict
+    def _extract_group(self, entry, p_class):
+        if not self.pb.has_group:
+            # no group specified
+            return
+        _groups=self.fundamentals.get('groups', {})
+        _res=[]
+        for _index, _item in _groups.items():
+            if (1<<_index)&self.pb.group:
+                _res.append({ 'category': _item['name'] })
+        if _res:
+            entry['categories']=_res
+
+    def _extract_wallpaper(self, entry, p_class):
+        if not self.pb.has_cached_wp:
+            return
+        # really ugly hack here !!!
+        _wp=self.pb.cached_wp.split('|')[1]
+        # BitPim can only deal with non-builtin wallpapers
+        if not _wp.startswith('Preloaded'):
+            # assume that the name has extension .jpg
+            entry['wallpapers']=[{ 'wallpaper': _wp+'.jpg',
+                                   'use': 'call' }]
+
+    def _extract_address(self, entry, p_class):
+        if not self.pb.has_address:
+            return
+        _addr={}
+        if self.pb.has_street:
+            _addr['street']=self.pb.street
+        if self.pb.has_city:
+            _addr['city']=self.pb.city
+        if self.pb.has_state:
+            _addr['state']=self.pb.state
+        if self.pb.has_zipcode:
+            _addr['postalcode']=self.pb.zipcode
+        if self.pb.has_country:
+            _addr['country']=self.pb.country
+        entry['addresses']=[_addr]
+
+    def getvalue(self):
+        _entry=parentpbentry.getvalue(self)
+        self._extract_address(_entry, self.phone.protocolclass)
+        return _entry
 
 # Profile class-----------------------------------------------------------------
 parentprofile=schu470.Profile
 class Profile(parentprofile):
     serialsname=Phone.serialsname
-    WALLPAPER_WIDTH=176
-    WALLPAPER_HEIGHT=220
+    WALLPAPER_WIDTH=240
+    WALLPAPER_HEIGHT=274
     # 128x96: outside LCD
     autodetect_delay=3
     usbids=( ( 0x04e8, 0x6640, 2),)
@@ -208,11 +262,9 @@ class Profile(parentprofile):
     # our targets are the same for all origins
     imagetargets={}
     imagetargets.update(common.getkv(parentprofile.stockimagetargets, "wallpaper",
-                                      {'width': 220, 'height': 184, 'format': "JPEG"}))
+                                      {'width': 240, 'height': 274, 'format': "JPEG"}))
     imagetargets.update(common.getkv(parentprofile.stockimagetargets, "pictureid",
-                                      {'width': 128, 'height': 96, 'format': "JPEG"}))
-    imagetargets.update(common.getkv(parentprofile.stockimagetargets, "outsidelcd",
-                                      {'width': 128, 'height': 96, 'format': "JPEG"}))
+                                      {'width': 80, 'height': 106, 'format': "JPEG"}))
     def GetTargetsForImageOrigin(self, origin):
         return self.imagetargets
 
@@ -220,14 +272,14 @@ class Profile(parentprofile):
         parentprofile.__init__(self)
 
     _supportedsyncs=(
-##        ('phonebook', 'read', None),  # all phonebook reading
+        ('phonebook', 'read', None),  # all phonebook reading
 ##        ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
 ##        ('calendar', 'read', None),   # all calendar reading
 ##        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
         ('ringtone', 'read', None),   # all ringtone reading
         ('ringtone', 'write', 'MERGE'),
         ('wallpaper', 'read', None),  # all wallpaper reading
-##        ('wallpaper', 'write', 'MERGE'),
+        ('wallpaper', 'write', 'MERGE'),
 ##        ('memo', 'read', None),     # all memo list reading DJP
 ##        ('memo', 'write', 'OVERWRITE'),  # all memo list writing DJP
 ##        ('call_history', 'read', None),# all call history list reading
@@ -248,9 +300,9 @@ class Profile(parentprofile):
                 'emailspeeddial': False, 'emailringtone': False,
                 'emailwallpaper': False },
             'address': {
-                'type': 0, 'company': 0, 'street': 0, 'street2': 0,
-                'city': 0, 'state': 0, 'postalcode': 0, 'country': 0,
-                'details': 0 },
+                'type': 0, 'company': 0, 'street': 1, 'street2': 0,
+                'city': 1, 'state': 1, 'postalcode': 1, 'country': 1,
+                'details': 1 },
             'url': 0,
             'memo': 1,
             'category': 1,

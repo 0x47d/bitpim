@@ -81,6 +81,9 @@ PACKET -NumberEntry:
     @property
     def is_primary(self):
         return bool(self.option & PB_FLG_PRIMARY)
+    @property
+    def has_ringtone(self):
+        return False
     %}
 
 PACKET -PBEntry:
@@ -205,6 +208,11 @@ PACKET -PBEntry:
     @property
     def has_wallpaper(self):
         return bool(self.info2 & PB_FLG_ENTRY_WP)
+    @property
+    def has_address(self):
+        # return True if this has at least one valid address item
+        return self.has_street or self.has_city or self.has_state or \
+               self.has_zipcode or self.has_country
     %}
 
 PACKET -LenEntry:
@@ -350,6 +358,13 @@ PACKET ss_pb_entry:
                 'raiseontruncate': False,
                 'default': '' } +im_name
     2 UINT { 'default': 0 } +im_type
+    %{
+    @property
+    def has_address(self):
+        # return True if this has at least one valid address item
+        return bool(self.street or self.city or self.state or self.zipcode or \
+                    self.country)
+    %}
 
 PACKET ss_pb_write_req:
     * ss_cmd_hdr { 'command': SS_CMD_PB_WRITE } +hdr

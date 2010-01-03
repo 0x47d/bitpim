@@ -525,6 +525,9 @@ class NumberEntry(BaseProtogenClass):
     @property
     def is_primary(self):
         return bool(self.option & PB_FLG_PRIMARY)
+    @property
+    def has_ringtone(self):
+        return False
 
 
 
@@ -1062,6 +1065,11 @@ class PBEntry(BaseProtogenClass):
     @property
     def has_wallpaper(self):
         return bool(self.info2 & PB_FLG_ENTRY_WP)
+    @property
+    def has_address(self):
+        # return True if this has at least one valid address item
+        return self.has_street or self.has_city or self.has_state or \
+               self.has_zipcode or self.has_country
 
 
 
@@ -2017,10 +2025,10 @@ class ss_pb_read_req(BaseProtogenClass):
         except:
             self.__field_hdr=ss_cmd_hdr(**{ 'command': SS_CMD_PB_READ })
         self.__field_hdr.writetobuffer(buf)
-        try: self.__field__gen_p_samsungschu750_251
+        try: self.__field__gen_p_samsungschu750_259
         except:
-            self.__field__gen_p_samsungschu750_251=DONTCARE(**{'sizeinbytes': 1})
-        self.__field__gen_p_samsungschu750_251.writetobuffer(buf)
+            self.__field__gen_p_samsungschu750_259=DONTCARE(**{'sizeinbytes': 1})
+        self.__field__gen_p_samsungschu750_259.writetobuffer(buf)
         self.__field_index.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -2032,8 +2040,8 @@ class ss_pb_read_req(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_hdr=ss_cmd_hdr(**{ 'command': SS_CMD_PB_READ })
         self.__field_hdr.readfrombuffer(buf)
-        self.__field__gen_p_samsungschu750_251=DONTCARE(**{'sizeinbytes': 1})
-        self.__field__gen_p_samsungschu750_251.readfrombuffer(buf)
+        self.__field__gen_p_samsungschu750_259=DONTCARE(**{'sizeinbytes': 1})
+        self.__field__gen_p_samsungschu750_259.readfrombuffer(buf)
         self.__field_index=UINT(**{'sizeinbytes': 2})
         self.__field_index.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -2711,10 +2719,10 @@ class ss_number_entry(BaseProtogenClass):
         except:
             self.__field_primary=UINT(**{'sizeinbytes': 1,  'default': 0 })
         self.__field_primary.writetobuffer(buf)
-        try: self.__field__gen_p_samsungschu750_284
+        try: self.__field__gen_p_samsungschu750_292
         except:
-            self.__field__gen_p_samsungschu750_284=DONTCARE(**{'sizeinbytes': 8})
-        self.__field__gen_p_samsungschu750_284.writetobuffer(buf)
+            self.__field__gen_p_samsungschu750_292=DONTCARE(**{'sizeinbytes': 8})
+        self.__field__gen_p_samsungschu750_292.writetobuffer(buf)
         try: self.__field_ringtone
         except:
             self.__field_ringtone=STRING(**{ 'terminator': 0,               'default': '' })
@@ -2733,8 +2741,8 @@ class ss_number_entry(BaseProtogenClass):
         self.__field_speeddial.readfrombuffer(buf)
         self.__field_primary=UINT(**{'sizeinbytes': 1,  'default': 0 })
         self.__field_primary.readfrombuffer(buf)
-        self.__field__gen_p_samsungschu750_284=DONTCARE(**{'sizeinbytes': 8})
-        self.__field__gen_p_samsungschu750_284.readfrombuffer(buf)
+        self.__field__gen_p_samsungschu750_292=DONTCARE(**{'sizeinbytes': 8})
+        self.__field__gen_p_samsungschu750_292.readfrombuffer(buf)
         self.__field_ringtone=STRING(**{ 'terminator': 0,               'default': '' })
         self.__field_ringtone.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -2859,18 +2867,18 @@ class ss_pb_entry(BaseProtogenClass):
         except:
             self.__field_email2=USTRING(**{ 'terminator': 0,                'encoding': ENCODING,                'default': '',                'maxsizeinbytes': PB_MAX_EMAIL_LEN,                'raiseontruncate': False })
         self.__field_email2.writetobuffer(buf)
-        try: self.__field__gen_p_samsungschu750_303
+        try: self.__field__gen_p_samsungschu750_311
         except:
-            self.__field__gen_p_samsungschu750_303=DONTCARE(**{'sizeinbytes': 2})
-        self.__field__gen_p_samsungschu750_303.writetobuffer(buf)
+            self.__field__gen_p_samsungschu750_311=DONTCARE(**{'sizeinbytes': 2})
+        self.__field__gen_p_samsungschu750_311.writetobuffer(buf)
         try: self.__field_note
         except:
             self.__field_note=USTRING(**{ 'terminator': 0,                'encoding': ENCODING,                'maxsizeinbytes': PB_MAX_NOTE_LEN,                'raiseontruncate': False,                'default': '' })
         self.__field_note.writetobuffer(buf)
-        try: self.__field__gen_p_samsungschu750_309
+        try: self.__field__gen_p_samsungschu750_317
         except:
-            self.__field__gen_p_samsungschu750_309=DONTCARE(**{'sizeinbytes': 1})
-        self.__field__gen_p_samsungschu750_309.writetobuffer(buf)
+            self.__field__gen_p_samsungschu750_317=DONTCARE(**{'sizeinbytes': 1})
+        self.__field__gen_p_samsungschu750_317.writetobuffer(buf)
         try: self.__field_wallpaper
         except:
             self.__field_wallpaper=STRING(**{ 'terminator': 0,               'default': '' })
@@ -2903,18 +2911,18 @@ class ss_pb_entry(BaseProtogenClass):
         except:
             self.__field_cell2=ss_number_entry()
         self.__field_cell2.writetobuffer(buf)
-        try: self.__field__gen_p_samsungschu750_319
+        try: self.__field__gen_p_samsungschu750_327
         except:
-            self.__field__gen_p_samsungschu750_319=DONTCARE(**{'sizeinbytes': 4})
-        self.__field__gen_p_samsungschu750_319.writetobuffer(buf)
+            self.__field__gen_p_samsungschu750_327=DONTCARE(**{'sizeinbytes': 4})
+        self.__field__gen_p_samsungschu750_327.writetobuffer(buf)
         try: self.__field_group
         except:
             self.__field_group=UINT(**{'sizeinbytes': 1,  'default': 0 })
         self.__field_group.writetobuffer(buf)
-        try: self.__field__gen_p_samsungschu750_321
+        try: self.__field__gen_p_samsungschu750_329
         except:
-            self.__field__gen_p_samsungschu750_321=DONTCARE(**{'sizeinbytes': 2})
-        self.__field__gen_p_samsungschu750_321.writetobuffer(buf)
+            self.__field__gen_p_samsungschu750_329=DONTCARE(**{'sizeinbytes': 2})
+        self.__field__gen_p_samsungschu750_329.writetobuffer(buf)
         try: self.__field_street
         except:
             self.__field_street=USTRING(**{ 'terminator': 0,                'encoding': ENCODING,                'maxsizeinbytes': PB_MAX_STREET_LEN,                'raiseontruncate': False,                'default': '' })
@@ -2957,12 +2965,12 @@ class ss_pb_entry(BaseProtogenClass):
         self.__field_email.readfrombuffer(buf)
         self.__field_email2=USTRING(**{ 'terminator': 0,                'encoding': ENCODING,                'default': '',                'maxsizeinbytes': PB_MAX_EMAIL_LEN,                'raiseontruncate': False })
         self.__field_email2.readfrombuffer(buf)
-        self.__field__gen_p_samsungschu750_303=DONTCARE(**{'sizeinbytes': 2})
-        self.__field__gen_p_samsungschu750_303.readfrombuffer(buf)
+        self.__field__gen_p_samsungschu750_311=DONTCARE(**{'sizeinbytes': 2})
+        self.__field__gen_p_samsungschu750_311.readfrombuffer(buf)
         self.__field_note=USTRING(**{ 'terminator': 0,                'encoding': ENCODING,                'maxsizeinbytes': PB_MAX_NOTE_LEN,                'raiseontruncate': False,                'default': '' })
         self.__field_note.readfrombuffer(buf)
-        self.__field__gen_p_samsungschu750_309=DONTCARE(**{'sizeinbytes': 1})
-        self.__field__gen_p_samsungschu750_309.readfrombuffer(buf)
+        self.__field__gen_p_samsungschu750_317=DONTCARE(**{'sizeinbytes': 1})
+        self.__field__gen_p_samsungschu750_317.readfrombuffer(buf)
         self.__field_wallpaper=STRING(**{ 'terminator': 0,               'default': '' })
         self.__field_wallpaper.readfrombuffer(buf)
         self.__field_wallpaper_range=UINT(**{'sizeinbytes': 1,  'default': 0 })
@@ -2979,12 +2987,12 @@ class ss_pb_entry(BaseProtogenClass):
         self.__field_fax.readfrombuffer(buf)
         self.__field_cell2=ss_number_entry()
         self.__field_cell2.readfrombuffer(buf)
-        self.__field__gen_p_samsungschu750_319=DONTCARE(**{'sizeinbytes': 4})
-        self.__field__gen_p_samsungschu750_319.readfrombuffer(buf)
+        self.__field__gen_p_samsungschu750_327=DONTCARE(**{'sizeinbytes': 4})
+        self.__field__gen_p_samsungschu750_327.readfrombuffer(buf)
         self.__field_group=UINT(**{'sizeinbytes': 1,  'default': 0 })
         self.__field_group.readfrombuffer(buf)
-        self.__field__gen_p_samsungschu750_321=DONTCARE(**{'sizeinbytes': 2})
-        self.__field__gen_p_samsungschu750_321.readfrombuffer(buf)
+        self.__field__gen_p_samsungschu750_329=DONTCARE(**{'sizeinbytes': 2})
+        self.__field__gen_p_samsungschu750_329.readfrombuffer(buf)
         self.__field_street=USTRING(**{ 'terminator': 0,                'encoding': ENCODING,                'maxsizeinbytes': PB_MAX_STREET_LEN,                'raiseontruncate': False,                'default': '' })
         self.__field_street.readfrombuffer(buf)
         self.__field_city=USTRING(**{ 'terminator': 0,                'encoding': ENCODING,                'maxsizeinbytes': PB_MAX_CITY_LEN,                'raiseontruncate': False,                'default': '' })
@@ -3344,6 +3352,12 @@ class ss_pb_entry(BaseProtogenClass):
         yield ('im_name', self.__field_im_name, None)
         yield ('im_type', self.__field_im_type, None)
 
+    @property
+    def has_address(self):
+        # return True if this has at least one valid address item
+        return bool(self.street or self.city or self.state or self.zipcode or \
+                    self.country)
+
 
 
 
@@ -3385,10 +3399,10 @@ class ss_pb_write_req(BaseProtogenClass):
         except:
             self.__field_hdr=ss_cmd_hdr(**{ 'command': SS_CMD_PB_WRITE })
         self.__field_hdr.writetobuffer(buf)
-        try: self.__field__gen_p_samsungschu750_356
+        try: self.__field__gen_p_samsungschu750_371
         except:
-            self.__field__gen_p_samsungschu750_356=DONTCARE(**{'sizeinbytes': 1})
-        self.__field__gen_p_samsungschu750_356.writetobuffer(buf)
+            self.__field__gen_p_samsungschu750_371=DONTCARE(**{'sizeinbytes': 1})
+        self.__field__gen_p_samsungschu750_371.writetobuffer(buf)
         self.__field_entry.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -3400,8 +3414,8 @@ class ss_pb_write_req(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_hdr=ss_cmd_hdr(**{ 'command': SS_CMD_PB_WRITE })
         self.__field_hdr.readfrombuffer(buf)
-        self.__field__gen_p_samsungschu750_356=DONTCARE(**{'sizeinbytes': 1})
-        self.__field__gen_p_samsungschu750_356.readfrombuffer(buf)
+        self.__field__gen_p_samsungschu750_371=DONTCARE(**{'sizeinbytes': 1})
+        self.__field__gen_p_samsungschu750_371.readfrombuffer(buf)
         self.__field_entry=ss_pb_entry()
         self.__field_entry.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
