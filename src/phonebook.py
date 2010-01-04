@@ -146,6 +146,7 @@ class phonebookdataobject(database.basedataobject):
                                               'ringtone', 'wallpaper' ],
                                   'ice': [ 'iceindex' ],
                                   'favorite': [ 'favoriteindex' ],
+                                  'ims': [ 'type', 'username' ],
 ##                                  'maillist': ['entry', 'speeddial',
 ##                                               'ringtone', 'wallpaper' ],
                                   # serials is in parent object

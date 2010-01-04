@@ -56,6 +56,7 @@ default_field_info={
         'storage': None,
         'secret': None,
         'ICE': None,
+        'im': None,
         },
     'calendar': {
         'description': None, 'location': None, 'allday': None,

@@ -1185,6 +1185,49 @@ class URLEditor(DirtyUIBase):
             res['type']='business'
         return res
 
+# IM Editor---------------------------------------------------------------------
+class IMEditor(DirtyUIBase):
+
+    ID_TYPE=wx.NewId()
+    _type_choices=('', 'AIM', 'Yahoo!', 'WL Messenger')
+    def __init__(self, parent, _, navtoolbar=False):
+        super(IMEditor, self).__init__(parent)
+
+        _box=field_color.build_color_field(self, wx.StaticBox,
+                                           (self, -1, "IM Name"), 'im')
+        hs=wx.StaticBoxSizer(_box, wx.HORIZONTAL)
+
+        self.type=wx.ComboBox(self, self.ID_TYPE, "", choices=self._type_choices,
+                              style=wx.CB_READONLY)
+        hs.Add(self.type, 0, wx.EXPAND|wx.ALL, 5)
+        self.name=wx.TextCtrl(self, -1, "")
+        hs.Add(self.name, 1, wx.EXPAND|wx.ALL, 5)
+        if navtoolbar:
+            hs.Add(NavToolBar(self), 0, wx.EXPAND|wx.BOTTOM, 5)
+        wx.EVT_TEXT(self, self.type.GetId(), self.OnDirtyUI)
+        wx.EVT_TEXT(self, self.name.GetId(), self.OnDirtyUI)
+        self.SetSizer(hs)
+        hs.Fit(self)
+
+    def Set(self, data):
+        self.Ignore()
+        self.name.SetValue(data.get("username", ""))
+        v=data.get("type", "")
+        if v in self._type_choices:
+            self.type.SetValue(v)
+        else:
+            self.type.SetSelection(0)
+        self.Clean()
+
+    def Get(self):
+        self.Clean()
+        res={}
+        if len(self.name.GetValue())==0:
+            return res
+        res['username']=self.name.GetValue()
+        res['type']=self.type.GetValue()
+        return res
+
 # AddressEditor-----------------------------------------------------------------
 class AddressEditor(DirtyUIBase):
 
@@ -1790,6 +1833,7 @@ class Editor(wx.Dialog):
         ("Ringtones", "ringtones", RingtoneEditor),
         ("ICE", 'ice', ICEEditor),
         ("Favorite", "favorite", FavoriteEditor),
+        ("IM Names", "ims", IMEditor),
         ("Misc", 'flags', MiscEditor),
         ]
 
