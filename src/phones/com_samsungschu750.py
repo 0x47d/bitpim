@@ -161,7 +161,8 @@ class Phone(com_brew.RealBrewProtocol2, parentphone):
 # PBEntry class-----------------------------------------------------------------
 parentpbentry=schu470.PBEntry
 class PBEntry(parentpbentry):
-
+    _IM_Type_String={ 1: 'AIM', 2: 'Yahoo!', 3: 'WL Messenger' }
+    _IM_Type_Index={ 'AIM': 1, 'Yahoo!': 2, 'WL Messenger': 3 }
     # routines to convert BitPim dict into phone's data
     def _build_address(self, address):
         if not address:
@@ -189,6 +190,7 @@ class PBEntry(parentpbentry):
             return
         _groups=self.fundamentals.get('groups', {})
         _res=[]
+        # each group is turned on/off via each bit of the _groups value
         for _index, _item in _groups.items():
             if (1<<_index)&self.pb.group:
                 _res.append({ 'category': _item['name'] })
@@ -205,6 +207,12 @@ class PBEntry(parentpbentry):
             # assume that the name has extension .jpg
             entry['wallpapers']=[{ 'wallpaper': _wp+'.jpg',
                                    'use': 'call' }]
+
+    def _extract_IM(self, entry, p_class):
+        if not self.pb.has_im_name:
+            return
+        entry['ims']=[{ 'type': self._IM_Type_String.get(self.pb.im_type, ''),
+                        'username': self.pb.im_name }]
 
     def _extract_address(self, entry, p_class):
         if not self.pb.has_address:
@@ -224,6 +232,7 @@ class PBEntry(parentpbentry):
 
     def getvalue(self):
         _entry=parentpbentry.getvalue(self)
+        self._extract_IM(_entry, self.phone.protocolclass)
         self._extract_address(_entry, self.phone.protocolclass)
         return _entry
 
@@ -309,6 +318,7 @@ class Profile(parentprofile):
             'wallpaper': 1,
             'ringtone': 1,
             'storage': 0,
+            'im': 1,
             },
         'calendar': {
             'description': True, 'location': True, 'allday': False,
