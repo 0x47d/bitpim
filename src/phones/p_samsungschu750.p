@@ -22,6 +22,8 @@ SND_EXCLUDED_FILES=('MsInfo.db',)
 SND_PRELOADED_PREFIX=SND_PATH+'/SCH-U750_PRELOADED_'
 
 # phonebook stuff,
+PB_WP_CACHE_WIDTH=80
+PB_WP_CACHE_HEIGHT=106
 PB_MAX_IMNAME_LEN=50
 PB_MAX_STREET_LEN=50
 PB_MAX_CITY_LEN=50
@@ -213,6 +215,21 @@ PACKET -PBEntry:
         # return True if this has at least one valid address item
         return self.has_street or self.has_city or self.has_state or \
                self.has_zipcode or self.has_country
+    @property
+    def address(self):
+        # return the address in a BitPim phonebook addresses dict
+        _addr={}
+        if self.has_street:
+            _addr['street']=self.street
+        if self.has_city:
+            _addr['city']=self.city
+        if self.has_state:
+            _addr['state']=self.state
+        if self.has_zipcode:
+            _addr['postalcode']=self.zipcode
+        if self.has_country:
+            _addr['country']=self.country
+        return _addr
     %}
 
 PACKET -LenEntry:
@@ -359,11 +376,21 @@ PACKET ss_pb_entry:
                 'default': '' } +im_name
     2 UINT { 'default': 0 } +im_type
     %{
-    @property
-    def has_address(self):
-        # return True if this has at least one valid address item
-        return bool(self.street or self.city or self.state or self.zipcode or \
-                    self.country)
+    def _set_address(self, addr):
+        # set address fields based on BitPim phonebook address dict
+        if not isinstance(addr, dict):
+            raise TypeError('addr must be of type dict')
+        self.street=addr.get('street', '')
+        self.city=addr.get('city', '')
+        self.state=addr.get('state', '')
+        self.zipcode=addr.get('postalcode', '')
+        self.country=addr.get('country', '')
+    def _get_address(self):
+        # return address items in BitPim phonebook address dict
+        return { 'street': self.street, 'city': self.city,
+                 'state': self.state, 'postalcode': self.zipcode,
+                 'country': self.country }
+    address=property(fget=_get_address, fset=_set_address)
     %}
 
 PACKET ss_pb_write_req:
@@ -375,3 +402,33 @@ PACKET -ss_pb_write_resp:
     * ss_cmd_hdr hdr
     1 DONTCARE
     2 UINT index
+
+# Call History
+PACKET -cl_list:
+    2 UINT index
+
+PACKET -cl_index_file:
+    * LIST { 'length': CL_MAX_ENTRIES,
+             'elementclass': cl_list } incoming
+    * LIST { 'length': CL_MAX_ENTRIES,
+             'elementclass': cl_list } outgoing
+    * LIST { 'length': CL_MAX_ENTRIES,
+             'elementclass': cl_list } missed
+    1374 DONTCARE
+    4 UINT incoming_count
+    4 UINT outgoing_count
+    4 UINT missed_count
+
+PACKET -cl_file:
+    1 UINT cl_type
+    51 STRING { 'terminator': 0 } number
+    4 DateTime2 datetime
+    4 DONTCARE
+    4 UINT duration
+    %{
+    @property
+    def valid(self):
+        global CL_VALID_TYPE
+        return bool(self.cl_type in CL_VALID_TYPE and self.number)
+    %}
+

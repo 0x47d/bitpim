@@ -656,7 +656,7 @@ class USTRING(BaseProtogenClass):
                     _value=_value[:-1]
 
         if self._maxsizeinbytes is not None:
-            self._value=self._value[:self._maxsizeinbytes]
+            _value=_value[:self._maxsizeinbytes]
 
         if self._constant is not None and _value!=self._constant:
             raise ValueException("The value read was not the constant")
@@ -1620,10 +1620,14 @@ class buffer(object):
     "This is used for reading and writing byte data"
     def __init__(self, data=None):
         "Call with data to read from it, or with None to write to it"
-        if data is not None:
-            self._data=data
-        else:
+        self.reset(data)
+
+    def reset(self, data=None):
+        "Call with data to read from it, or with None to write to it"
+        if data is None:
             self._buffer=cStringIO.StringIO()
+        else:
+            self._data=data
 
         self._offset=0
 

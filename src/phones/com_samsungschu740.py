@@ -192,7 +192,8 @@ class Phone(parentphone):
             if not _img.Ok():
                 self.log('Failed to understand image: '+filename)
                 return
-            _img.Rescale(128, 96)
+            _img.Rescale(self.protocolclass.PB_WP_CACHE_WIDTH,
+                         self.protocolclass.PB_WP_CACHE_HEIGHT)
             _img.SaveFile(_tmpname, wx.BITMAP_TYPE_JPEG)
             _newfilename='%(prefix)s/%(index)d.jpg'%\
                           { 'prefix': self.protocolclass.PB_WP_CACHE_PATH,

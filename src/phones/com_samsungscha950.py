@@ -779,7 +779,8 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
             if not _img.Ok():
                 self.log('Failed to understand image: '+filename)
                 return
-            _img.Rescale(128, 96)
+            _img.Rescale(self.protocolclass.PB_WP_CACHE_WIDTH,
+                         self.protocolclass.PB_WP_CACHE_HEIGHT)
             _img.SaveFile(_tmpname, wx.BITMAP_TYPE_JPEG)
             _newfilename=self.protocolclass.PB_WP_CACHE_PATH+'/$'+filename.replace('/', '$')
             _data=file(_tmpname, 'rb').read()
@@ -859,9 +860,9 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         # read the index file and return the number of incoming, outgoing, and
         # missed calls
         try:
-            _buf=prototypes.buffer(self.getfilecontents(self.protocolclass.CL_INDEX_FILE))
-            _req=self.protocolclass.cl_index_file()
-            _req.readfrombuffer(_buf, 'Reading Call Log Index File')
+            _req=self.readobject(self.protocolclass.CL_INDEX_FILE,
+                                 self.protocolclass.cl_index_file,
+                                 logtitle='Reading Call Log Index File')
             return ([x.index for x in _req.incoming[:_req.incoming_count]],
                     [x.index for x in _req.outgoing[:_req.outgoing_count]],
                     [x.index for x in _req.missed[:_req.missed_count]])
@@ -874,9 +875,10 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
     def _get_ch(self, call_list, folder, res):
         # read the call history files
         _req=self.protocolclass.cl_file()
+        _buf=prototypes.buffer()
         for _idx in call_list:
             try:
-                _buf=prototypes.buffer(self.getfilecontents(
+                _buf.reset(self.getfilecontents(
                     '%s%02d'%(self.protocolclass.CL_PREFIX, _idx)))
                 _req.readfrombuffer(_buf, 'Reading Call Log File')
                 if _req.valid:

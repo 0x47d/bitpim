@@ -45,6 +45,8 @@ PB_JRNL_FILE_PREFIX=PB_PATH+'/jrnl_'
 PB_ENTRY_FILE_PREFIX=PB_PATH+'/recs_'
 PB_MAIN_FILE_PREFIX=PB_PATH+'/main_'
 PB_WP_CACHE_PATH='cache/pb'
+PB_WP_CACHE_WIDTH=128
+PB_WP_CACHE_HEIGHT=96
 PB_MAX_NAME_LEN=32
 PB_MAX_EMAIL_LEN=48
 PB_MAX_NUMBER_LEN=48
@@ -1411,7 +1413,7 @@ class GroupEntry(BaseProtogenClass):
         self.__field_numofmembers=UINT(**{'sizeinbytes': 2})
         self.__field_numofmembers.readfrombuffer(buf)
         if self.numofmembers:
-            self.__field_members=LIST(**{'elementclass': _gen_p_samsungscha950_186,  'length': self.numofmembers })
+            self.__field_members=LIST(**{'elementclass': _gen_p_samsungscha950_188,  'length': self.numofmembers })
             self.__field_members.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -1475,7 +1477,7 @@ class GroupEntry(BaseProtogenClass):
         if isinstance(value,LIST):
             self.__field_members=value
         else:
-            self.__field_members=LIST(value,**{'elementclass': _gen_p_samsungscha950_186,  'length': self.numofmembers })
+            self.__field_members=LIST(value,**{'elementclass': _gen_p_samsungscha950_188,  'length': self.numofmembers })
 
     def __delfield_members(self): del self.__field_members
 
@@ -1495,7 +1497,7 @@ class GroupEntry(BaseProtogenClass):
 
 
 
-class _gen_p_samsungscha950_186(BaseProtogenClass):
+class _gen_p_samsungscha950_188(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['index']
 
@@ -1504,8 +1506,8 @@ class _gen_p_samsungscha950_186(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_samsungscha950_186,self).__init__(**dict)
-        if self.__class__ is _gen_p_samsungscha950_186:
+        super(_gen_p_samsungscha950_188,self).__init__(**dict)
+        if self.__class__ is _gen_p_samsungscha950_188:
             self._update(args,dict)
 
 
@@ -1514,7 +1516,7 @@ class _gen_p_samsungscha950_186(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_samsungscha950_186,self)._update(args,kwargs)
+        super(_gen_p_samsungscha950_188,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -1522,7 +1524,7 @@ class _gen_p_samsungscha950_186(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_samsungscha950_186,kwargs)
+            self._complainaboutunusedargs(_gen_p_samsungscha950_188,kwargs)
         if len(args):
             dict2={'sizeinbytes': 2}
             dict2.update(kwargs)
@@ -5416,10 +5418,10 @@ class ss_pb_read_req(BaseProtogenClass):
         except:
             self.__field_hdr=ss_cmd_hdr(**{ 'command': SS_CMD_PB_READ })
         self.__field_hdr.writetobuffer(buf)
-        try: self.__field__gen_p_samsungscha950_458
+        try: self.__field__gen_p_samsungscha950_460
         except:
-            self.__field__gen_p_samsungscha950_458=DONTCARE(**{'sizeinbytes': 1})
-        self.__field__gen_p_samsungscha950_458.writetobuffer(buf)
+            self.__field__gen_p_samsungscha950_460=DONTCARE(**{'sizeinbytes': 1})
+        self.__field__gen_p_samsungscha950_460.writetobuffer(buf)
         self.__field_index.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -5431,8 +5433,8 @@ class ss_pb_read_req(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_hdr=ss_cmd_hdr(**{ 'command': SS_CMD_PB_READ })
         self.__field_hdr.readfrombuffer(buf)
-        self.__field__gen_p_samsungscha950_458=DONTCARE(**{'sizeinbytes': 1})
-        self.__field__gen_p_samsungscha950_458.readfrombuffer(buf)
+        self.__field__gen_p_samsungscha950_460=DONTCARE(**{'sizeinbytes': 1})
+        self.__field__gen_p_samsungscha950_460.readfrombuffer(buf)
         self.__field_index=UINT(**{'sizeinbytes': 2})
         self.__field_index.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -6110,10 +6112,10 @@ class ss_number_entry(BaseProtogenClass):
         except:
             self.__field_primary=UINT(**{'sizeinbytes': 1,  'default': 0 })
         self.__field_primary.writetobuffer(buf)
-        try: self.__field__gen_p_samsungscha950_491
+        try: self.__field__gen_p_samsungscha950_493
         except:
-            self.__field__gen_p_samsungscha950_491=DONTCARE(**{'sizeinbytes': 8})
-        self.__field__gen_p_samsungscha950_491.writetobuffer(buf)
+            self.__field__gen_p_samsungscha950_493=DONTCARE(**{'sizeinbytes': 8})
+        self.__field__gen_p_samsungscha950_493.writetobuffer(buf)
         try: self.__field_ringtone
         except:
             self.__field_ringtone=STRING(**{ 'terminator': 0,               'default': '' })
@@ -6132,8 +6134,8 @@ class ss_number_entry(BaseProtogenClass):
         self.__field_speeddial.readfrombuffer(buf)
         self.__field_primary=UINT(**{'sizeinbytes': 1,  'default': 0 })
         self.__field_primary.readfrombuffer(buf)
-        self.__field__gen_p_samsungscha950_491=DONTCARE(**{'sizeinbytes': 8})
-        self.__field__gen_p_samsungscha950_491.readfrombuffer(buf)
+        self.__field__gen_p_samsungscha950_493=DONTCARE(**{'sizeinbytes': 8})
+        self.__field__gen_p_samsungscha950_493.readfrombuffer(buf)
         self.__field_ringtone=STRING(**{ 'terminator': 0,               'default': '' })
         self.__field_ringtone.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
@@ -6258,18 +6260,18 @@ class ss_pb_entry(BaseProtogenClass):
         except:
             self.__field_email2=USTRING(**{ 'terminator': 0,                'encoding': ENCODING,                'default': '',                'maxsizeinbytes': PB_MAX_EMAIL_LEN,                'raiseontruncate': False })
         self.__field_email2.writetobuffer(buf)
-        try: self.__field__gen_p_samsungscha950_510
+        try: self.__field__gen_p_samsungscha950_512
         except:
-            self.__field__gen_p_samsungscha950_510=DONTCARE(**{'sizeinbytes': 4})
-        self.__field__gen_p_samsungscha950_510.writetobuffer(buf)
+            self.__field__gen_p_samsungscha950_512=DONTCARE(**{'sizeinbytes': 4})
+        self.__field__gen_p_samsungscha950_512.writetobuffer(buf)
         try: self.__field_wallpaper
         except:
             self.__field_wallpaper=STRING(**{ 'terminator': 0,               'default': '' })
         self.__field_wallpaper.writetobuffer(buf)
-        try: self.__field__gen_p_samsungscha950_513
+        try: self.__field__gen_p_samsungscha950_515
         except:
-            self.__field__gen_p_samsungscha950_513=DONTCARE(**{'sizeinbytes': 1})
-        self.__field__gen_p_samsungscha950_513.writetobuffer(buf)
+            self.__field__gen_p_samsungscha950_515=DONTCARE(**{'sizeinbytes': 1})
+        self.__field__gen_p_samsungscha950_515.writetobuffer(buf)
         try: self.__field_home
         except:
             self.__field_home=ss_number_entry()
@@ -6294,18 +6296,18 @@ class ss_pb_entry(BaseProtogenClass):
         except:
             self.__field_cell2=ss_number_entry()
         self.__field_cell2.writetobuffer(buf)
-        try: self.__field__gen_p_samsungscha950_520
+        try: self.__field__gen_p_samsungscha950_522
         except:
-            self.__field__gen_p_samsungscha950_520=DONTCARE(**{'sizeinbytes': 4})
-        self.__field__gen_p_samsungscha950_520.writetobuffer(buf)
+            self.__field__gen_p_samsungscha950_522=DONTCARE(**{'sizeinbytes': 4})
+        self.__field__gen_p_samsungscha950_522.writetobuffer(buf)
         try: self.__field_group
         except:
             self.__field_group=UINT(**{'sizeinbytes': 1,  'default': 0 })
         self.__field_group.writetobuffer(buf)
-        try: self.__field__gen_p_samsungscha950_522
+        try: self.__field__gen_p_samsungscha950_524
         except:
-            self.__field__gen_p_samsungscha950_522=DONTCARE(**{'sizeinbytes': 2})
-        self.__field__gen_p_samsungscha950_522.writetobuffer(buf)
+            self.__field__gen_p_samsungscha950_524=DONTCARE(**{'sizeinbytes': 2})
+        self.__field__gen_p_samsungscha950_524.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
@@ -6320,12 +6322,12 @@ class ss_pb_entry(BaseProtogenClass):
         self.__field_email.readfrombuffer(buf)
         self.__field_email2=USTRING(**{ 'terminator': 0,                'encoding': ENCODING,                'default': '',                'maxsizeinbytes': PB_MAX_EMAIL_LEN,                'raiseontruncate': False })
         self.__field_email2.readfrombuffer(buf)
-        self.__field__gen_p_samsungscha950_510=DONTCARE(**{'sizeinbytes': 4})
-        self.__field__gen_p_samsungscha950_510.readfrombuffer(buf)
+        self.__field__gen_p_samsungscha950_512=DONTCARE(**{'sizeinbytes': 4})
+        self.__field__gen_p_samsungscha950_512.readfrombuffer(buf)
         self.__field_wallpaper=STRING(**{ 'terminator': 0,               'default': '' })
         self.__field_wallpaper.readfrombuffer(buf)
-        self.__field__gen_p_samsungscha950_513=DONTCARE(**{'sizeinbytes': 1})
-        self.__field__gen_p_samsungscha950_513.readfrombuffer(buf)
+        self.__field__gen_p_samsungscha950_515=DONTCARE(**{'sizeinbytes': 1})
+        self.__field__gen_p_samsungscha950_515.readfrombuffer(buf)
         self.__field_home=ss_number_entry()
         self.__field_home.readfrombuffer(buf)
         self.__field_work=ss_number_entry()
@@ -6338,12 +6340,12 @@ class ss_pb_entry(BaseProtogenClass):
         self.__field_fax.readfrombuffer(buf)
         self.__field_cell2=ss_number_entry()
         self.__field_cell2.readfrombuffer(buf)
-        self.__field__gen_p_samsungscha950_520=DONTCARE(**{'sizeinbytes': 4})
-        self.__field__gen_p_samsungscha950_520.readfrombuffer(buf)
+        self.__field__gen_p_samsungscha950_522=DONTCARE(**{'sizeinbytes': 4})
+        self.__field__gen_p_samsungscha950_522.readfrombuffer(buf)
         self.__field_group=UINT(**{'sizeinbytes': 1,  'default': 0 })
         self.__field_group.readfrombuffer(buf)
-        self.__field__gen_p_samsungscha950_522=DONTCARE(**{'sizeinbytes': 2})
-        self.__field__gen_p_samsungscha950_522.readfrombuffer(buf)
+        self.__field__gen_p_samsungscha950_524=DONTCARE(**{'sizeinbytes': 2})
+        self.__field__gen_p_samsungscha950_524.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
 
@@ -6690,7 +6692,7 @@ class ss_pb_write_resp(BaseProtogenClass):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_hdr.writetobuffer(buf)
-        self.__field__gen_p_samsungscha950_531.writetobuffer(buf)
+        self.__field__gen_p_samsungscha950_533.writetobuffer(buf)
         self.__field_index.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -6702,8 +6704,8 @@ class ss_pb_write_resp(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_hdr=ss_cmd_hdr()
         self.__field_hdr.readfrombuffer(buf)
-        self.__field__gen_p_samsungscha950_531=DONTCARE(**{'sizeinbytes': 1})
-        self.__field__gen_p_samsungscha950_531.readfrombuffer(buf)
+        self.__field__gen_p_samsungscha950_533=DONTCARE(**{'sizeinbytes': 1})
+        self.__field__gen_p_samsungscha950_533.readfrombuffer(buf)
         self.__field_index=UINT(**{'sizeinbytes': 2})
         self.__field_index.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()

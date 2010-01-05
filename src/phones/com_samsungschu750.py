@@ -161,27 +161,24 @@ class Phone(com_brew.RealBrewProtocol2, parentphone):
 # PBEntry class-----------------------------------------------------------------
 parentpbentry=schu470.PBEntry
 class PBEntry(parentpbentry):
+
     _IM_Type_String={ 1: 'AIM', 2: 'Yahoo!', 3: 'WL Messenger' }
     _IM_Type_Index={ 'AIM': 1, 'Yahoo!': 2, 'WL Messenger': 3 }
+
     # routines to convert BitPim dict into phone's data
     def _build_address(self, address):
-        if not address:
-            # nothing to build
-            return
-        if address.get('street', None):
-            self.pb.street=address['street']
-        if address.get('city', None):
-            self.pb.city=address['city']
-        if address.get('state', None):
-            self.pb.state=address['state']
-        if address.get('postalcode', None):
-            self.pb.zipcode=address['postalcode']
-        if address.get('country', None):
-            self.pb.country=address['country']
+        if address:
+            self.pb.address=address
+
+    def _build_IM(self, im):
+        if im:
+            self.pb.im_type=self._IM_Type_Index.get(im.get('type', ''), 1)
+            self.pb.im_name=im.get('username', '')
 
     def _build(self, entry):
         parentpbentry._build(self, entry)
         self._build_address(entry.get('addresses', [{}])[0])
+        self._build_IM(entry.get('ims', [{}])[0])
 
     # routines to convert phone's data into BitPim dict
     def _extract_group(self, entry, p_class):
@@ -209,26 +206,13 @@ class PBEntry(parentpbentry):
                                    'use': 'call' }]
 
     def _extract_IM(self, entry, p_class):
-        if not self.pb.has_im_name:
-            return
-        entry['ims']=[{ 'type': self._IM_Type_String.get(self.pb.im_type, ''),
-                        'username': self.pb.im_name }]
+        if self.pb.has_im_name:
+            entry['ims']=[{ 'type': self._IM_Type_String.get(self.pb.im_type, ''),
+                            'username': self.pb.im_name }]
 
     def _extract_address(self, entry, p_class):
-        if not self.pb.has_address:
-            return
-        _addr={}
-        if self.pb.has_street:
-            _addr['street']=self.pb.street
-        if self.pb.has_city:
-            _addr['city']=self.pb.city
-        if self.pb.has_state:
-            _addr['state']=self.pb.state
-        if self.pb.has_zipcode:
-            _addr['postalcode']=self.pb.zipcode
-        if self.pb.has_country:
-            _addr['country']=self.pb.country
-        entry['addresses']=[_addr]
+        if self.pb.has_address:
+            entry['addresses']=[self.pb.address]
 
     def getvalue(self):
         _entry=parentpbentry.getvalue(self)
@@ -282,7 +266,7 @@ class Profile(parentprofile):
 
     _supportedsyncs=(
         ('phonebook', 'read', None),  # all phonebook reading
-##        ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
+        ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
 ##        ('calendar', 'read', None),   # all calendar reading
 ##        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
         ('ringtone', 'read', None),   # all ringtone reading
@@ -291,7 +275,7 @@ class Profile(parentprofile):
         ('wallpaper', 'write', 'MERGE'),
 ##        ('memo', 'read', None),     # all memo list reading DJP
 ##        ('memo', 'write', 'OVERWRITE'),  # all memo list writing DJP
-##        ('call_history', 'read', None),# all call history list reading
+        ('call_history', 'read', None),# all call history list reading
 ##        ('sms', 'read', None),     # all SMS list reading DJP
         )
 
