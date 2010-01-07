@@ -227,6 +227,12 @@ class Phone(parentphone):
                              }
             fundamentals['wallpaper-range']=_wp_range
 
+# CalendarEntry class-----------------------------------------------------------
+parentcalendarentry=scha950.CalendarEntry
+class CalendarEntry(parentcalendarentry):
+    pass
+
+
 # PBEntry class-----------------------------------------------------------------
 parentpbentry=scha950.PBEntry
 class PBEntry(parentpbentry):

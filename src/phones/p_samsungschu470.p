@@ -208,13 +208,13 @@ PACKET CalIndexEntry:
     2 UINT { 'default': 0 } +index
 PACKET CalIndexFile:
     2 UINT next_index
-    12 UNKNOWN { 'pad': 0 } +zero1
+    12 DONTCARE +
     2 UINT numofevents
-    6 UNKNOWN { 'pad': 0 } +zero2
+    6 DONTCARE +
     2 UINT numofnotes
-    6 UNKNOWN { 'pad': 0 } +zero3
+    6 DONTCARE +
     2 UINT numofactiveevents
-    112 UNKNOWN { 'pad': 0 } +zero4
+    112 DONTCARE +
     * LIST { 'elementclass': CalIndexEntry,
              'length': 103,
              'createdefault': True } +events
@@ -231,27 +231,27 @@ PACKET CalEntry:
                 'encoding': ENCODING,
                 'terminator': None } title
     4 DateTime start
-    4 UNKNOWN { 'pad': 0 } +zero1
+    4 DONTCARE +
     4 DateTime { 'default': self.start } +start2
-    4 UNKNOWN { 'pad': 0 } +zero2
+    4 DONTCARE +
     4 ExpiringTime exptime
-    4 UNKNOWN { 'pad': 0 } +zero3
-    1 UINT { 'default': 1 } +one
+    4 DONTCARE +
+    1 DONTCARE { 'default': '\x01' } +
     1 UINT repeat
-    1 UINT { 'default': 3 } +three
+    1 DONTCARE { 'default': '\x03' } +
     1 UINT alarm
     1 UINT alert
-    6 UNKNOWN { 'pad': 0 } +zero4
+    6 DONTCARE +
     4 UINT duration
     1 UINT timezone
     4 DateTime creationtime
-    4 UNKNOWN { 'pad': 0 } +zero5
+    4 DONTCARE +
     4 DateTime modifiedtime
-    4 UNKNOWN { 'pad': 0 } +zero6
+    4 DONTCARE +
     2 UINT ringtonelen
     * STRING { 'sizeinbytes': self.ringtonelen,
                'terminator': None } ringtone
-    2 UNKNOWN { 'pad': 0 } +zero7
+    2 DONTCARE +
 
 PACKET NotePadEntry:
     2 UINT textlen

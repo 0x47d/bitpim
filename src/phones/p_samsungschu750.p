@@ -39,9 +39,9 @@ PB_FLG_CITY=0x0004
 PB_FLG_STATE=0x0008
 PB_FLG_ZIP=0x0010
 PB_FLG_COUNTRY=0x0020
-PB_FLG_ENTRY_WP=0x0040
+PB_FLG_ENTRY_WP=0x0100
 PB_FLG_ENTRY_RT=0x0080
-PB_FLG_ENTRY_CACHED_WP=0x0100
+PB_FLG_ENTRY_CACHED_WP=0x0040
 # each number entry flag
 PB_FLG_DUNNO1=0x04
 %}
@@ -431,4 +431,181 @@ PACKET -cl_file:
         global CL_VALID_TYPE
         return bool(self.cl_type in CL_VALID_TYPE and self.number)
     %}
+
+# Calendar and notes stuff
+PACKET CalIndexEntry:
+    2 UINT { 'default': 0 } +index
+PACKET CalIndexFile:
+    2 UINT next_index
+    12 DONTCARE +
+    2 UINT numofevents
+    6 DONTCARE +
+    2 UINT numofnotes
+    6 DONTCARE +
+    2 UINT numofactiveevents
+    112 DONTCARE +
+    * LIST { 'elementclass': CalIndexEntry,
+             'length': 103,
+             'createdefault': True } +events
+    * LIST { 'elementclass': CalIndexEntry,
+             'length': 35,
+             'createdefault': True } +notes
+    * LIST { 'elementclass': CalIndexEntry,
+             'length': 319,
+             'createdefault': True } +activeevents
+
+PACKET CalEntry:
+    2 UINT titlelen
+    * USTRING { 'sizeinbytes': self.titlelen,
+                'encoding': ENCODING,
+                'terminator': None } title
+    4 DateTime2 start
+    4 DateTime2 { 'default': self.start } +start2
+    4 DateTime2 end
+    1 DONTCARE { 'default': '\x01' } +
+    1 UINT repeat
+    1 DONTCARE { 'default': '\x03' } +
+    1 UINT alarm
+    1 UINT alert
+    1 UINT { 'default': 0 } +reminder
+    5 DONTCARE +
+    4 UINT duration
+    1 UINT timezone
+    4 DateTime2 creationtime
+    4 DateTime2 { 'default': self.creationtime } +modifiedtime
+    2 UINT ringtonelen
+    * STRING { 'sizeinbytes': self.ringtonelen,
+               'terminator': None } ringtone
+    2 DONTCARE +
+
+PACKET NotePadEntry:
+    2 UINT textlen
+    * USTRING { 'terminator': None,
+                'encoding': ENCODING,
+                'sizeinbytes': self.textlen } text
+    4 DateTime2 creation
+    4 DateTime2 { 'default': self.creation } +creation2
+    6 DONTCARE +
+    1 DONTCARE { 'default': '\x05' } +
+    12 DONTCARE +
+    1 DONTCARE { 'default': '\x30' } +
+    4 DateTime2 { 'default': self.creation } +modified
+    4 DateTime2 { 'default': self.modified } +modified2
+    4 DONTCARE +
+
+# SMS Stuff
+PACKET pBOOL:
+    P BOOL value
+
+PACKET -sms_header:
+    2 UINT index
+    1 DONTCARE
+    1 UINT msg_len
+    1 DONTCARE
+    1 UINT callback_len
+    1 UINT bitmap1
+    1 UINT bitmap2
+    6 DONTCARE
+    2 UINT body_len
+    2 UINT file_type
+    1 UINT msg_type
+    1 UINT enhance_delivery
+    * pBOOL { 'value': self.file_type==SMS_TXT_TYPE and self.msg_type in SMS_VALID_TYPE } is_txt_msg
+    * pBOOL { 'value': self.msg_type==SMS_TYPE_IN } in_msg
+    * pBOOL { 'value': self.msg_type==SMS_TYPE_SENT } sent_msg
+    * pBOOL { 'value': self.msg_type==SMS_TYPE_DRAFT } draft_msg
+    if self.is_txt_msg.value:
+        * sms_body {
+            'msg_len': self.msg_len,
+            'has_callback': self.bitmap2 & SMS_FLG2_CALLBACK,
+            'has_priority': self.bitmap2 & SMS_FLG2_PRIORITY,
+            'has_1byte': (self.bitmap2 & SMS_FLG2_SOMETHING) or (not self.bitmap2),
+            'has_1byte2': self.bitmap2 & SMS_FLG2_MSG,
+            'has_40bytes': self.bitmap1 & SMS_FLG1_HAS40 } body
+
+PACKET -sms_msg_stat_list:
+    1 UINT status
+PACKET -sms_datetime_list:
+    4 DateTime2 datetime
+PACKET -sms_delivered_datetime:
+    * LIST { 'elementclass': sms_datetime_list,
+             'length': 10 } datetime
+    20 DONTCARE
+PACKET -sms_body:
+    P UINT msg_len
+    P BOOL { 'default': True } +has_callback
+    P BOOL { 'default': False } +has_priority
+    P BOOL { 'default': False } +has_1byte
+    P BOOL { 'default': True } +has_1byte2
+    P BOOL { 'default': False } +has_40bytes
+    54 DONTCARE
+    * USTRING { 'sizeinbytes': self.msg_len,
+                'encoding': ENCODING,
+                'terminator': None } msg
+    if self.has_callback:
+        4 DONTCARE
+        1 UINT callback_len
+        * STRING { 'sizeinbytes': self.callback_len,
+                   'terminator': None } callback
+    if self.has_priority:
+        1 UINT priority
+    if self.has_1byte:
+        1 DONTCARE
+    40 DONTCARE
+    4 DateTime1 datetime
+    13 DONTCARE
+    1 UINT addr_len0
+    1 UINT addr_len1
+    1 UINT addr_len2
+    1 UINT addr_len3
+    1 UINT addr_len4
+    1 UINT addr_len5
+    1 UINT addr_len6
+    1 UINT addr_len7
+    1 UINT addr_len8
+    1 UINT addr_len9
+    if self.addr_len0:
+        * STRING { 'sizeinbytes': self.addr_len0,
+                   'terminator': None } addr0
+    if self.addr_len1:
+        * STRING { 'sizeinbytes': self.addr_len1,
+                   'terminator': None } addr1
+    if self.addr_len2:
+        * STRING { 'sizeinbytes': self.addr_len2,
+                   'terminator': None } addr2
+    if self.addr_len3:
+        * STRING { 'sizeinbytes': self.addr_len3,
+                   'terminator': None } addr3
+    if self.addr_len4:
+        * STRING { 'sizeinbytes': self.addr_len4,
+                   'terminator': None } addr4
+    if self.addr_len5:
+        * STRING { 'sizeinbytes': self.addr_len5,
+                   'terminator': None } addr5
+    if self.addr_len6:
+        * STRING { 'sizeinbytes': self.addr_len6,
+                   'terminator': None } addr6
+    if self.addr_len7:
+        * STRING { 'sizeinbytes': self.addr_len7,
+                   'terminator': None } addr7
+    if self.addr_len8:
+        * STRING { 'sizeinbytes': self.addr_len8,
+                   'terminator': None } addr8
+    if self.addr_len9:
+        * STRING { 'sizeinbytes': self.addr_len9,
+                   'terminator': None } addr9
+    if not self.has_1byte and self.has_1byte2:
+        1 DONTCARE
+    if self.has_1byte2:
+        1 DONTCARE
+    81 DONTCARE
+    if self.has_40bytes:
+        40 DONTCARE
+    * LIST { 'elementclass': sms_msg_stat_list,
+             'length': 10 } msg_stat
+    # too hard to do it here.  Will be handled by the phone code
+##    if self.msg_stat[0].status==SMS_STATUS_DELIVERED:
+##        4 DateTime1 delivered_datetime
+##        96 UNKNOWN dunno10
+##    4 UINT locked
 

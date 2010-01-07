@@ -74,8 +74,9 @@ class Phone(com_brew.RealBrewProtocol2, parentphone):
     def __init__(self, logtarget, commport):
         "Calls all the constructors and sets initial modes"
         parentphone.__init__(self, logtarget, commport)
-        global PBEntry
+        global PBEntry, CalendarEntry
         self.pbentryclass=PBEntry
+        self.calendarclass=CalendarEntry
 
     # ringtone stuff-----------------------------------------------------------
     def _get_file_ringtone_index(self, idx, result,
@@ -157,6 +158,33 @@ class Phone(com_brew.RealBrewProtocol2, parentphone):
                 raise
         return fundamentals
 
+# CalendarEntry class-----------------------------------------------------------
+parentcalendarentry=schu470.CalendarEntry
+class CalendarEntry(parentcalendarentry):
+    """Transient class to handle calendar data being sent to, retrieved from
+    the phone.
+    """
+    # routines to build phone data from BitPim dict
+    def _build(self, entry):
+        # populate this object with data from BitPim
+        self.cal.titlelen=len(entry.desc_loc)
+        self.cal.title=entry.desc_loc
+        self.cal.start=entry.start
+        self.cal.end=entry.end
+        self.cal.repeat=self._build_repeat(entry)
+        self.cal.alarm=self._build_alarm(entry)
+        self.cal.alert=self._build_alert(entry)
+        self.cal.duration=self._build_duration(entry)
+        self.cal.timezone=self._build_tz()
+        self.cal.creationtime=self.phone._time_now()
+        _ringtone=self.phone.get_ringtone_range(entry.ringtone,
+                                                self.fundamentals)
+        self.cal.ringtonelen=len(_ringtone)
+        self.cal.ringtone=_ringtone
+
+    # routines to extract data from the phone into BitPim dict
+    def _extract_end(self):
+        return self.cal.end[:5]
 
 # PBEntry class-----------------------------------------------------------------
 parentpbentry=schu470.PBEntry
@@ -267,16 +295,16 @@ class Profile(parentprofile):
     _supportedsyncs=(
         ('phonebook', 'read', None),  # all phonebook reading
         ('phonebook', 'write', 'OVERWRITE'),  # only overwriting phonebook
-##        ('calendar', 'read', None),   # all calendar reading
-##        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
+        ('calendar', 'read', None),   # all calendar reading
+        ('calendar', 'write', 'OVERWRITE'),   # only overwriting calendar
         ('ringtone', 'read', None),   # all ringtone reading
         ('ringtone', 'write', 'MERGE'),
         ('wallpaper', 'read', None),  # all wallpaper reading
         ('wallpaper', 'write', 'MERGE'),
-##        ('memo', 'read', None),     # all memo list reading DJP
-##        ('memo', 'write', 'OVERWRITE'),  # all memo list writing DJP
+        ('memo', 'read', None),     # all memo list reading DJP
+        ('memo', 'write', 'OVERWRITE'),  # all memo list writing DJP
         ('call_history', 'read', None),# all call history list reading
-##        ('sms', 'read', None),     # all SMS list reading DJP
+        ('sms', 'read', None),     # all SMS list reading DJP
         )
 
     field_color_data={

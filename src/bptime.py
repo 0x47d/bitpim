@@ -170,7 +170,7 @@ class BPTime(object):
         self._date=self._time=None
         if len(v)>2:
             self._date=datetime.date(*v[:3])
-        if len(v)==5:
+        if len(v)>4:
             self._time=datetime.time(*v[3:])
 
     def mktime(self):

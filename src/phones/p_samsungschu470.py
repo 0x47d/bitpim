@@ -1546,7 +1546,7 @@ class CalIndexEntry(BaseProtogenClass):
 
 
 class CalIndexFile(BaseProtogenClass):
-    __fields=['next_index', 'zero1', 'numofevents', 'zero2', 'numofnotes', 'zero3', 'numofactiveevents', 'zero4', 'events', 'notes', 'activeevents']
+    __fields=['next_index', 'numofevents', 'numofnotes', 'numofactiveevents', 'events', 'notes', 'activeevents']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -1580,25 +1580,25 @@ class CalIndexFile(BaseProtogenClass):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         self.__field_next_index.writetobuffer(buf)
-        try: self.__field_zero1
+        try: self.__field__gen_p_samsungschu470_211
         except:
-            self.__field_zero1=UNKNOWN(**{'sizeinbytes': 12,  'pad': 0 })
-        self.__field_zero1.writetobuffer(buf)
+            self.__field__gen_p_samsungschu470_211=DONTCARE(**{'sizeinbytes': 12})
+        self.__field__gen_p_samsungschu470_211.writetobuffer(buf)
         self.__field_numofevents.writetobuffer(buf)
-        try: self.__field_zero2
+        try: self.__field__gen_p_samsungschu470_213
         except:
-            self.__field_zero2=UNKNOWN(**{'sizeinbytes': 6,  'pad': 0 })
-        self.__field_zero2.writetobuffer(buf)
+            self.__field__gen_p_samsungschu470_213=DONTCARE(**{'sizeinbytes': 6})
+        self.__field__gen_p_samsungschu470_213.writetobuffer(buf)
         self.__field_numofnotes.writetobuffer(buf)
-        try: self.__field_zero3
+        try: self.__field__gen_p_samsungschu470_215
         except:
-            self.__field_zero3=UNKNOWN(**{'sizeinbytes': 6,  'pad': 0 })
-        self.__field_zero3.writetobuffer(buf)
+            self.__field__gen_p_samsungschu470_215=DONTCARE(**{'sizeinbytes': 6})
+        self.__field__gen_p_samsungschu470_215.writetobuffer(buf)
         self.__field_numofactiveevents.writetobuffer(buf)
-        try: self.__field_zero4
+        try: self.__field__gen_p_samsungschu470_217
         except:
-            self.__field_zero4=UNKNOWN(**{'sizeinbytes': 112,  'pad': 0 })
-        self.__field_zero4.writetobuffer(buf)
+            self.__field__gen_p_samsungschu470_217=DONTCARE(**{'sizeinbytes': 112})
+        self.__field__gen_p_samsungschu470_217.writetobuffer(buf)
         try: self.__field_events
         except:
             self.__field_events=LIST(**{ 'elementclass': CalIndexEntry,             'length': 103,             'createdefault': True })
@@ -1621,20 +1621,20 @@ class CalIndexFile(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_next_index=UINT(**{'sizeinbytes': 2})
         self.__field_next_index.readfrombuffer(buf)
-        self.__field_zero1=UNKNOWN(**{'sizeinbytes': 12,  'pad': 0 })
-        self.__field_zero1.readfrombuffer(buf)
+        self.__field__gen_p_samsungschu470_211=DONTCARE(**{'sizeinbytes': 12})
+        self.__field__gen_p_samsungschu470_211.readfrombuffer(buf)
         self.__field_numofevents=UINT(**{'sizeinbytes': 2})
         self.__field_numofevents.readfrombuffer(buf)
-        self.__field_zero2=UNKNOWN(**{'sizeinbytes': 6,  'pad': 0 })
-        self.__field_zero2.readfrombuffer(buf)
+        self.__field__gen_p_samsungschu470_213=DONTCARE(**{'sizeinbytes': 6})
+        self.__field__gen_p_samsungschu470_213.readfrombuffer(buf)
         self.__field_numofnotes=UINT(**{'sizeinbytes': 2})
         self.__field_numofnotes.readfrombuffer(buf)
-        self.__field_zero3=UNKNOWN(**{'sizeinbytes': 6,  'pad': 0 })
-        self.__field_zero3.readfrombuffer(buf)
+        self.__field__gen_p_samsungschu470_215=DONTCARE(**{'sizeinbytes': 6})
+        self.__field__gen_p_samsungschu470_215.readfrombuffer(buf)
         self.__field_numofactiveevents=UINT(**{'sizeinbytes': 2})
         self.__field_numofactiveevents.readfrombuffer(buf)
-        self.__field_zero4=UNKNOWN(**{'sizeinbytes': 112,  'pad': 0 })
-        self.__field_zero4.readfrombuffer(buf)
+        self.__field__gen_p_samsungschu470_217=DONTCARE(**{'sizeinbytes': 112})
+        self.__field__gen_p_samsungschu470_217.readfrombuffer(buf)
         self.__field_events=LIST(**{ 'elementclass': CalIndexEntry,             'length': 103,             'createdefault': True })
         self.__field_events.readfrombuffer(buf)
         self.__field_notes=LIST(**{ 'elementclass': CalIndexEntry,             'length': 35,             'createdefault': True })
@@ -1657,22 +1657,6 @@ class CalIndexFile(BaseProtogenClass):
 
     next_index=property(__getfield_next_index, __setfield_next_index, __delfield_next_index, None)
 
-    def __getfield_zero1(self):
-        try: self.__field_zero1
-        except:
-            self.__field_zero1=UNKNOWN(**{'sizeinbytes': 12,  'pad': 0 })
-        return self.__field_zero1.getvalue()
-
-    def __setfield_zero1(self, value):
-        if isinstance(value,UNKNOWN):
-            self.__field_zero1=value
-        else:
-            self.__field_zero1=UNKNOWN(value,**{'sizeinbytes': 12,  'pad': 0 })
-
-    def __delfield_zero1(self): del self.__field_zero1
-
-    zero1=property(__getfield_zero1, __setfield_zero1, __delfield_zero1, None)
-
     def __getfield_numofevents(self):
         return self.__field_numofevents.getvalue()
 
@@ -1685,22 +1669,6 @@ class CalIndexFile(BaseProtogenClass):
     def __delfield_numofevents(self): del self.__field_numofevents
 
     numofevents=property(__getfield_numofevents, __setfield_numofevents, __delfield_numofevents, None)
-
-    def __getfield_zero2(self):
-        try: self.__field_zero2
-        except:
-            self.__field_zero2=UNKNOWN(**{'sizeinbytes': 6,  'pad': 0 })
-        return self.__field_zero2.getvalue()
-
-    def __setfield_zero2(self, value):
-        if isinstance(value,UNKNOWN):
-            self.__field_zero2=value
-        else:
-            self.__field_zero2=UNKNOWN(value,**{'sizeinbytes': 6,  'pad': 0 })
-
-    def __delfield_zero2(self): del self.__field_zero2
-
-    zero2=property(__getfield_zero2, __setfield_zero2, __delfield_zero2, None)
 
     def __getfield_numofnotes(self):
         return self.__field_numofnotes.getvalue()
@@ -1715,22 +1683,6 @@ class CalIndexFile(BaseProtogenClass):
 
     numofnotes=property(__getfield_numofnotes, __setfield_numofnotes, __delfield_numofnotes, None)
 
-    def __getfield_zero3(self):
-        try: self.__field_zero3
-        except:
-            self.__field_zero3=UNKNOWN(**{'sizeinbytes': 6,  'pad': 0 })
-        return self.__field_zero3.getvalue()
-
-    def __setfield_zero3(self, value):
-        if isinstance(value,UNKNOWN):
-            self.__field_zero3=value
-        else:
-            self.__field_zero3=UNKNOWN(value,**{'sizeinbytes': 6,  'pad': 0 })
-
-    def __delfield_zero3(self): del self.__field_zero3
-
-    zero3=property(__getfield_zero3, __setfield_zero3, __delfield_zero3, None)
-
     def __getfield_numofactiveevents(self):
         return self.__field_numofactiveevents.getvalue()
 
@@ -1743,22 +1695,6 @@ class CalIndexFile(BaseProtogenClass):
     def __delfield_numofactiveevents(self): del self.__field_numofactiveevents
 
     numofactiveevents=property(__getfield_numofactiveevents, __setfield_numofactiveevents, __delfield_numofactiveevents, None)
-
-    def __getfield_zero4(self):
-        try: self.__field_zero4
-        except:
-            self.__field_zero4=UNKNOWN(**{'sizeinbytes': 112,  'pad': 0 })
-        return self.__field_zero4.getvalue()
-
-    def __setfield_zero4(self, value):
-        if isinstance(value,UNKNOWN):
-            self.__field_zero4=value
-        else:
-            self.__field_zero4=UNKNOWN(value,**{'sizeinbytes': 112,  'pad': 0 })
-
-    def __delfield_zero4(self): del self.__field_zero4
-
-    zero4=property(__getfield_zero4, __setfield_zero4, __delfield_zero4, None)
 
     def __getfield_events(self):
         try: self.__field_events
@@ -1813,13 +1749,9 @@ class CalIndexFile(BaseProtogenClass):
 
     def containerelements(self):
         yield ('next_index', self.__field_next_index, None)
-        yield ('zero1', self.__field_zero1, None)
         yield ('numofevents', self.__field_numofevents, None)
-        yield ('zero2', self.__field_zero2, None)
         yield ('numofnotes', self.__field_numofnotes, None)
-        yield ('zero3', self.__field_zero3, None)
         yield ('numofactiveevents', self.__field_numofactiveevents, None)
-        yield ('zero4', self.__field_zero4, None)
         yield ('events', self.__field_events, None)
         yield ('notes', self.__field_notes, None)
         yield ('activeevents', self.__field_activeevents, None)
@@ -1828,7 +1760,7 @@ class CalIndexFile(BaseProtogenClass):
 
 
 class CalEntry(BaseProtogenClass):
-    __fields=['titlelen', 'title', 'start', 'zero1', 'start2', 'zero2', 'exptime', 'zero3', 'one', 'repeat', 'three', 'alarm', 'alert', 'zero4', 'duration', 'timezone', 'creationtime', 'zero5', 'modifiedtime', 'zero6', 'ringtonelen', 'ringtone', 'zero7']
+    __fields=['titlelen', 'title', 'start', 'start2', 'exptime', 'repeat', 'alarm', 'alert', 'duration', 'timezone', 'creationtime', 'modifiedtime', 'ringtonelen', 'ringtone']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -1864,56 +1796,56 @@ class CalEntry(BaseProtogenClass):
         self.__field_titlelen.writetobuffer(buf)
         self.__field_title.writetobuffer(buf)
         self.__field_start.writetobuffer(buf)
-        try: self.__field_zero1
+        try: self.__field__gen_p_samsungschu470_234
         except:
-            self.__field_zero1=UNKNOWN(**{'sizeinbytes': 4,  'pad': 0 })
-        self.__field_zero1.writetobuffer(buf)
+            self.__field__gen_p_samsungschu470_234=DONTCARE(**{'sizeinbytes': 4})
+        self.__field__gen_p_samsungschu470_234.writetobuffer(buf)
         try: self.__field_start2
         except:
             self.__field_start2=DateTime(**{'sizeinbytes': 4,  'default': self.start })
         self.__field_start2.writetobuffer(buf)
-        try: self.__field_zero2
+        try: self.__field__gen_p_samsungschu470_236
         except:
-            self.__field_zero2=UNKNOWN(**{'sizeinbytes': 4,  'pad': 0 })
-        self.__field_zero2.writetobuffer(buf)
+            self.__field__gen_p_samsungschu470_236=DONTCARE(**{'sizeinbytes': 4})
+        self.__field__gen_p_samsungschu470_236.writetobuffer(buf)
         self.__field_exptime.writetobuffer(buf)
-        try: self.__field_zero3
+        try: self.__field__gen_p_samsungschu470_238
         except:
-            self.__field_zero3=UNKNOWN(**{'sizeinbytes': 4,  'pad': 0 })
-        self.__field_zero3.writetobuffer(buf)
-        try: self.__field_one
+            self.__field__gen_p_samsungschu470_238=DONTCARE(**{'sizeinbytes': 4})
+        self.__field__gen_p_samsungschu470_238.writetobuffer(buf)
+        try: self.__field__gen_p_samsungschu470_239
         except:
-            self.__field_one=UINT(**{'sizeinbytes': 1,  'default': 1 })
-        self.__field_one.writetobuffer(buf)
+            self.__field__gen_p_samsungschu470_239=DONTCARE(**{'sizeinbytes': 1,  'default': '\x01' })
+        self.__field__gen_p_samsungschu470_239.writetobuffer(buf)
         self.__field_repeat.writetobuffer(buf)
-        try: self.__field_three
+        try: self.__field__gen_p_samsungschu470_241
         except:
-            self.__field_three=UINT(**{'sizeinbytes': 1,  'default': 3 })
-        self.__field_three.writetobuffer(buf)
+            self.__field__gen_p_samsungschu470_241=DONTCARE(**{'sizeinbytes': 1,  'default': '\x03' })
+        self.__field__gen_p_samsungschu470_241.writetobuffer(buf)
         self.__field_alarm.writetobuffer(buf)
         self.__field_alert.writetobuffer(buf)
-        try: self.__field_zero4
+        try: self.__field__gen_p_samsungschu470_244
         except:
-            self.__field_zero4=UNKNOWN(**{'sizeinbytes': 6,  'pad': 0 })
-        self.__field_zero4.writetobuffer(buf)
+            self.__field__gen_p_samsungschu470_244=DONTCARE(**{'sizeinbytes': 6})
+        self.__field__gen_p_samsungschu470_244.writetobuffer(buf)
         self.__field_duration.writetobuffer(buf)
         self.__field_timezone.writetobuffer(buf)
         self.__field_creationtime.writetobuffer(buf)
-        try: self.__field_zero5
+        try: self.__field__gen_p_samsungschu470_248
         except:
-            self.__field_zero5=UNKNOWN(**{'sizeinbytes': 4,  'pad': 0 })
-        self.__field_zero5.writetobuffer(buf)
+            self.__field__gen_p_samsungschu470_248=DONTCARE(**{'sizeinbytes': 4})
+        self.__field__gen_p_samsungschu470_248.writetobuffer(buf)
         self.__field_modifiedtime.writetobuffer(buf)
-        try: self.__field_zero6
+        try: self.__field__gen_p_samsungschu470_250
         except:
-            self.__field_zero6=UNKNOWN(**{'sizeinbytes': 4,  'pad': 0 })
-        self.__field_zero6.writetobuffer(buf)
+            self.__field__gen_p_samsungschu470_250=DONTCARE(**{'sizeinbytes': 4})
+        self.__field__gen_p_samsungschu470_250.writetobuffer(buf)
         self.__field_ringtonelen.writetobuffer(buf)
         self.__field_ringtone.writetobuffer(buf)
-        try: self.__field_zero7
+        try: self.__field__gen_p_samsungschu470_254
         except:
-            self.__field_zero7=UNKNOWN(**{'sizeinbytes': 2,  'pad': 0 })
-        self.__field_zero7.writetobuffer(buf)
+            self.__field__gen_p_samsungschu470_254=DONTCARE(**{'sizeinbytes': 2})
+        self.__field__gen_p_samsungschu470_254.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
 
@@ -1928,46 +1860,46 @@ class CalEntry(BaseProtogenClass):
         self.__field_title.readfrombuffer(buf)
         self.__field_start=DateTime(**{'sizeinbytes': 4})
         self.__field_start.readfrombuffer(buf)
-        self.__field_zero1=UNKNOWN(**{'sizeinbytes': 4,  'pad': 0 })
-        self.__field_zero1.readfrombuffer(buf)
+        self.__field__gen_p_samsungschu470_234=DONTCARE(**{'sizeinbytes': 4})
+        self.__field__gen_p_samsungschu470_234.readfrombuffer(buf)
         self.__field_start2=DateTime(**{'sizeinbytes': 4,  'default': self.start })
         self.__field_start2.readfrombuffer(buf)
-        self.__field_zero2=UNKNOWN(**{'sizeinbytes': 4,  'pad': 0 })
-        self.__field_zero2.readfrombuffer(buf)
+        self.__field__gen_p_samsungschu470_236=DONTCARE(**{'sizeinbytes': 4})
+        self.__field__gen_p_samsungschu470_236.readfrombuffer(buf)
         self.__field_exptime=ExpiringTime(**{'sizeinbytes': 4})
         self.__field_exptime.readfrombuffer(buf)
-        self.__field_zero3=UNKNOWN(**{'sizeinbytes': 4,  'pad': 0 })
-        self.__field_zero3.readfrombuffer(buf)
-        self.__field_one=UINT(**{'sizeinbytes': 1,  'default': 1 })
-        self.__field_one.readfrombuffer(buf)
+        self.__field__gen_p_samsungschu470_238=DONTCARE(**{'sizeinbytes': 4})
+        self.__field__gen_p_samsungschu470_238.readfrombuffer(buf)
+        self.__field__gen_p_samsungschu470_239=DONTCARE(**{'sizeinbytes': 1,  'default': '\x01' })
+        self.__field__gen_p_samsungschu470_239.readfrombuffer(buf)
         self.__field_repeat=UINT(**{'sizeinbytes': 1})
         self.__field_repeat.readfrombuffer(buf)
-        self.__field_three=UINT(**{'sizeinbytes': 1,  'default': 3 })
-        self.__field_three.readfrombuffer(buf)
+        self.__field__gen_p_samsungschu470_241=DONTCARE(**{'sizeinbytes': 1,  'default': '\x03' })
+        self.__field__gen_p_samsungschu470_241.readfrombuffer(buf)
         self.__field_alarm=UINT(**{'sizeinbytes': 1})
         self.__field_alarm.readfrombuffer(buf)
         self.__field_alert=UINT(**{'sizeinbytes': 1})
         self.__field_alert.readfrombuffer(buf)
-        self.__field_zero4=UNKNOWN(**{'sizeinbytes': 6,  'pad': 0 })
-        self.__field_zero4.readfrombuffer(buf)
+        self.__field__gen_p_samsungschu470_244=DONTCARE(**{'sizeinbytes': 6})
+        self.__field__gen_p_samsungschu470_244.readfrombuffer(buf)
         self.__field_duration=UINT(**{'sizeinbytes': 4})
         self.__field_duration.readfrombuffer(buf)
         self.__field_timezone=UINT(**{'sizeinbytes': 1})
         self.__field_timezone.readfrombuffer(buf)
         self.__field_creationtime=DateTime(**{'sizeinbytes': 4})
         self.__field_creationtime.readfrombuffer(buf)
-        self.__field_zero5=UNKNOWN(**{'sizeinbytes': 4,  'pad': 0 })
-        self.__field_zero5.readfrombuffer(buf)
+        self.__field__gen_p_samsungschu470_248=DONTCARE(**{'sizeinbytes': 4})
+        self.__field__gen_p_samsungschu470_248.readfrombuffer(buf)
         self.__field_modifiedtime=DateTime(**{'sizeinbytes': 4})
         self.__field_modifiedtime.readfrombuffer(buf)
-        self.__field_zero6=UNKNOWN(**{'sizeinbytes': 4,  'pad': 0 })
-        self.__field_zero6.readfrombuffer(buf)
+        self.__field__gen_p_samsungschu470_250=DONTCARE(**{'sizeinbytes': 4})
+        self.__field__gen_p_samsungschu470_250.readfrombuffer(buf)
         self.__field_ringtonelen=UINT(**{'sizeinbytes': 2})
         self.__field_ringtonelen.readfrombuffer(buf)
         self.__field_ringtone=STRING(**{ 'sizeinbytes': self.ringtonelen,               'terminator': None })
         self.__field_ringtone.readfrombuffer(buf)
-        self.__field_zero7=UNKNOWN(**{'sizeinbytes': 2,  'pad': 0 })
-        self.__field_zero7.readfrombuffer(buf)
+        self.__field__gen_p_samsungschu470_254=DONTCARE(**{'sizeinbytes': 2})
+        self.__field__gen_p_samsungschu470_254.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
 
@@ -2010,22 +1942,6 @@ class CalEntry(BaseProtogenClass):
 
     start=property(__getfield_start, __setfield_start, __delfield_start, None)
 
-    def __getfield_zero1(self):
-        try: self.__field_zero1
-        except:
-            self.__field_zero1=UNKNOWN(**{'sizeinbytes': 4,  'pad': 0 })
-        return self.__field_zero1.getvalue()
-
-    def __setfield_zero1(self, value):
-        if isinstance(value,UNKNOWN):
-            self.__field_zero1=value
-        else:
-            self.__field_zero1=UNKNOWN(value,**{'sizeinbytes': 4,  'pad': 0 })
-
-    def __delfield_zero1(self): del self.__field_zero1
-
-    zero1=property(__getfield_zero1, __setfield_zero1, __delfield_zero1, None)
-
     def __getfield_start2(self):
         try: self.__field_start2
         except:
@@ -2042,22 +1958,6 @@ class CalEntry(BaseProtogenClass):
 
     start2=property(__getfield_start2, __setfield_start2, __delfield_start2, None)
 
-    def __getfield_zero2(self):
-        try: self.__field_zero2
-        except:
-            self.__field_zero2=UNKNOWN(**{'sizeinbytes': 4,  'pad': 0 })
-        return self.__field_zero2.getvalue()
-
-    def __setfield_zero2(self, value):
-        if isinstance(value,UNKNOWN):
-            self.__field_zero2=value
-        else:
-            self.__field_zero2=UNKNOWN(value,**{'sizeinbytes': 4,  'pad': 0 })
-
-    def __delfield_zero2(self): del self.__field_zero2
-
-    zero2=property(__getfield_zero2, __setfield_zero2, __delfield_zero2, None)
-
     def __getfield_exptime(self):
         return self.__field_exptime.getvalue()
 
@@ -2071,38 +1971,6 @@ class CalEntry(BaseProtogenClass):
 
     exptime=property(__getfield_exptime, __setfield_exptime, __delfield_exptime, None)
 
-    def __getfield_zero3(self):
-        try: self.__field_zero3
-        except:
-            self.__field_zero3=UNKNOWN(**{'sizeinbytes': 4,  'pad': 0 })
-        return self.__field_zero3.getvalue()
-
-    def __setfield_zero3(self, value):
-        if isinstance(value,UNKNOWN):
-            self.__field_zero3=value
-        else:
-            self.__field_zero3=UNKNOWN(value,**{'sizeinbytes': 4,  'pad': 0 })
-
-    def __delfield_zero3(self): del self.__field_zero3
-
-    zero3=property(__getfield_zero3, __setfield_zero3, __delfield_zero3, None)
-
-    def __getfield_one(self):
-        try: self.__field_one
-        except:
-            self.__field_one=UINT(**{'sizeinbytes': 1,  'default': 1 })
-        return self.__field_one.getvalue()
-
-    def __setfield_one(self, value):
-        if isinstance(value,UINT):
-            self.__field_one=value
-        else:
-            self.__field_one=UINT(value,**{'sizeinbytes': 1,  'default': 1 })
-
-    def __delfield_one(self): del self.__field_one
-
-    one=property(__getfield_one, __setfield_one, __delfield_one, None)
-
     def __getfield_repeat(self):
         return self.__field_repeat.getvalue()
 
@@ -2115,22 +1983,6 @@ class CalEntry(BaseProtogenClass):
     def __delfield_repeat(self): del self.__field_repeat
 
     repeat=property(__getfield_repeat, __setfield_repeat, __delfield_repeat, None)
-
-    def __getfield_three(self):
-        try: self.__field_three
-        except:
-            self.__field_three=UINT(**{'sizeinbytes': 1,  'default': 3 })
-        return self.__field_three.getvalue()
-
-    def __setfield_three(self, value):
-        if isinstance(value,UINT):
-            self.__field_three=value
-        else:
-            self.__field_three=UINT(value,**{'sizeinbytes': 1,  'default': 3 })
-
-    def __delfield_three(self): del self.__field_three
-
-    three=property(__getfield_three, __setfield_three, __delfield_three, None)
 
     def __getfield_alarm(self):
         return self.__field_alarm.getvalue()
@@ -2157,22 +2009,6 @@ class CalEntry(BaseProtogenClass):
     def __delfield_alert(self): del self.__field_alert
 
     alert=property(__getfield_alert, __setfield_alert, __delfield_alert, None)
-
-    def __getfield_zero4(self):
-        try: self.__field_zero4
-        except:
-            self.__field_zero4=UNKNOWN(**{'sizeinbytes': 6,  'pad': 0 })
-        return self.__field_zero4.getvalue()
-
-    def __setfield_zero4(self, value):
-        if isinstance(value,UNKNOWN):
-            self.__field_zero4=value
-        else:
-            self.__field_zero4=UNKNOWN(value,**{'sizeinbytes': 6,  'pad': 0 })
-
-    def __delfield_zero4(self): del self.__field_zero4
-
-    zero4=property(__getfield_zero4, __setfield_zero4, __delfield_zero4, None)
 
     def __getfield_duration(self):
         return self.__field_duration.getvalue()
@@ -2213,22 +2049,6 @@ class CalEntry(BaseProtogenClass):
 
     creationtime=property(__getfield_creationtime, __setfield_creationtime, __delfield_creationtime, None)
 
-    def __getfield_zero5(self):
-        try: self.__field_zero5
-        except:
-            self.__field_zero5=UNKNOWN(**{'sizeinbytes': 4,  'pad': 0 })
-        return self.__field_zero5.getvalue()
-
-    def __setfield_zero5(self, value):
-        if isinstance(value,UNKNOWN):
-            self.__field_zero5=value
-        else:
-            self.__field_zero5=UNKNOWN(value,**{'sizeinbytes': 4,  'pad': 0 })
-
-    def __delfield_zero5(self): del self.__field_zero5
-
-    zero5=property(__getfield_zero5, __setfield_zero5, __delfield_zero5, None)
-
     def __getfield_modifiedtime(self):
         return self.__field_modifiedtime.getvalue()
 
@@ -2241,22 +2061,6 @@ class CalEntry(BaseProtogenClass):
     def __delfield_modifiedtime(self): del self.__field_modifiedtime
 
     modifiedtime=property(__getfield_modifiedtime, __setfield_modifiedtime, __delfield_modifiedtime, None)
-
-    def __getfield_zero6(self):
-        try: self.__field_zero6
-        except:
-            self.__field_zero6=UNKNOWN(**{'sizeinbytes': 4,  'pad': 0 })
-        return self.__field_zero6.getvalue()
-
-    def __setfield_zero6(self, value):
-        if isinstance(value,UNKNOWN):
-            self.__field_zero6=value
-        else:
-            self.__field_zero6=UNKNOWN(value,**{'sizeinbytes': 4,  'pad': 0 })
-
-    def __delfield_zero6(self): del self.__field_zero6
-
-    zero6=property(__getfield_zero6, __setfield_zero6, __delfield_zero6, None)
 
     def __getfield_ringtonelen(self):
         return self.__field_ringtonelen.getvalue()
@@ -2284,22 +2088,6 @@ class CalEntry(BaseProtogenClass):
 
     ringtone=property(__getfield_ringtone, __setfield_ringtone, __delfield_ringtone, None)
 
-    def __getfield_zero7(self):
-        try: self.__field_zero7
-        except:
-            self.__field_zero7=UNKNOWN(**{'sizeinbytes': 2,  'pad': 0 })
-        return self.__field_zero7.getvalue()
-
-    def __setfield_zero7(self, value):
-        if isinstance(value,UNKNOWN):
-            self.__field_zero7=value
-        else:
-            self.__field_zero7=UNKNOWN(value,**{'sizeinbytes': 2,  'pad': 0 })
-
-    def __delfield_zero7(self): del self.__field_zero7
-
-    zero7=property(__getfield_zero7, __setfield_zero7, __delfield_zero7, None)
-
     def iscontainer(self):
         return True
 
@@ -2307,26 +2095,17 @@ class CalEntry(BaseProtogenClass):
         yield ('titlelen', self.__field_titlelen, None)
         yield ('title', self.__field_title, None)
         yield ('start', self.__field_start, None)
-        yield ('zero1', self.__field_zero1, None)
         yield ('start2', self.__field_start2, None)
-        yield ('zero2', self.__field_zero2, None)
         yield ('exptime', self.__field_exptime, None)
-        yield ('zero3', self.__field_zero3, None)
-        yield ('one', self.__field_one, None)
         yield ('repeat', self.__field_repeat, None)
-        yield ('three', self.__field_three, None)
         yield ('alarm', self.__field_alarm, None)
         yield ('alert', self.__field_alert, None)
-        yield ('zero4', self.__field_zero4, None)
         yield ('duration', self.__field_duration, None)
         yield ('timezone', self.__field_timezone, None)
         yield ('creationtime', self.__field_creationtime, None)
-        yield ('zero5', self.__field_zero5, None)
         yield ('modifiedtime', self.__field_modifiedtime, None)
-        yield ('zero6', self.__field_zero6, None)
         yield ('ringtonelen', self.__field_ringtonelen, None)
         yield ('ringtone', self.__field_ringtone, None)
-        yield ('zero7', self.__field_zero7, None)
 
 
 

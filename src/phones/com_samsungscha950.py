@@ -492,19 +492,19 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
 
     # Calendar stuff------------------------------------------------------------
     def _read_calendar_index(self):
-        _buf=prototypes.buffer(self.getfilecontents(self.protocolclass.CAL_INDEX_FILE_NAME))
-        _res=self.protocolclass.CalIndexFile()
-        _res.readfrombuffer(_buf)
-        return _res
+        return self.readobject(self.protocolclass.CAL_INDEX_FILE_NAME,
+                               self.protocolclass.CalIndexFile,
+                               'Reading Calendar Index File')
     
     def getcalendar(self, fundamentals):
         self.log('Reading calendar')
         _cal_index=self._read_calendar_index()
         _res={}
+        _buf=prototypes.buffer()
         for _cnt in range(_cal_index.numofevents):
             _cal_file_name='%s%04d'%(self.protocolclass.CAL_FILE_NAME_PREFIX,
                                      _cal_index.events[_cnt].index)
-            _buf=prototypes.buffer(self.getfilecontents(_cal_file_name))
+            _buf.reset(self.getfilecontents(_cal_file_name))
             _bpcal=self.calendarclass(self, _buf, fundamentals).getvalue()
             _res[_bpcal.id]=_bpcal
         fundamentals['calendar']=_res
@@ -533,11 +533,10 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
                 break
             try:
                 _cal_entry=self.calendarclass(self, _entry, fundamentals)
-                _buf=prototypes.buffer()
-                _cal_entry.writetobuffer(_buf)
                 _cal_file_name='%s%04d'%(self.protocolclass.CAL_FILE_NAME_PREFIX,
                                          _idx)
-                self.writefile(_cal_file_name, _buf.getvalue())
+                self.writeobject(_cal_file_name, _cal_entry,
+                                 'Writing Calendar Entry')
                 _idx+=1
                 _cnt+=1
             except:
@@ -564,10 +563,9 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
             _cal_index.events[_cnt].index=_idx
             _cal_index.activeevents[_cnt].index=_idx
             _cnt+=1
-        _buf=prototypes.buffer()
-        _cal_index.writetobuffer(_buf)
-        self.writefile(self.protocolclass.CAL_INDEX_FILE_NAME,
-                       _buf.getvalue())
+        self.writeobject(self.protocolclass.CAL_INDEX_FILE_NAME,
+                         _cal_index,
+                         'Writing Calendar Index File')
 
     def savecalendar(self, fundamentals, merge):
         self.log("Sending calendar entries")
@@ -586,11 +584,11 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         for _idx in range(_index_file.numofnotes):
             _file_name='%s%04d'%(self.protocolclass.NP_FILE_NAME_PREFIX,
                                  _index_file.notes[_idx].index)
-            _buf=prototypes.buffer(self.getfilecontents(_file_name))
-            _note=self.protocolclass.NotePadEntry()
-            _note.readfrombuffer(_buf)
+            _note=self.readobject(_file_name,
+                                  self.protocolclass.NotePadEntry)
             _memo=memo.MemoEntry()
             _memo.text=_note.text
+            _memo.set_date_isostr('%04d%02d%02dT%02d%02d00'%_note.modified[:5])
             _res[_memo.id]=_memo
         fundamentals['memo']=_res
         return fundamentals
@@ -623,11 +621,10 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
                 _memo_entry.textlen=_text_len
                 _memo_entry.text=_entry.text[:_text_len]
                 _memo_entry.creation=self._time_now()
-                _buf=prototypes.buffer()
-                _memo_entry.writetobuffer(_buf)
                 _file_name='%s%04d'%(self.protocolclass.NP_FILE_NAME_PREFIX,
                                      _idx)
-                self.writefile(_file_name, _buf.getvalue())
+                self.writeobject(_file_name, _memo_entry,
+                                 logtitle='Writing memo entry')
                 _idx+=1
                 _cnt+=1
             except:
@@ -650,10 +647,9 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         for _idx in range(_old_next_index, next_index):
             _file_index.notes[_cnt].index=_idx
             _cnt+=1
-        _buf=prototypes.buffer()
-        _file_index.writetobuffer(_buf)
-        self.writefile(self.protocolclass.CAL_INDEX_FILE_NAME,
-                       _buf.getvalue())
+        self.writeobject(self.protocolclass.CAL_INDEX_FILE_NAME,
+                         _file_index,
+                         logtitle='Writing calendar/memo file index')
         
     def savememo(self, fundamentals, merge):
         self.log('Writing memo/notepad items')
@@ -733,12 +729,14 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
             _buf=prototypes.buffer(self.getfilecontents(filename))
             _rec_file=self.protocolclass.PBFileHeader()
             _rec_file.readfrombuffer(_buf)
+            _entry=self.protocolclass.PBEntry()
             for _len in _rec_file.lens:
                 if _len.itemlen:
-                    _entry=self.protocolclass.PBEntry()
+                    _buf_ofs=_buf.offset
                     _entry.readfrombuffer(_buf)
-                    _pbentry=self.pbentryclass(self, _entry, fundamentals).getvalue()
-                    res[len(res)]=_pbentry
+                    _buf.offset=_buf_ofs+_len.itemlen
+                    res[len(res)]=self.pbentryclass(self, _entry,
+                                                    fundamentals).getvalue()
         except:
             self.log('Failed to read file: %s'%filename)
             if __debug__:
@@ -1044,8 +1042,8 @@ class CalendarEntry(object):
         else:
             raise TypeError('Expecting type bpcalendar.CalendarEntry or prototypes.buffer')
 
-    def writetobuffer(self, buf):
-        self.cal.writetobuffer(buf)
+    def writetobuffer(self, buf, logtitle=None):
+        self.cal.writetobuffer(buf, logtitle=logtitle)
 
     # building routines---------------------------------------------------------
     _build_repeat_dict={
@@ -1182,8 +1180,8 @@ class PBEntry(object):
         else:
             raise TypeError('Should be PBEntry or phone dict')
 
-    def writetobuffer(self, buf):
-        self.pb.writetobuffer(buf)
+    def writetobuffer(self, buf, logtitle=None):
+        self.pb.writetobuffer(buf, logtitle=logtitle)
 
     # Building a phonebook rec from a bp phone dict-----------------------------
     _pb_type_dict={

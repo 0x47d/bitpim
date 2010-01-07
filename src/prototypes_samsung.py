@@ -42,8 +42,8 @@ class DateTime(prototypes.UINTlsb):
 
     _time_delta=315514800.0
     def _converttoint(self, date):
-        assert len(date)==5
-        _timetuple=datetime.datetime(*date).timetuple()[:-1]+(DateTime._daylight,)
+        assert len(date)>4
+        _timetuple=datetime.datetime(*date[:5]).timetuple()[:-1]+(DateTime._daylight,)
         return int(calendar.timegm(_timetuple)-self._time_delta)
 
     def getvalue(self):

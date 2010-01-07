@@ -148,6 +148,10 @@ class Phone(parentphone):
                 raise
         return fundamentals
 
+# CalendarEntry class-----------------------------------------------------------
+parentcalendarentry=u740.CalendarEntry
+class CalendarEntry(parentcalendarentry):
+    pass
 
 # PBEntry class-----------------------------------------------------------------
 parentpbentry=u740.PBEntry
