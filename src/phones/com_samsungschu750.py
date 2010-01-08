@@ -13,6 +13,7 @@
 
 # BitPim modules
 import common
+import commport
 import com_brew
 import com_samsungschu470 as schu470
 import p_samsungschu750 as p_schu750
@@ -157,6 +158,55 @@ class Phone(com_brew.RealBrewProtocol2, parentphone):
             if __debug__:
                 raise
         return fundamentals
+
+    # SMS Stuff----------------------------------------------------------------
+    def _build_locked_field(self, entry, buf):
+        _locked=self.protocolclass.UINT(sizeinbytes=2)
+        _locked.readfrombuffer(buf)
+        entry.locked=bool(_locked.getvalue() & 0x100)
+
+    # Phone Detection-----------------------------------------------------------
+    def is_mode_brew(self):
+        # Borrowed from the VX4400
+        req=self.protocolclass.testing0crequest()
+        respc=self.protocolclass.data
+        for baud in 0, 38400, 115200:
+            if baud:
+                if not self.comm.setbaudrate(baud):
+                    continue
+            try:
+                self.sendbrewcommand(req, respc, callsetmode=False)
+                return True
+            except com_phone.modeignoreerrortypes:
+                pass
+        return False
+
+    @classmethod
+    def detectphone(_, coms, likely_ports, res, _module, _log):
+        if not likely_ports:
+            # cannot detect any likely ports
+            return None
+        for port in likely_ports:
+            if not res.has_key(port):
+                res[port]={ 'mode_modem': None, 'mode_brew': None,
+                            'manufacturer': None, 'model': None,
+                            'firmware_version': None, 'esn': None,
+                            'firmwareresponse': None }
+            try:
+                if res[port]['model']:
+                    # been found, not much we can do now
+                    continue
+                p=_module.Phone(_log, commport.CommConnection(_log, port, timeout=1))
+                # Force to check for BREW
+                if not res[port]['mode_brew']:
+                    res[port]['mode_brew']=p.is_mode_brew()
+                if res[port]['mode_brew']:
+                    p.check_my_phone(res[port])
+                p.comm.close()
+            except:
+                if __debug__:
+                    raise
+
 
 # CalendarEntry class-----------------------------------------------------------
 parentcalendarentry=schu470.CalendarEntry

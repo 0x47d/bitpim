@@ -5332,7 +5332,7 @@ class sms_delivered_datetime(BaseProtogenClass):
 
 class sms_body(BaseProtogenClass):
     # Read-From-Buffer-Only Class
-    __fields=['msg_len', 'has_callback', 'has_priority', 'has_1byte', 'has_1byte2', 'has_40bytes', 'msg', 'callback_len', 'callback', 'priority', 'datetime', 'addr_len0', 'addr_len1', 'addr_len2', 'addr_len3', 'addr_len4', 'addr_len5', 'addr_len6', 'addr_len7', 'addr_len8', 'addr_len9', 'addr0', 'addr1', 'addr2', 'addr3', 'addr4', 'addr5', 'addr6', 'addr7', 'addr8', 'addr9', 'msg_stat']
+    __fields=['msg_len', 'has_callback', 'has_priority', 'has_1byte', 'has_1byte2', 'has_40bytes', 'msg', 'msg', 'callback_len', 'callback', 'priority', 'datetime', 'addr_len0', 'addr_len1', 'addr_len2', 'addr_len3', 'addr_len4', 'addr_len5', 'addr_len6', 'addr_len7', 'addr_len8', 'addr_len9', 'addr0', 'addr1', 'addr2', 'addr3', 'addr4', 'addr5', 'addr6', 'addr7', 'addr8', 'addr9', 'msg_stat']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -5378,6 +5378,9 @@ class sms_body(BaseProtogenClass):
         try: self.__field_has_40bytes
         except:
             self.__field_has_40bytes=BOOL(**{ 'default': False })
+        try: self.__field_msg
+        except:
+            self.__field_msg=USTRING(**{'default': '' })
 
 
     def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
@@ -5389,9 +5392,12 @@ class sms_body(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        DONTCARE(**{'sizeinbytes': 54}).readfrombuffer(buf)
-        self.__field_msg=USTRING(**{ 'sizeinbytes': self.msg_len,                'encoding': ENCODING,                'terminator': None })
-        self.__field_msg.readfrombuffer(buf)
+        if self.msg_len:
+            DONTCARE(**{'sizeinbytes': 54}).readfrombuffer(buf)
+            self.__field_msg=USTRING(**{ 'sizeinbytes': self.msg_len,                    'encoding': ENCODING,                    'terminator': None })
+            self.__field_msg.readfrombuffer(buf)
+        else:
+            DONTCARE(**{'sizeinbytes': 53}).readfrombuffer(buf)
         if self.has_callback:
             DONTCARE(**{'sizeinbytes': 4}).readfrombuffer(buf)
             self.__field_callback_len=UINT(**{'sizeinbytes': 1})
@@ -5569,7 +5575,23 @@ class sms_body(BaseProtogenClass):
         if isinstance(value,USTRING):
             self.__field_msg=value
         else:
-            self.__field_msg=USTRING(value,**{ 'sizeinbytes': self.msg_len,                'encoding': ENCODING,                'terminator': None })
+            self.__field_msg=USTRING(value,**{ 'sizeinbytes': self.msg_len,                    'encoding': ENCODING,                    'terminator': None })
+
+    def __delfield_msg(self): del self.__field_msg
+
+    msg=property(__getfield_msg, __setfield_msg, __delfield_msg, None)
+
+    def __getfield_msg(self):
+        try: self.__field_msg
+        except:
+            self.__field_msg=USTRING(**{'default': '' })
+        return self.__field_msg.getvalue()
+
+    def __setfield_msg(self, value):
+        if isinstance(value,USTRING):
+            self.__field_msg=value
+        else:
+            self.__field_msg=USTRING(value,**{'default': '' })
 
     def __delfield_msg(self): del self.__field_msg
 
@@ -5910,7 +5932,10 @@ class sms_body(BaseProtogenClass):
         yield ('has_1byte', self.__field_has_1byte, None)
         yield ('has_1byte2', self.__field_has_1byte2, None)
         yield ('has_40bytes', self.__field_has_40bytes, None)
-        yield ('msg', self.__field_msg, None)
+        if self.msg_len:
+            yield ('msg', self.__field_msg, None)
+        else:
+            yield ('msg', self.__field_msg, None)
         if self.has_callback:
             yield ('callback_len', self.__field_callback_len, None)
             yield ('callback', self.__field_callback, None)

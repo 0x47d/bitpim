@@ -538,10 +538,14 @@ PACKET -sms_body:
     P BOOL { 'default': False } +has_1byte
     P BOOL { 'default': True } +has_1byte2
     P BOOL { 'default': False } +has_40bytes
-    54 DONTCARE
-    * USTRING { 'sizeinbytes': self.msg_len,
-                'encoding': ENCODING,
-                'terminator': None } msg
+    if self.msg_len:
+        54 DONTCARE
+        * USTRING { 'sizeinbytes': self.msg_len,
+                    'encoding': ENCODING,
+                    'terminator': None } msg
+    else:
+        53 DONTCARE
+        P USTRING {'default': '' } +msg
     if self.has_callback:
         4 DONTCARE
         1 UINT callback_len

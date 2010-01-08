@@ -674,7 +674,8 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
             try:
                 self.sendbrewcommand(req, respc, callsetmode=False)
                 return True
-            except com_phone.modeignoreerrortypes:
+            except (com_phone.modeignoreerrortypes,
+                    ValueError):
                 pass
         return False
     def check_my_phone(self, res):
