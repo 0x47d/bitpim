@@ -20,6 +20,7 @@
 <li><p><B>Groups (Categories)</B> names cannot be added, changed, or deleted from BitPim, it must be done from the phone.
 <LI><P>If a contact is assigned to multiple groups, only the first group is written to the phone.
 <LI><P><B>Picture ID:</B>  BitPim cannot to use any of the phone's built-in wallpapers as Picture ID of a contact.  BitPim can use another other wallpapers/images as Picture IDs.
+<LI><P><B>ICE Setting:</B> BitPim can neither set nor preserve your ICE settings.  You will have to re-assign your ICE settings every time BitPim updates the phone contacts.
 </UL>
 
 <H3>Calendar</H3>
