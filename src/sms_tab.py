@@ -81,8 +81,11 @@ class SMSInfo(pb_editor.DirtyUIBase):
     _w_index=5
     _flg_index=6
     _not_used_fields={
-        sms.SMSEntry.Folder_Inbox: ('delivery_status', '_to'),
-        sms.SMSEntry.Folder_Sent: ('read', '_from'),
+##        sms.SMSEntry.Folder_Inbox: ('delivery_status', '_to'),
+##        sms.SMSEntry.Folder_Sent: ('read', '_from'),
+##        sms.SMSEntry.Folder_Saved: ('delivery_status',) }
+        sms.SMSEntry.Folder_Inbox: ('delivery_status',),
+        sms.SMSEntry.Folder_Sent: (),
         sms.SMSEntry.Folder_Saved: ('delivery_status',) }
     def __init__(self, parent, _=None):
         super(SMSInfo, self).__init__(parent)
@@ -147,7 +150,7 @@ class SMSInfo(pb_editor.DirtyUIBase):
 class SMSWidget(wx.Panel, widgets.BitPimWidget):
     _data_key='sms'
     _canned_data_key='canned_msg'
-    msg_type_list=(sms.SMSEntry.Folder_Saved, sms.SMSEntry.Folder_Sent, sms.SMSEntry.Folder_Inbox)
+    msg_type_list=(sms.SMSEntry.Folder_Saved, sms.SMSEntry.Folder_Sent, sms.SMSEntry.Folder_Inbox, 'All')
     def __init__(self, mainwindow, parent):
         super(SMSWidget, self).__init__(parent, -1)
         self._main_window=mainwindow
@@ -365,6 +368,7 @@ class SMSList(wx.Panel, widgets.BitPimWidget):
     _by_type=0
     _by_date=1
     _by_number=2
+    _me_name='<Me>'
     def __init__(self, mainwindow, parent, stats):
         super(SMSList, self).__init__(parent, -1)
         self._main_window=mainwindow
@@ -388,9 +392,9 @@ class SMSList(wx.Panel, widgets.BitPimWidget):
         # main list
         hbmessage=wx.BoxSizer(wx.HORIZONTAL)
         column_info=[]
-        column_info.append(("From/To", 105, False))
-        column_info.append(("Date", 120, False))
-        column_info.append(("Subject", 180, False))
+        column_info.append(("From", 105, False))
+        column_info.append(("To", 120, False))
+        column_info.append(("Date", 180, False))
         self._item_list=guiwidgets.BitPimListCtrl(self, column_info)
         self._item_list.ResetView(self.nodes, self.nodes_keys)
         vbs0=wx.BoxSizer(wx.VERTICAL)
@@ -496,6 +500,13 @@ class SMSList(wx.Panel, widgets.BitPimWidget):
             self._item_list.Select(item)
             item=self._item_list.GetNextItem(item)
 
+    def _number2name(self, numstr):
+        # Lookup name from number string
+        _s=self._name_map.get(numstr, None)
+        if _s is None:
+            return phonenumber.format(numstr)
+        return _s
+
     def _OnSelChanged(self, evt):
         # an item was clicked on/selected
         item=evt.GetIndex()
@@ -512,21 +523,10 @@ class SMSList(wx.Panel, widgets.BitPimWidget):
         # set the general detail
         e=copy.deepcopy(entry)
         # lookup names if available
-        s=self._name_map.get(e._from, None)
-        if s is None:
-            e._from=phonenumber.format(e._from)
-        else:
-            e._from=s
-        s=self._name_map.get(e._to, None)
-        if s is None:
-            e._to=phonenumber.format(e._to)
-        else:
-            e._to=s
-        s=self._name_map.get(e.callback, None)
-        if s is None:
-            e.callback=phonenumber.format(e.callback)
-        else:
-            e.callback=s
+        e._from=self._me_name if e.folder in (e.Folder_Sent, e.Folder_Saved) else \
+                self._number2name(e._from)
+        e._to=self._me_name if e.folder==e.Folder_Inbox else self._number2name(e._to)
+        e.callback=self._number2name(e.callback)
         self._item_info.Set(e)
         self._item_text.Set({'memo': e.text})
 
@@ -550,21 +550,12 @@ class SMSList(wx.Panel, widgets.BitPimWidget):
             if len(e.callback) and not self._name_map.has_key(e.callback):
                 pubsub.publish(pubsub.REQUEST_PB_LOOKUP,
                                { 'item': e.callback } )
-            if e.folder==self._display_filter:
-                col=self._item_list.GetColumn(0)
-                col.SetMask(wx.LIST_MASK_TEXT)
-                if e.folder==sms.SMSEntry.Folder_Inbox:
-                    col.SetText("From")
-                    name=e._from
-                else:
-                    col.SetText("To")
-                    name=e._to
-                self._item_list.SetColumn(0, col)
-                if name!=None and name!="":
-                    temp=self._name_map.get(name, None)
-                    if temp !=None:
-                        name=temp
-                self.nodes[index]=(name, e.get_date_time_str(), e.subject)
+            if self._display_filter=='All' or e.folder==self._display_filter:
+                _from=self._me_name if e.folder in (e.Folder_Sent, e.Folder_Saved) \
+                       else self._number2name(e._from)
+                _to=self._me_name if e.folder==e.Folder_Inbox \
+                     else self._number2name(e._to)
+                self.nodes[index]=(_from, _to, e.get_date_time_str())
                 self.nodes_keys[index]=k
                 self._data_map[k]=index
                 index+=1

@@ -863,12 +863,12 @@ class RealBrewProtocol2(RealBrewProtocol):
     by newer qualcomm chipsets used in phones like the LG vx8100
     """
 
-##    def exists(self, name):
-##        try:
-##            self.statfile(name)
-##        except BrewNoSuchFileException:
-##            return False
-##        return True
+    def exists(self, name):
+        try:
+            self.statfile(name)
+        except BrewNoSuchFileException:
+            return False
+        return True
 
     def reconfig_directory(self):
         # not sure how important this is or even what it really does
@@ -1119,15 +1119,15 @@ class RealBrewProtocol2(RealBrewProtocol):
         req=p_brew.new_statfilerequest()
         req.filename=name
         res=self.sendbrewcommand(req, p_brew.new_statfileresponse)
-##        if res.error==2:    # ENOENT
-##            raise BrewNoSuchFileException
-##        elif res.error==0x13: # ENODEV
-##            # locked system file. example: /dev.null
-##            raise BrewFileLockedException
-##        elif res.error != 0:
-##            raise BrewStatFileException(res.error, name)
-        if res.error==2 or res.error==0x13 or res.error!=0:
-            return None
+        if res.error==2:    # ENOENT
+            raise BrewNoSuchFileException
+        elif res.error==0x13: # ENODEV
+            # locked system file. example: /dev.null
+            raise BrewFileLockedException
+        elif res.error != 0:
+            raise BrewStatFileException(res.error, name)
+##        if res.error==2 or res.error==0x13 or res.error!=0:
+##            return None
         if res.type==1 or res.type==0x86:
             # files on external media have type 0x86
             results={ 'name': name, 'type': 'file', 'size': res.size }
