@@ -750,7 +750,7 @@ class Phone(com_phone.Phone, com_brew.BrewProtocol):
         while True:
             _file_name='%s%04d'%(self.protocolclass.PB_ENTRY_FILE_PREFIX,
                                  _file_cnt)
-            if self.statfile(_file_name):
+            if self.exists(_file_name):
                 self._extract_entries(_file_name, _res, fundamentals)
                 _file_cnt+=1
             else:

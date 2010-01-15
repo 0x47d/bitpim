@@ -86,6 +86,9 @@ class MissingQuotesException(ProtogenException):
 
 class BaseProtogenClass(object):
     """All types are derived from this"""
+    def __init__(self, *args, **kwargs):
+        pass
+
     def packetsize(self):
         "Returns size in bytes that we occupy"
         # This is implemented by writing to a buffer and seeing how big the result is.

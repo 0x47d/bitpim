@@ -85,7 +85,7 @@ class SMSInfo(pb_editor.DirtyUIBase):
 ##        sms.SMSEntry.Folder_Sent: ('read', '_from'),
 ##        sms.SMSEntry.Folder_Saved: ('delivery_status',) }
         sms.SMSEntry.Folder_Inbox: ('delivery_status',),
-        sms.SMSEntry.Folder_Sent: (),
+        sms.SMSEntry.Folder_Sent: ('read',),
         sms.SMSEntry.Folder_Saved: ('delivery_status',) }
     def __init__(self, parent, _=None):
         super(SMSInfo, self).__init__(parent)
