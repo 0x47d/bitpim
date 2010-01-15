@@ -344,7 +344,7 @@ class SanyoPhonebook:
                 res=self.sendpbcommand(req, respc)
                 if res.entry.dunno4==2:
                     entry=sms.SMSEntry()
-                    entry.datetime="200%d%02d%02dT%02d%02d%02d" % ((res.entry.year, res.entry.month, res.entry.day, res.entry.hour,res.entry.minute, res.entry.second))
+                    entry.datetime="%04d%02d%02dT%02d%02d%02d" % ((2000 + res.entry.year, res.entry.month, res.entry.day, res.entry.hour,res.entry.minute, res.entry.second))
                     if box==0:
                         entry.folder=entry.Folder_Inbox
                         entry._from=res.entry.phonenum
