@@ -21,6 +21,7 @@ URL: http://www.bitpim.org
 Source0: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-buildroot
 AutoReqProv: no
+Requires: libusb >= 1.0.6
 
 %description
 BitPim is a program that allows you to view and manipulate data on

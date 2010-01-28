@@ -1,90 +1,91 @@
+### (-*- python -*-)
+### A python wrapper for the libusb 1.x library
+### (c) 2010 Nathan Hjelm <hjelmn@users.sourceforge.net>
+### (c) Bitpim
 ###
-### A wrapper for the libusb wrapper of the libusb library :-)
+### This code is in the Public Domain.  (libusb is released under the LGPL)
 ###
-### This code is in the Public Domain.  (libusb and the wrapper
-### are LGPL)
 ###
-
-from __future__ import generators
 
 import sys
+import os
+from ctypes import *
 
-if sys.platform=='win32':
+if sys.platform == 'darwin':
     try:
-        import win32api
-        handle=win32api.LoadLibrary("libusb0.dll")
-        win32api.FreeLibrary(handle)
+        path = str.join ('/', os.environ['RESOURCEPATH'].split('/')[:-1]) + '/Frameworks/'
     except:
-        raise ImportError("libusb needs to be installed for this module to work")
-    
-import libusb as usb
+        path = "/opt/local/lib/"
+    libusb = CDLL(path + "libusb-1.0.dylib")
+else:
+    libusb = CDLL("libusb-1.0.so")
 
-# grab some constants and put them in our namespace
+class libusb_device_descriptor(Structure):
+    _fields_ = [("bLength", c_uint8), ("bDescriptorType", c_uint8), ("bcdUSB", c_uint16),
+                ("bDeviceClass", c_uint8), ("bDeviceSubClass", c_uint8), ("bDeviceProtocol", c_uint8),
+                ("bMaxPacketSize0", c_uint8), ("idVendor", c_uint16), ("idProduct", c_uint16),
+                ("bcdDevice", c_uint16), ("iManufacturer", c_uint8), ("iProduct", c_uint8),
+                ("iSerialNumber", c_uint8), ("bNumConfigurations", c_uint8)]
 
-for sym in dir(usb):
-    if sym.startswith("USB_CLASS_") or sym.startswith("USB_DT"):
-        exec "%s=usb.%s" %(sym, sym)
-del sym
+class libusb_endpoint_descriptor(Structure):
+    _fields_ = [("bLength", c_uint8), ("bDescriptorType", c_uint8), ("bEndpointAddress", c_uint8),
+                ("bmAttributes", c_uint8), ("wMaxPacketSize", c_uint16), ("bInterval", c_uint8),
+                ("bRefresh", c_uint8), ("bSyncAddress", c_uint8), ("extra", c_char_p),
+                ("extra_length", c_int)]
+
+class libusb_interface_descriptor(Structure):
+    _fields_ = [("bLength", c_uint8), ("bDescriptorType", c_uint8), ("bInterfaceNumber", c_uint8),
+                ("bAlternateSetting", c_uint8), ("bNumEndpoints", c_uint8), ("bInterfaceClass", c_uint8),
+                ("bInterfaceSubClass", c_uint8), ("bInterfaceProtocol", c_uint8), ("iInterface", c_uint8),
+                ("endpoint", POINTER(libusb_endpoint_descriptor)), ("extra", c_char_p), ("extra_length", c_int)]
+
+class libusb_interface(Structure):
+    _fields_ = [("altsetting", POINTER(libusb_interface_descriptor)), ("num_altsetting", c_int)]
+
+class libusb_config_descriptor (Structure):
+    _fields_ = [("bLength", c_uint8), ("bDescriptorType", c_uint8), ("wTotalLength", c_uint16),
+                ("bNumInterfaces", c_uint8), ("bConfigurationValue", c_uint8), ("iConfiguration", c_uint8),
+                ("bmAttributes", c_uint8), ("MaxPower", c_uint8), ("interface", POINTER(libusb_interface)),
+                ("extra", c_char_p), ("extra_length", c_int)]
 
 TRACE=False
 
-class USBException(Exception):
-    def __init__(self):
-        Exception.__init__(self, usb.usb_strerror())
-
-def UpdateLists():
-    """Updates the lists of busses and devices
-
-    @return: A tuple of (change in number of busses, change in number of devices)
-    """
-    return usb.usb_find_busses(), usb.usb_find_devices()
-
-class USBBus:
-    "Wraps a bus"
-    
-    def __init__(self, usb_bus):
-        self.bus=usb_bus
-
-    def name(self):
-        return self.bus.dirname
-
-    def devices(self):
-        dev=self.bus.devices
-        while dev is not None:
-            if dev.config is not None:
-               yield USBDevice(dev)
-            dev=dev.next
-        raise StopIteration()
-
 class USBDevice:
-    "Wraps a device"
+    def __init__ (self, dev):
+        self.libusb = libusb
+        self.dev    = dev
+        self.desc   = libusb_device_descriptor ()
+        self.pcdesc = pointer(libusb_config_descriptor ())
+        libusb.libusb_get_device_descriptor (dev, byref (self.desc))
+        libusb.libusb_get_config_descriptor (dev, 0, byref (self.pcdesc))
+        self.handle = c_void_p (None)
 
-    def __init__(self, usb_device):
-        self.usb=usb # save it so that it can't be GC before us
-        self.dev=usb_device
-        self.handle=usb.usb_open(self.dev)
-        if TRACE: print "usb_open(%s)=%s" % (self.dev,self.handle)
-        if self.handle is None:
-            raise USBException()
+        ret = libusb.libusb_open (self.dev, byref (self.handle))
+        if TRACE: print "libusb_open(%s, %s)=%s" % (self.dev, byref (self.handle), ret)
+        if ret < 0:
+            raise
 
-    def __del__(self):
-        self.close()
+    def __del__ (self):
+        self.close ()
 
     def close(self):
-        if self.handle is not None:
-            if TRACE: print "usb_close(%s)" % (self.handle,)
-            self.usb.usb_close(self.handle)
-            self.handle=None
-        self.usb=None
-
-    def number(self):
-        return self.dev.bInterfaceNumber
+        if libusb is not None and self.handle is not None:
+            if TRACE: print "libusb_close(%s)" % (self.handle,)
+            libusb.libusb_close (self.handle)
+            self.handle = None
 
     def name(self):
-        return self.dev.filename
+        # this name is based off the name generated by usb-0.1
+        return "%03i-%04x-%04x-%02x-%02x"%(libusb.libusb_get_device_address (self.dev), self.desc.idVendor, self.desc.idProduct, self.desc.bDeviceClass, self.desc.bDeviceSubClass)
+
+    def busnumber (self):
+        return libusb.libusb_get_bus_number(self.dev)
 
     def vendor(self):
-        return self.dev.descriptor.idVendor
+        return self.desc.idVendor
+
+    def product(self):
+        return self.desc.idProduct
 
     def vendorstring(self):
         return self._getstring("iManufacturer")
@@ -96,36 +97,36 @@ class USBDevice:
         return self._getstring("iSerialNumber")
 
     def _getstring(self, fieldname):
-        n=getattr(self.dev.descriptor, fieldname)
+        n = getattr(self.desc, fieldname)
         if n:
-            res,string=usb.usb_get_string_simple(self.handle, n, 1024)
-            if TRACE: print "usb_get_string_simple(%s, %d, %d)=%d,%s" % (self.handle, n, 1024, res, string)
+            buffer = create_string_buffer (1024)
+            res = libusb.libusb_get_string_descriptor_ascii (self.handle, n, buffer, 1024)
+            string = string_at (buffer)
+            if TRACE: print "usb_get_string_descriptor_ascii (%s, %d, %s, %d)=%d,%s" % (self.handle, n, buffer, 1024, res, string)
             if res<0:
-                raise USBException()
+                raise
             return string
         return None
 
-    def product(self):
-        return self.dev.descriptor.idProduct
-
-    def interfaces(self):
-        for i in range(self.dev.config.bNumInterfaces):
-            yield USBInterface(self, usb.usb_interface_index(self.dev.config.interface, i))
+    def interfaces (self):
+        for i in range(self.pcdesc[0].bNumInterfaces):
+            yield USBInterface(self, self.pcdesc[0].interface[i])
         raise StopIteration()
 
     def classdetails(self):
         "returns a tuple of device class, devicesubclass, deviceprotocol (all ints)"
-        return self.dev.descriptor.bDeviceClass, \
-               self.dev.descriptor.bDeviceSubClass, \
-               self.dev.descriptor.bDeviceProtocol
+        return self.desc.bDeviceClass, self.desc.bDeviceSubClass, self.desc.bDeviceProtocol
 
 class USBInterface:
-
     # currently we only deal with first configuration
     def __init__(self, device, iface, alt=None):
         self.iface=iface
         self.device=device
-        self.desc=alt or iface.altsetting
+        self.desc=alt or iface.altsetting[0]
+        self.isopen = False
+
+    def __del__ (self):
+        self.closebulk ()
 
     def number(self):
         return self.desc.bInterfaceNumber
@@ -134,9 +135,7 @@ class USBInterface:
         return self.desc.bAlternateSetting
 
     def classdetails(self):
-        return self.desc.bInterfaceClass, \
-               self.desc.bInterfaceSubClass, \
-               self.desc.bInterfaceProtocol
+        return self.desc.bInterfaceClass, self.desc.bInterfaceSubClass, self.desc.bInterfaceProtocol
 
     def openbulk(self,epinno=None,epoutno=None):
         "Returns a filelike object you can use to read and write"
@@ -147,7 +146,7 @@ class USBInterface:
         epout=None
         for ep in self.endpoints():
             if ep.isbulk():
-                if ep.direction()==ep.IN:
+                if ep.direction()==0x80:
                     if (not epin) and match(epinno,ep.address()): epin=ep
                 else:
                     if (not epout) and match(epoutno,ep.address()): epout=ep
@@ -157,36 +156,43 @@ class USBInterface:
         # set the configuration
         if TRACE:
             print "getting configvalue"
-        v=self.device.dev.config.bConfigurationValue
+        v=self.device.pcdesc[0].bConfigurationValue
         if TRACE:
             print "value is",v,"now about to set config"
-        res=usb.usb_set_configuration(self.device.handle, v)
+        res = libusb.libusb_set_configuration(self.device.handle, v)
         if TRACE:
-            print "usb_set_configurationds(%s, %d)=%d" % (self.device.handle,v,res)
+            print "libusb_set_configuration(%s, %d)=%d" % (self.device.handle,v,res)
             print "config set"
             # grab the interface
             print "claiming",self.number()
-        res=usb.usb_claim_interface(self.device.handle, self.number())
-        if TRACE: print "usb_claim_interface(%s, %d)=%d" % (self.device.handle, self.number(), res)
+        res = libusb.libusb_claim_interface (self.device.handle, self.number())
+        if TRACE: print "libusb_claim_interface(%s, %d)=%d" % (self.device.handle, self.number(), res)
         if res<0:
             raise USBException()
 
         # set the alt setting
-        res=usb.usb_set_altinterface(self.device.handle, self.altnumber())
-        if TRACE: print "usb_set_alt_interface(%s, %d)=%d" % (self.device.handle, self.altnumber(), res)
+#        res = libusb.libusb_set_interface_alt_setting (self.device.handle, self.altnumber())
+#        if TRACE: print "libusb_set_interface_alt_setting (%s, %d)=%d" % (self.device.handle, self.altnumber(), res)
         if res<0:
             # Setting the alternate interface causes problems with some phones (VX-10000)
             # reset the device and reclaim the interface if there was problem setting the
             # alternate interface.
-            usb.usb_reset(self.device.handle)
-            usb.usb_release_interface (self.device.handle, self.number())
+            libusb.libusb_reset_device (self.device.handle)
+            libusb.libusb_release_interface (self.device.handle, self.number())
 
-            res=usb.usb_claim_interface(self.device.handle, self.number())
+            res = libusb.libusb_claim_interface(self.device.handle, self.number())
             if res<0:
                 raise USBException()
 
+        self.isopen = True
+
         # we now have the file
         return USBFile(self, epin, epout)
+
+    def closebulk (self):
+        if self.isopen:
+            libusb.libusb_release_interface (self.device.handle, self.number ())
+            self.isopen = False
 
     def alternates(self):
        for i in range(self.iface.num_altsetting):
@@ -195,23 +201,15 @@ class USBInterface:
 
     def endpoints(self):
        for i in range(self.desc.bNumEndpoints):
-           yield USBEndpoint(usb.usb_endpoint_descriptor_index(self.desc.endpoint, i))
+           yield USBEndpoint(self.desc.endpoint[i])
        raise StopIteration()
 
 class USBEndpoint:
-    # type of endpoint
-    TYPE_CONTROL=usb.USB_ENDPOINT_TYPE_CONTROL
-    TYPE_ISOCHRONOUS=usb.USB_ENDPOINT_TYPE_ISOCHRONOUS
-    TYPE_BULK=usb.USB_ENDPOINT_TYPE_BULK
-    TYPE_INTERRUPT=usb.USB_ENDPOINT_TYPE_INTERRUPT
-    # direction for bulk
-    IN=usb.USB_ENDPOINT_IN
-    OUT=usb.USB_ENDPOINT_OUT
     def __init__(self, ep):
         self.ep=ep
 
     def type(self):
-        return self.ep.bmAttributes&usb.USB_ENDPOINT_TYPE_MASK
+        return self.ep.bmAttributes & 0x03
 
     def address(self):
         return self.ep.bEndpointAddress
@@ -220,17 +218,14 @@ class USBEndpoint:
         return self.ep.wMaxPacketSize
 
     def isbulk(self):
-        return self.type()==self.TYPE_BULK
+        return self.type() == 2
 
     def direction(self):
-        assert self.isbulk()
-        return self.ep.bEndpointAddress&usb.USB_ENDPOINT_DIR_MASK
-        
-class USBFile:
+#        assert self.isbulk()
+        return self.ep.bEndpointAddress & 0xf0
 
+class USBFile:
     def __init__(self, iface, epin, epout):
-        self.usb=usb  # save this so that our destructor can run
-        self.claimed=True
         self.iface=iface
         self.epin=epin
         self.epout=epout
@@ -240,31 +235,29 @@ class USBFile:
         self.outsize=epout.maxpacketsize()
 
     def __del__(self):
-        self.close()
+        self.resetep ()
 
     def resetep(self, resetin=True, resetout=True):
         if resetin:
-            res=usb.usb_clear_halt(self.iface.device.handle, self.addrin)
+            res = libusb.libusb_clear_halt(self.iface.device.handle, self.addrin)
             if TRACE: print "usb_clear_halt(%s,%d)=%d" % (self.iface.device.handle, self.addrin, res)
-            res=usb.usb_resetep(self.iface.device.handle, self.addrin)
-            if TRACE: print "usb_resetep(%s,%d)=%d" % (self.iface.device.handle, self.addrin, res)
         if resetout:
-            res=usb.usb_clear_halt(self.iface.device.handle, self.addrout)
+            res = libusb.libusb_clear_halt(self.iface.device.handle, self.addrout)
             if TRACE: print "usb_clear_halt(%s,%d)=%d" % (self.iface.device.handle, self.addrout, res)
-            res=usb.usb_resetep(self.iface.device.handle, self.addrout)
-            if TRACE: print "usb_resetep(%s,%d)=%d" % (self.iface.device.handle, self.addrout, res)
 
     def read(self,howmuch=1024, timeout=1000):
         data=""
+        buffer = create_string_buffer (self.insize)
         while howmuch>0:
-            res,str=usb.usb_bulk_read_wrapped(self.iface.device.handle, self.addrin, self.insize, int(timeout))
-            if TRACE: print "usb_bulk_read(%s,%d,%d,%d)=%d,%s" % (self.iface.device.handle, self.addrin, self.insize, timeout, res, `str`)
+            readsize = c_int(self.insize)
+            res = libusb.libusb_bulk_transfer (self.iface.device.handle, self.addrin, buffer, self.insize, byref (readsize), int(timeout))
+            str = string_at (buffer, readsize.value)
+            if TRACE: print "libusb_bulk_transfer(%s,%x,%s,%d,%d)=%d,%s" % (self.iface.device.handle, self.addrin, buffer, self.insize, timeout, res, `str`)
             if res<0:
                 if len(data)>0:
                     return data
-                e=USBException()
-                raise e
-            if res==0:
+                raise USBException ()
+            if readsize.value == 0:
                 return data
             data+=str
             howmuch-=len(str)
@@ -278,93 +271,95 @@ class USBFile:
         first=True
         while first or len(data):
             first=False
-            res=usb.usb_bulk_write(self.iface.device.handle, self.addrout, data[:min(len(data), self.outsize)], timeout)
-            if TRACE: print "usb_bulk_write(%s, %d, %d bytes, %d)=%d" % (self.iface.device.handle, self.addrout, min(len(data), self.outsize), timeout, res)
+            writesize = min(len(data), self.outsize)
+            cwritesize = c_int (writesize)
+            cdata = create_string_buffer(data[:writesize])
+            res = libusb.libusb_bulk_transfer (self.iface.device.handle, self.addrout, cdata, cwritesize, byref (cwritesize), timeout)
+            if TRACE: print "libusb_bulk_transfer(%s, %d, %s, %d, %d)=%d" % (self.iface.device.handle, self.addrout, cdata, min(len(data), writesize), timeout, res)
             if res<0:
                 raise USBException()
-            data=data[res:]
+            data=data[cwritesize.value:]
 
-    def close(self):
-        if self.claimed:
-            self.resetep()
-            self.usb.usb_release_interface(self.iface.device.handle, self.iface.number())
-        self.usb=None
-        self.claimed=False
+class USBException(Exception):
+    def __init__(self):
+        Exception.__init__(self, "a usb error occurred")
 
 def OpenDevice(vendorid, productid, interfaceid):
-    for bus in AllBusses():
-        for device in bus.devices():
-            if device.vendor()==vendorid and device.product()==productid:
-                for iface in device.interfaces():
-                    if iface.number()==interfaceid:
-                        return iface.openbulk()
+    for device in AllDevices ():
+        if device.vendor()==vendorid and device.product()==productid:
+            for iface in device.interfaces():
+                if iface.number()==interfaceid:
+                    return iface.openbulk()
     raise ValueError( "vendor 0x%x product 0x%x interface %d not found" % (vendorid, productid, interfaceid))
         
     
 def classtostring(klass):
     "Returns the class as a string"
-    for sym in dir(usb):
-        if sym.startswith("USB_CLASS_") and klass==getattr(usb, sym):
+    for sym in dir(libusb):
+        if sym.startswith("USB_CLASS_") and klass==getattr(libusb, sym):
             return sym
     return `klass`
 
 def eptypestring(type):
-    for sym in dir(USBEndpoint):
-        if sym.startswith("TYPE_") and type==getattr(USBEndpoint, sym):
+    for sym in dir(libusb):
+        if sym.startswith("TYPE_") and type==getattr(libusb, sym):
             return sym
     return `type`
-    
-def AllBusses():
-    bus=usb.usb_get_busses()
-    while bus is not None:
-        yield USBBus(bus)
-        bus=bus.next
-    raise StopIteration()
 
-# initialise
-usb.usb_init() # sadly no way to tell if this has failed
+def AllDevices ():
+    ptr = pointer(pointer(c_void_p(None)))
+    count = libusb.libusb_get_device_list (None, byref(ptr))
+    if count < 0:
+        raise
 
+    for i in range(count):
+        yield USBDevice (ptr[i])
+
+    libusb.libusb_free_device_list (ptr, 1)
+    raise StopIteration ()
+
+import gc
+
+ret = libusb.libusb_init (None)
+if ret < 0:
+    raise
 if __name__=='__main__':
-
-    bus,dev=UpdateLists()
-    print "%d busses, %d devices" % (bus,dev)
-
-    for bus in AllBusses():
-        print bus.name()
-        for device in bus.devices():
-            print "  %x/%x %s" % (device.vendor(), device.product(), device.name())
-            klass,subclass,proto=device.classdetails()
-            print "  class %s subclass %d protocol %d" % (classtostring(klass), subclass, proto)
-            for i in device.vendorstring, device.productstring, device.serialnumber:
-                try:
-                    print "  "+i()
-                except:
-                    pass
-            for iface in device.interfaces():
-                print "      interface number %d" % (iface.number(),)
-                klass,subclass,proto=iface.classdetails()
-                print "      class %s subclass %d protocol %d" % (classtostring(klass), subclass, proto)
-                for ep in iface.endpoints():
-                    print "          endpointaddress 0x%x" % (ep.address(),)
-                    print "          "+eptypestring(ep.type()),
-                    if ep.isbulk():
-                        if ep.direction()==ep.IN:
-                            print "IN"
-                        else:
-                            print "OUT"
+    for device in AllDevices ():
+        print "  %x/%x" % (device.vendor(), device.product())
+        klass,subclass,proto=device.classdetails()
+        print "  class %s subclass %d protocol %d" % (classtostring(klass), subclass, proto)
+        print " name %s" % (device.name())
+        print " bus number: %i" % (device.busnumber ())
+        for i in device.vendorstring, device.productstring, device.serialnumber:
+            try:
+                print "  "+i()
+            except:
+                pass
+        for iface in device.interfaces():
+            print "      interface number %d" % (iface.number(),)
+            klass,subclass,proto=iface.classdetails()
+            print "      class %s subclass %d protocol %d" % (classtostring(klass), subclass, proto)
+            for ep in iface.endpoints():
+                print "          endpointaddress 0x%x" % (ep.address(),)
+                print "          "+eptypestring(ep.type()),
+                if ep.isbulk():
+                    if ep.direction()==0x80:
+                        print "IN"
                     else:
-                        print
-
-                print ""
+                        print "OUT"
+                else:
+                    print
+                    
             print ""
         print ""
+    print ""
 
     print "opening device"
     cell=OpenDevice(0x1004, 0x6000, 2)
     print "device opened, about to write"
-    cell.write("\x59\x0c\xc4\xc1\x7e")
+    cell.write("\x01\xf1\xe1\x7e")
     print "wrote, about to read"
     res=cell.read(12)
     print "read %d bytes" % (len(res),)
     print `res`
-    cell.close()
+#    cell.close()

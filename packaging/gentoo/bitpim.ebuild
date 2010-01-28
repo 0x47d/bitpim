@@ -11,7 +11,7 @@ LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
 
-RDEPEND=">=dev-libs/libusb-0.1.10a"
+RDEPEND=">=dev-libs/libusb-1.0.6"
 
 RESTRICT="fetch"
 

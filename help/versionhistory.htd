@@ -1,4 +1,10 @@
 #include "pagestart.h"
+   <H2><a name="1.0.8">Changes in 1.0.8</a></h2>
+    <UL>
+      <LI><P>Maintenance: Upgrade to py2app 0.4.3
+      <LI><P>Maintenance: Upgrade to libusb-1.0.6. New usb module for Linux/MacOS X.
+    </UL>
+   </H2>
    <H2><a name="1.0.7">Changes in 1.0.7</a></h2>
     <UL>
       <LI><P>Maintenacne: Upgrade to Sqlite-3.6.1 and APSW-3.5.9-r2.

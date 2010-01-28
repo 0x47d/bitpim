@@ -10,13 +10,13 @@ import glob
 
 topdir=os.getcwd()
 
-ALL=["usb", "strings", "bmp2avi"]
+ALL=["strings", "bmp2avi"]
 
 args=sys.argv[1:] if __name__=='__main__' else []
 if len(args)==1 and args[0]=="all":
     args=ALL
 elif len(args)==0:
-    args=["usb", "strings"] # default
+    args=["strings"] # default
 
 for v in args:
     if v not in ALL:
@@ -31,20 +31,6 @@ def run(cmd):
     res=os.system(cmd)
     if res!=0:
         raise Exception("Command failed with code "+`res`)
-
-if "usb" in args:
-    # USB
-    print "===== src/native/usb"
-    if sys.platform in ('darwin', 'linux2'):
-        os.chdir("src/native/usb")
-        if os.path.exists("_libusb.so"):
-            os.remove("_libusb.so")
-        if sys.platform=='darwin':
-            run("sh -x ./macbuild.sh")
-        else:
-            run("sh -x ./build.sh")
-        assert os.path.exists("_libusb.so")
-        os.chdir(topdir)
 
 if "strings" in args:
     # JARO WINKLER STRINGS

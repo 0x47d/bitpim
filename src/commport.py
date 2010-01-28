@@ -116,17 +116,13 @@ class CommConnection:
             raise Exception("USB module not available - unable to open "+name)
         _,wantedbus,wanteddev,wantediface=name.split("::")
         wantediface=int(wantediface)
-        usb.UpdateLists()
-        for bus in usb.AllBusses():
-            if bus.name()!=wantedbus:
+        for device in usb.AllDevices ():
+            if device.busnumber() != int(wantedbus) or device.name()!=wanteddev:
                 continue
-            for device in bus.devices():
-                if device.name()!=wanteddev:
+            for iface in device.interfaces():
+                if iface.number()!=wantediface:
                     continue
-                for iface in device.interfaces():
-                    if iface.number()!=wantediface:
-                        continue
-                    return _usbdevicewrapper(iface.openbulk(), timeout)
+                return _usbdevicewrapper(iface.openbulk(), timeout)
         self.log("Failed to find "+name+".  You may need to rescan.")
         raise common.CommsOpenFailure("Failed to find usb device "+name)
         
