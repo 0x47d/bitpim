@@ -26,6 +26,7 @@ import helpids
 import copy
 import time
 import os.path
+import phonebookentryeditor
 
 DEBUG1=False
 #-------------------------------------------------------------------------------
@@ -554,6 +555,9 @@ class Phone(parentphone):
             alarm_set=self.setalarm(entry, data)
             if alarm_set:
                 if entry.ringtone=="No Ring" and not entry.vibrate:
+                    alarm_name="Low Beep Once"
+                #ringtone coming up as "Select:" would be the same as "No Ring", so we should check for it also
+                elif entry.ringtone==phonebookentryeditor.RingtoneEditor.unnamed and not entry.vibrate:
                     alarm_name="Low Beep Once"
                 else:
                     alarm_name=entry.ringtone

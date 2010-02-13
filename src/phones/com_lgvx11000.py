@@ -120,13 +120,13 @@ class Phone(parentphone):
                     else:
                         paper = self.protocolclass.NOWALLPAPER
                         
-                    if paper is None:
-                        raise
+                    if paper is None: #if it cant find the wallpaper, say so but we still need to add the group
+                        self.log("can't find wallpaper for group index: " + str(_group.groupid) + ": " + str(_group.name))
                 
                     groups[_group.groupid]= { 'name': _group.name, 'user_added': _group.user_added,
                                               'wallpaper': paper } #groups can have wallpaper on this phone
                 except:
-                    self.log("can't find wallpaper for group index: " + str(_group.groupid) + ": " + str(_group.name))
+                    self.log("error occured adding group index: " + str(_group.groupid) + ": " + str(_group.name))
 
         results['groups'] = groups
         return groups
@@ -600,7 +600,66 @@ class Phone(parentphone):
             elif key in new_entry.getfields():
                 setattr (new_entry, key, pb_entry[key])
 
-        return new_entry
+        return new_entry   
+    
+    def setalarm(self, entry, data):
+        # vx11000 only allows certain repeat intervals, adjust to fit, it also stores an index to the interval
+        rc=True
+        if entry.alarm>=1440:
+            entry.alarm=1440
+            data.alarmminutes=0
+            data.alarmhours=24
+            data.alarmindex_vibrate=0x12
+        elif entry.alarm>=300:
+            entry.alarm=300
+            data.alarmminutes=0
+            data.alarmhours=5
+            data.alarmindex_vibrate=0x10
+        elif entry.alarm>=180:
+            entry.alarm=180
+            data.alarmminutes=0
+            data.alarmhours=3
+            data.alarmindex_vibrate=0xe
+        elif entry.alarm>=60:
+            entry.alarm=60
+            data.alarmminutes=0
+            data.alarmhours=1
+            data.alarmindex_vibrate=0xc
+        elif entry.alarm>=30:
+            entry.alarm=30
+            data.alarmminutes=30
+            data.alarmhours=0
+            data.alarmindex_vibrate=0xa
+        elif entry.alarm>=15:
+            entry.alarm=15
+            data.alarmminutes=15
+            data.alarmhours=0
+            data.alarmindex_vibrate=0x8
+        elif entry.alarm>=10:
+            entry.alarm=10
+            data.alarmminutes=10
+            data.alarmhours=0
+            data.alarmindex_vibrate=0x6
+        elif entry.alarm>=5:
+            entry.alarm=5
+            data.alarmminutes=5
+            data.alarmhours=0
+            data.alarmindex_vibrate=0x4
+        elif entry.alarm>=0:
+            entry.alarm=0
+            data.alarmminutes=0
+            data.alarmhours=0
+            data.alarmindex_vibrate=0x2
+        else: # no alarm
+            data.alarmminutes=0x64
+            data.alarmhours=0x64
+            data.alarmindex_vibrate=1
+            rc=False
+
+        # set the vibrate bit
+        if data.alarmindex_vibrate > 1 and entry.vibrate==0:
+            data.alarmindex_vibrate+=1
+        return rc    
 
 #-------------------------------------------------------------------------------
 parentprofile=com_lgvx9700.Profile
@@ -653,17 +712,13 @@ class Profile(parentprofile):
         ('ringtone', 'write', 'OVERWRITE'),
         ('sms', 'write', 'OVERWRITE'),        # all SMS list writing
         ('memo', 'write', 'OVERWRITE'),       # all memo list writing
-##        ('playlist', 'read', 'OVERWRITE'),
-##        ('playlist', 'write', 'OVERWRITE'),
-##        ('t9_udb', 'write', 'OVERWRITE'),
         )
     if __debug__:
         _supportedsyncs+=(
-        ('t9_udb', 'read', 'OVERWRITE'),
-        ('t9_udb', 'write', 'OVERWRITE'),
-        ('playlist', 'read', None),
-        ('playlist', 'write', 'OVERWRITE'),
-        ('playlist', 'write', 'MERGE'),
+#        ('t9_udb', 'read', None),
+#        ('t9_udb', 'write', 'OVERWRITE'),
+#        ('playlist', 'read', None),
+#        ('playlist', 'write', 'OVERWRITE'),
         )
         
     field_color_data={
