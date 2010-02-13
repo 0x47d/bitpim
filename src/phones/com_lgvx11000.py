@@ -230,6 +230,18 @@ class Phone(parentphone):
         except:
             pb_addresses = None
 
+        try:
+            # check for addresses support
+            if hasattr(self.protocolclass, 'imfile'):
+                self.log("Reading ims")
+                ims = self.readobject(self.protocolclass.im_file_name,
+                                      self.protocolclass.imfile,
+                                      logtitle='Reading ims')
+            else:
+                ims = None
+        except:
+            ims = None
+
         self.log("Reading Ringtone IDs")
         ring_pathf=self._get_path_index(self.protocolclass.RTPathIndexFile)
         _rt_ids=self._build_media_dict(result, ring_pathf, 'ringtone-index')
@@ -245,7 +257,7 @@ class Phone(parentphone):
                 continue
             try:
                 self.log("Parse entry "+`_cnt`+" - " + pb_entry.name)
-                pbook[_cnt]=self.extractphonebookentry(pb_entry, pb_numbers, pb_addresses,
+                pbook[_cnt]=self.extractphonebookentry(pb_entry, pb_numbers, pb_addresses, ims,
                                                        _speeds, _ices, _favorites, result,
                                                        _rt_ids.get(ring_pathf.items[_cnt].pathname, None),
                                                        _wp_ids.get(picid_pathf.items[_cnt].pathname, None))
@@ -281,7 +293,7 @@ class Phone(parentphone):
         result['group_wallpapers']=group_wps
         return pbook
 
-    def extractphonebookentry(self, entry, numbers, addresses, speeds, ices, favorites, fundamentals,
+    def extractphonebookentry(self, entry, numbers, addresses, ims, speeds, ices, favorites, fundamentals,
                               rt_name, wp_name):
         """Return a phonebook entry in BitPim format.  This is called from getphonebook."""
         res={}
@@ -294,10 +306,13 @@ class Phone(parentphone):
         # only one name
         res['names']=[ {'full': entry.name} ]
 
-        # only one category
-        cat=fundamentals['groups'].get(entry.group, {'name': "No Group"})['name']
-        if cat!="No Group":
-            res['categories']=[ {'category': cat} ]
+        # up to 30 categories
+        categories = []
+        for group in entry.groups:
+            if group.gid:
+                categories.append ({'category': fundamentals['groups'].get(group.gid, {})['name']})
+        if len(categories):
+            res['categories'] = categories
 
         # emails
         res['emails']=[]
@@ -344,6 +359,14 @@ class Phone(parentphone):
                                            'state': _address.state,
                                            'postalcode': _address.zip_code,
                                            'country': _address.country }]
+                    break
+
+        if ims is not None and entry.imindex != 0xffff:
+            for _im in ims.items:
+                if _im.valid () and _im.index == entry.imindex:
+                    self.log ("setting ims to: " + _im.screen_name)
+                    res['ims'] = [ { 'type': self.protocolclass.imindexservice.get (_im.service, ''),
+                                     'username': _im.screen_name } ]
                     break
 
         # assume we are like the VX-8100 in this regard -- looks correct
@@ -404,6 +427,11 @@ class Phone(parentphone):
         else:
             pa_entries = None
 
+        if hasattr(self.protocolclass, 'imfile'):
+            im_entries = self.protocolclass.imfile ()
+        else:
+            im_entries = None
+
         ice_entries = self.protocolclass.iceentryfile()
         for i in range(self.protocolclass.NUMEMERGENCYCONTACTS):
             ice_entries.items.append (self.protocolclass.iceentry())
@@ -425,7 +453,7 @@ class Phone(parentphone):
             favorites = None
 
         for i in keys:
-            pb_entries.items.append(self.make_entry (pn_entries, pa_entries, favorites, speeddials,
+            pb_entries.items.append(self.make_entry (pn_entries, pa_entries, im_entries, favorites, speeddials,
                                                      ice_entries, entry_num0, entry_num1, pbook[i],
                                                      data, ring_pathf,_rt_index, picid_pathf, _wp_index))
             entry_num0 += 1
@@ -443,6 +471,7 @@ class Phone(parentphone):
                          pb_entries,
                          logtitle='Writing phonebook entries',
                          uselocalfs=DEBUG1)
+
         # write phone numbers
         self.log ("Writing phone numbers")
         self.writeobject(self.protocolclass.pn_file_name,
@@ -454,6 +483,13 @@ class Phone(parentphone):
             self.log ("Writing addresses")
             self.writeobject(self.protocolclass.pa_file_name,
                              pa_entries, logtitle="Writing addresses",
+                             uselocalfs=DEBUG1)
+
+        if im_entries is not None:
+            # write addresses
+            self.log ("Writing ims")
+            self.writeobject(self.protocolclass.im_file_name,
+                             im_entries, logtitle="Writing ims",
                              uselocalfs=DEBUG1)
 
         # write ringtone index
@@ -530,8 +566,17 @@ class Phone(parentphone):
         new_entry.country  = address['country']
 
         return new_entry
+
+    def make_im_entry (self, pb_entry, im_index, im):
+        new_entry = self.protocolclass.imfileentry(entry_tag=self.protocolclass.PI_ENTRY_SOR)
+        new_entry.index       = im_index
+        new_entry.pb_entry    = pb_entry
+        new_entry.service     = self.protocolclass.imserviceindex.get(im.get('type', ''), 0)
+        new_entry.screen_name = im.get ('username', '')
+
+        return new_entry
         
-    def make_entry (self, pn_entries, pa_entries, favorites, speeddials, ice_entries,
+    def make_entry (self, pn_entries, pa_entries, im_entries, favorites, speeddials, ice_entries,
                     entry_num0, entry_num1, pb_entry, data,
                     ring_pathf, rt_index, picid_pathf, wp_index):
         """ Create a pbfileentry from a bitpim phonebook entry """
@@ -581,6 +626,12 @@ class Phone(parentphone):
                 if pa_entries is not None and _addresses is not None and len(_addresses) > 0:
                     new_entry.addressindex = address_id
                     pa_entries.items.append(self.make_pa_entry (entry_num0, address_id, _addresses[0]))
+            elif key == 'ims':
+                _ims = pb_entry['ims']
+                im_id = len (im_entries.items)
+                if im_entries is not None and _ims is not None and len (_ims) > 0:
+                    new_entry.imindex = im_id
+                    im_entries.items.append(self.make_im_entry (entry_num0, im_id, _ims[0]))
             elif key == 'ringtone':
                 new_entry.ringtone = self._findmediainindex(data['ringtone-index'], pb_entry['ringtone'], pb_entry['name'], 'ringtone')
                 try:
@@ -597,6 +648,10 @@ class Phone(parentphone):
                     new_entry.wallpaper = 0x64
                 except:
                     picid_pathf.items.append(self.protocolclass.PathIndexEntry())
+            elif key == 'groups':
+                l = getattr (new_entry, 'groups')
+                for i in range(0, self.protocolclass.NUMGROUPS):
+                    l.append (pb_entry['groups'][i])
             elif key in new_entry.getfields():
                 setattr (new_entry, key, pb_entry[key])
 
@@ -817,17 +872,17 @@ class Profile(parentprofile):
                 # address
                 e['addresses']=entry.get('addresses', None)
 
+                # im
+                e['ims'] = entry.get('ims', None)
+
                 # categories/groups
-                cat=helper.makeone(helper.getcategory(entry.get('categories', []),0,1,32), None)
-                if cat is None:
-                    e['group']=0
-                else:
-                    key,value=self._getgroup(cat, data['groups'])
+                cats = helper.getcategory(entry.get('categories', []), 0 , self.protocolclass.NUMGROUPS, 32)
+                groups = []
+                for cat in cats:
+                    key,value = self._getgroup (cat, data['groups'])
                     if key is not None:
-                        e['group']=key
-                    else:
-                        # sorry no space for this category
-                        e['group']=0
+                        groups.append (key)
+                e['groups'] = helper.filllist(groups, self.protocolclass.NUMGROUPS, 0)
 
                 # email addresses
                 emails=helper.getemails(entry.get('emails', []) ,0,self.protocolclass.NUMEMAILS,48)
