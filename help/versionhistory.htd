@@ -3,6 +3,7 @@
     <UL>
       <LI><P>Maintenance: Upgrade to py2app 0.4.3
       <LI><P>Maintenance: Upgrade to libusb-1.0.6. New usb module for Linux/MacOS X.
+      <LI><P>New phone support: <B>LG VX-8575</B> (Initial)
     </UL>
    </H2>
    <H2><a name="1.0.7">Changes in 1.0.7</a></h2>

@@ -200,6 +200,11 @@ BEGIN_TOC
             TOC_2
             TOCITEM_2(Notes,phone-lgvx8560-notes.htm)
             ENDTOC_2
+        TOCITEM_1(LG VX-8575,phone-lgvx8575.htm)
+            TOC_2
+            TOCITEM_2(Cables,phone-lgvx8575-cables.htm)
+            TOCITEM_2(Notes,phone-lgvx8575-notes.htm)
+            ENDTOC_2
         TOCITEM_1(LG VX-8600,phone-lgvx8600.htm)
             TOC_2
             TOCITEM_2(Cables,phone-lgvx8600-cables.htm)
