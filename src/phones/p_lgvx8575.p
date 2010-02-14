@@ -29,6 +29,28 @@ imindexservice = { 0: 'AIM', 1: 'Yahoo!', 2: 'WL Messenger' }
 
 %}
 
+# Call history
+
+PACKET call:
+    4 GPSDATE GPStime    # no. of seconds since 0h 1-6-80, based off local time.
+    4 UINT  unk0         # different for each call
+    4 UINT  duration     # seconds, not certain about length of this field
+    49 USTRING {'raiseonunterminatedread': False} number
+    36 USTRING {'encoding': PHONE_ENCODING, 'raiseonunterminatedread': False} name
+    1 UINT  numberlength # length of phone number
+    1 UINT  status       # 0=outgoing, 1=incoming, 2=missed, etc
+    1 UINT  pbnumbertype # 1=cell, 2=home, 3=office, 4=cell2, 5=fax, 6=vmail, 0xFF=not in phone book
+    4 UINT  unk1         # always seems to be 0
+    2 UINT  pbentrynum   # entry number in phonebook
+    76 DATA number_location # set by pay software
+
+# similar to the VX-8560
+PACKET callhistory:
+    4 UINT { 'default': 0x00050000 } unk0
+    4 UINT numcalls
+    4 UINT { 'default': 0 } unk1
+    * LIST {'elementclass': call, 'length': self.numcalls} +calls
+
 # /pim/pbentry.dat format
 PACKET pbfileentry:
     5   STRING { 'raiseonunterminatedread': False, 'raiseontruncate': False, 'default': '\xff\xff\xff\xff\xff' } +entry_tag
