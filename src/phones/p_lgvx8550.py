@@ -604,7 +604,8 @@ class pbfileentry(BaseProtogenClass):
 
     def valid(self):
         global PB_ENTRY_SOR
-        return self.entry_tag==PB_ENTRY_SOR and ord(self.name[0]) != 0xff
+        return self.entry_tag==PB_ENTRY_SOR and \
+               (self.name and ord(self.name[0]) != 0xff)
 
 
 
@@ -2472,7 +2473,7 @@ class scheduleringerfile(BaseProtogenClass):
         self.__field_numringers.writetobuffer(buf)
         try: self.__field_ringerpaths
         except:
-            self.__field_ringerpaths=LIST(**{'elementclass': _gen_p_lgvx8550_205})
+            self.__field_ringerpaths=LIST(**{'elementclass': _gen_p_lgvx8550_206})
         self.__field_ringerpaths.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -2484,7 +2485,7 @@ class scheduleringerfile(BaseProtogenClass):
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
         self.__field_numringers=UINT(**{'sizeinbytes': 4})
         self.__field_numringers.readfrombuffer(buf)
-        self.__field_ringerpaths=LIST(**{'elementclass': _gen_p_lgvx8550_205})
+        self.__field_ringerpaths=LIST(**{'elementclass': _gen_p_lgvx8550_206})
         self.__field_ringerpaths.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -2505,14 +2506,14 @@ class scheduleringerfile(BaseProtogenClass):
     def __getfield_ringerpaths(self):
         try: self.__field_ringerpaths
         except:
-            self.__field_ringerpaths=LIST(**{'elementclass': _gen_p_lgvx8550_205})
+            self.__field_ringerpaths=LIST(**{'elementclass': _gen_p_lgvx8550_206})
         return self.__field_ringerpaths.getvalue()
 
     def __setfield_ringerpaths(self, value):
         if isinstance(value,LIST):
             self.__field_ringerpaths=value
         else:
-            self.__field_ringerpaths=LIST(value,**{'elementclass': _gen_p_lgvx8550_205})
+            self.__field_ringerpaths=LIST(value,**{'elementclass': _gen_p_lgvx8550_206})
 
     def __delfield_ringerpaths(self): del self.__field_ringerpaths
 
@@ -2528,7 +2529,7 @@ class scheduleringerfile(BaseProtogenClass):
 
 
 
-class _gen_p_lgvx8550_205(BaseProtogenClass):
+class _gen_p_lgvx8550_206(BaseProtogenClass):
     'Anonymous inner class'
     __fields=['path']
 
@@ -2537,8 +2538,8 @@ class _gen_p_lgvx8550_205(BaseProtogenClass):
         # What was supplied to this function
         dict.update(kwargs)
         # Parent constructor
-        super(_gen_p_lgvx8550_205,self).__init__(**dict)
-        if self.__class__ is _gen_p_lgvx8550_205:
+        super(_gen_p_lgvx8550_206,self).__init__(**dict)
+        if self.__class__ is _gen_p_lgvx8550_206:
             self._update(args,dict)
 
 
@@ -2547,7 +2548,7 @@ class _gen_p_lgvx8550_205(BaseProtogenClass):
 
 
     def _update(self, args, kwargs):
-        super(_gen_p_lgvx8550_205,self)._update(args,kwargs)
+        super(_gen_p_lgvx8550_206,self)._update(args,kwargs)
         keys=kwargs.keys()
         for key in keys:
             if key in self.__fields:
@@ -2555,7 +2556,7 @@ class _gen_p_lgvx8550_205(BaseProtogenClass):
                 del kwargs[key]
         # Were any unrecognized kwargs passed in?
         if __debug__:
-            self._complainaboutunusedargs(_gen_p_lgvx8550_205,kwargs)
+            self._complainaboutunusedargs(_gen_p_lgvx8550_206,kwargs)
         if len(args):
             dict2={'sizeinbytes': 256,  'encoding': PHONE_ENCODING, 'raiseontruncate': True }
             dict2.update(kwargs)

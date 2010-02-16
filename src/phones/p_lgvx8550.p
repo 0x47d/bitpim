@@ -84,7 +84,8 @@ PACKET pbfileentry:
     %{
     def valid(self):
         global PB_ENTRY_SOR
-        return self.entry_tag==PB_ENTRY_SOR and ord(self.name[0]) != 0xff
+        return self.entry_tag==PB_ENTRY_SOR and \
+               (self.name and ord(self.name[0]) != 0xff)
     %}
 
 PACKET pbfile:
