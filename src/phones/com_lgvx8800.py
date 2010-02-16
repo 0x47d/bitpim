@@ -52,6 +52,7 @@ class Phone(parentphone):
         res={}
         # The Voyager and Venus use index files to keep track of SMS messages
         for item in self.getindex(self.protocolclass.drafts_index):
+            try:
                 buf=prototypes.buffer(self.getfilecontents(item.filename, True))
                 self.logdata("SMS message file " +item.filename, buf.getdata())
                 sf=self.protocolclass.sms_saved()
@@ -59,20 +60,34 @@ class Phone(parentphone):
                 entry=self._getoutboxmessage(sf.outbox)
                 entry.folder=entry.Folder_Saved
                 res[entry.id]=entry
+            except:
+                self.log('Failed to process SMS file: '+item.filename)
+                if __debug__:
+                    raise
         for item in self.getindex(self.protocolclass.inbox_index):
+            try:
                 buf=prototypes.buffer(self.getfilecontents(item.filename, True))
                 self.logdata("SMS message file " +item.filename, buf.getdata())
                 sf=self.protocolclass.sms_in()
                 sf.readfrombuffer(buf, logtitle="SMS inbox item")
                 entry=self._getinboxmessage(sf)
                 res[entry.id]=entry
+            except:
+                self.log('Failed to process SMS file: '+item.filename)
+                if __debug__:
+                    raise
         for item in self.getindex(self.protocolclass.outbox_index):
+            try:
                 buf=prototypes.buffer(self.getfilecontents(item.filename, True))
                 self.logdata("SMS message file " +item.filename, buf.getdata())
                 sf=self.protocolclass.sms_out()
                 sf.readfrombuffer(buf, logtitle="SMS sent item")
                 entry=self._getoutboxmessage(sf)
                 res[entry.id]=entry
+            except:
+                self.log('Failed to process SMS file: '+item.filename)
+                if __debug__:
+                    raise
         return res 
 
     def _scheduleextras(self, data, fwversion):
