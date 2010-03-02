@@ -66,7 +66,7 @@ PACKET pbgroup:
                 'raiseontruncate': False,
                 'default': ''} +name
     2  UINT { 'default': 0 } +groupid
-    1  UINT {'default': 0} +user_added "=1 when was added by user"
+    2  UINT {'default': 0} +user_added "=1 when was added by user"
 
 PACKET pbgroups:
     "Phonebook groups"

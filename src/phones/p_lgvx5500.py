@@ -861,7 +861,7 @@ class pbgroup(BaseProtogenClass):
         self.__field_groupid.writetobuffer(buf)
         try: self.__field_user_added
         except:
-            self.__field_user_added=UINT(**{'sizeinbytes': 1, 'default': 0})
+            self.__field_user_added=UINT(**{'sizeinbytes': 2, 'default': 0})
         self.__field_user_added.writetobuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologwrite(buf, logtitle=logtitle)
@@ -875,7 +875,7 @@ class pbgroup(BaseProtogenClass):
         self.__field_name.readfrombuffer(buf)
         self.__field_groupid=UINT(**{'sizeinbytes': 2,  'default': 0 })
         self.__field_groupid.readfrombuffer(buf)
-        self.__field_user_added=UINT(**{'sizeinbytes': 1, 'default': 0})
+        self.__field_user_added=UINT(**{'sizeinbytes': 2, 'default': 0})
         self.__field_user_added.readfrombuffer(buf)
         self._bufferendoffset=buf.getcurrentoffset()
 
@@ -915,14 +915,14 @@ class pbgroup(BaseProtogenClass):
     def __getfield_user_added(self):
         try: self.__field_user_added
         except:
-            self.__field_user_added=UINT(**{'sizeinbytes': 1, 'default': 0})
+            self.__field_user_added=UINT(**{'sizeinbytes': 2, 'default': 0})
         return self.__field_user_added.getvalue()
 
     def __setfield_user_added(self, value):
         if isinstance(value,UINT):
             self.__field_user_added=value
         else:
-            self.__field_user_added=UINT(value,**{'sizeinbytes': 1, 'default': 0})
+            self.__field_user_added=UINT(value,**{'sizeinbytes': 2, 'default': 0})
 
     def __delfield_user_added(self): del self.__field_user_added
 
