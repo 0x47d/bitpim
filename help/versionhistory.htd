@@ -6,6 +6,7 @@
       <LI><P>New phone support: <B>LG VX-8575</B> (Initial)
       <LI><P>Bug fix: <B>LG VX-9200</B>: One bad SMS item stops SMS data read.
       <LI><P>Bug fix: <B>LG VX-9200</B>: BitPim fails to read phone contacts with blank names.
+      <LI><P>Bug fix: <B>LG VX-5500</B>: Fixed reading/writing groups.
     </UL>
    </H2>
    <H2><a name="1.0.7">Changes in 1.0.7</a></h2>
